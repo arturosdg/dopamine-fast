@@ -1,0 +1,12 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "bootstrap-sha": "b388a26e24a6879f7ae65d1a328b21f51d2ff1b7",
+  "include-component-in-tag": false,
+  "packages": {
+    ".": {
+      "package-name": "dopamine-fast",
+      "changelog-path": "CHANGELOG.md"
+    }
+  }
+}

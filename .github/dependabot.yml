@@ -1,11 +1,67 @@
-# To get started with Dependabot version updates, you'll need to specify which
-# package ecosystems to update and where the package manifests are located.
-# Please see the documentation for all configuration options:
-# https://docs.github.com/github/administering-a-repository/configuration-options-for-dependency-updates
-
 version: 2
+
 updates:
-  - package-ecosystem: "npm" # See documentation for possible values
-    directory: "/" # Location of package manifests
+  - package-ecosystem: "npm"
+    directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "Europe/Madrid"
+    cooldown:
+      semver-patch-days: 3
+      semver-minor-days: 7
+      semver-major-days: 30
+      include:
+        - "*"
+    groups:
+      npm-patches:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "patch"
+      npm-minors:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+      npm-majors:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+        update-types:
+          - "major"
+    versioning-strategy: "increase-if-necessary"
+    open-pull-requests-limit: 10
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "javascript"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:30"
+      timezone: "Europe/Madrid"
+    cooldown:
+      default-days: 7
+      include:
+        - "*"
+    groups:
+      github-actions:
+        applies-to: "version-updates"
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "github-actions"

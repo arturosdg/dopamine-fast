@@ -1,98 +1,136 @@
-<div align="center">
-<img src="public/icon-128.png" alt="logo"/>
-<h1> Chrome Extension Boilerplate with<br/>React + Vite + TypeScript</h1>
+# Dopamine Fast
 
-![](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)
-![](https://img.shields.io/badge/Typescript-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![](https://badges.aleen42.com/src/vitejs.svg)
-![GitHub action badge](https://github.com/Jonghakseo/chrome-extension-boilerplate-react-vite/actions/workflows/build-zip.yml/badge.svg)
-<img src="https://hits.seeyoufarm.com/api/count/incr/badge.svg?url=https://github.com/Jonghakseo/chrome-extension-boilerplate-react-viteFactions&count_bg=%23#222222&title_bg=%23#454545&title=😀&edge_flat=true" alt="hits"/>
+Dopamine Fast is an open-source browser extension that keeps social websites
+usable while giving their feeds a real end.
 
+The MVP targets Firefox for Android and supports Reddit, X/Twitter and
+Instagram. It works on top of the websites you already use:
 
-> This project is listed in the [Awesome Vite](https://github.com/vitejs/awesome-vite)
+- pauses before opening a supported feed;
+- hides best-effort suggested and promoted surfaces;
+- disables media autoplay;
+- reveals posts in finite batches;
+- adds a deliberate unlock flow before showing another batch;
+- enforces a local daily allowance.
 
-</div>
+It does not copy posts, inspect private messages, use platform APIs or send
+browsing data to a backend.
 
-## Table of Contents
+## Status
 
-- [Intro](#intro)
-- [Features](#features)
-- [Installation](#installation)
-  - [Procedures](#procedures)
-- [Screenshots](#screenshots)
-  - [NewTab](#newtab)
-  - [Popup](#popup)  
-- [Examples](#examples)
-- [Documents](#documents)
+This is an early, selector-based prototype. Social websites change frequently,
+so platform selectors will need to be tested and adjusted against their current
+mobile interfaces.
 
-## Intro <a name="intro"></a>
-This boilerplate is made for creating chrome extensions using React and Typescript.
-> The focus was on improving the build speed and development experience with Vite.
+## Development
 
-## Features <a name="features"></a>
-- [React 18](https://reactjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Jest](https://jestjs.io/)
-- [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/)
-- [Vite](https://vitejs.dev/)
-- [SASS](https://sass-lang.com/)
-- [Twind](https://twind.dev/)
-- [ESLint](https://eslint.org/)
-- [Prettier](https://prettier.io/)
-- [Chrome Extension Manifest Version 3](https://developer.chrome.com/docs/extensions/mv3/intro/)
-- HRR(Hot Rebuild & Refresh/Reload)
+Requirements:
 
-## Installation <a name="installation"></a>
+- Node.js 22 or newer
+- npm
+- Firefox
 
-### Procedures <a name="procedures"></a>
-1. Clone this repository.
-2. Change `name` and `description` in package.json => **Auto synchronize with manifest** 
-3. Run `yarn install` or `npm i` (check your node version >= 16.6, recommended >= 18)
-4. Run `yarn dev` or `npm run dev`
-5. Load Extension on Chrome
-   1. Open - Chrome browser
-   2. Access - chrome://extensions
-   3. Check - Developer mode
-   4. Find - Load unpacked extension
-   5. Select - `dist` folder in this project (after dev or build)
-6. If you want to build in production, Just run `yarn build` or `npm run build`.
+Install dependencies:
 
-## Screenshots <a name="screenshots"></a>
+```sh
+npm install
+```
 
-### New Tab <a name="newtab"></a>
+Start Firefox development mode:
 
-<img width="971" src="https://user-images.githubusercontent.com/53500778/162631646-cd40976b-b737-43d0-8e6a-6ac090a2e2d4.png">
+```sh
+npm run dev
+```
 
-### Popup <a name="popup"></a>
+Run validation:
 
-<img width="314" alt="popup" src="https://user-images.githubusercontent.com/53500778/203561728-23517d46-12e3-4139-8a4f-e0b2f22a6ab3.png">
+```sh
+npm run validate
+npm run zip
+```
 
-## Examples <a name="examples"></a>
-- https://github.com/Jonghakseo/drag-gpt-extension
-- https://github.com/Jonghakseo/pr-commit-noti
-- https://github.com/ariburaco/chatgpt-file-uploader-extended
+The production Firefox build is written to `.output/firefox-mv2`.
 
-## Documents <a name="documents"></a>
-- [Vite Plugin](https://vitejs.dev/guide/api-plugin.html)
-- [ChromeExtension](https://developer.chrome.com/docs/extensions/mv3/)
-- [Rollup](https://rollupjs.org/guide/en/)
-- [Rollup-plugin-chrome-extension](https://www.extend-chrome.dev/rollup-plugin)
+## Firefox for Android
 
+WXT targets Manifest V2 for Firefox by default and Manifest V3 for Chromium.
+For Android testing, build the extension and load `.output/firefox-mv2` using
+Mozilla's Firefox Android extension development workflow.
 
-## Star History
+## Architecture
 
-[![Star History Chart](https://api.star-history.com/svg?repos=Jonghakseo/chrome-extension-boilerplate-react-vite&type=Date)](https://star-history.com/#Jonghakseo/chrome-extension-boilerplate-react-vite&Date)
+```text
+entrypoints/content.ts
+  ├─ opening pause
+  ├─ route activation
+  └─ FeedLimiter
+       ├─ platform selectors
+       ├─ finite batch
+       ├─ suggested-content suppression
+       └─ unlock intervention
 
+entrypoints/options/
+  └─ local settings UI
 
+lib/
+  ├─ models.ts
+  ├─ storage.ts
+  ├─ platforms.ts
+  ├─ feed-limiter.ts
+  └─ intervention-ui.ts
+```
 
----
-## Thanks To
+All preferences and daily counters use browser extension local storage.
 
-| [Jetbrains](https://jb.gg/OpenSourceSupport)                                                                           | [Jackson Hong](https://www.linkedin.com/in/j-acks0n/)                                            |
-|--------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------|
-| <img width="100" src="https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.png" alt="JetBrains Logo (Main) logo."> | <img width="100" src='https://avatars.githubusercontent.com/u/23139754?v=4' alt='Jackson Hong'/> |
+## Releases and dependency updates
 
+GitHub Actions validates every pull request and packages Firefox and Chromium
+artifacts.
 
----
+Release Please manages versions through Conventional Commits:
 
-[Jonghakseo](https://nookpi.tistory.com/)
+- `fix:` produces a patch release;
+- `feat:` produces a minor release;
+- `feat!:` or `BREAKING CHANGE:` produces a major release.
+
+After changes reach `main`, Release Please opens or updates a release pull
+request. Merging that pull request creates the tag and GitHub Release, builds
+both browser packages and uploads ZIP files plus SHA-256 checksums.
+
+Dependabot checks npm and GitHub Actions weekly. Version updates are separated
+into patch, minor and major groups, with cooldowns of 3, 7 and 30 days. Security
+updates are not delayed by the cooldown.
+
+Third-party actions are pinned to commit SHAs. Dependabot keeps those pins
+current.
+
+### Optional Firefox Add-ons deployment
+
+The release workflow submits to AMO when these Actions secrets exist:
+
+- `FIREFOX_EXTENSION_ID`
+- `FIREFOX_JWT_ISSUER`
+- `FIREFOX_JWT_SECRET`
+
+The first AMO listing must be created manually. Without these secrets, GitHub
+Releases continue working and the AMO step exits successfully with a notice.
+
+`RELEASE_PLEASE_TOKEN` is optional. When provided as a fine-grained token, PRs
+created by Release Please can trigger other GitHub workflows. Otherwise the
+workflow falls back to `GITHUB_TOKEN`.
+
+## Privacy
+
+Dopamine Fast requests access only to Reddit, X/Twitter and Instagram, plus the
+browser's local storage permission. It has no analytics, accounts, cookie
+permission or remote service.
+
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development workflow and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for the
+behavior and product principles expected in this community.
+
+## License
+
+MIT
