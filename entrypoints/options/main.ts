@@ -20,6 +20,8 @@ const controls = {
   openingDelayOutput: requiredElement<HTMLOutputElement>(
     "#opening-delay-output",
   ),
+  sessionDuration: requiredElement<HTMLInputElement>("#session-duration"),
+  dailyUsageLimit: requiredElement<HTMLInputElement>("#daily-usage-limit"),
   unlockDelay: requiredElement<HTMLInputElement>("#unlock-delay"),
   unlockDelayOutput:
     requiredElement<HTMLOutputElement>("#unlock-delay-output"),
@@ -51,6 +53,8 @@ function updateOutputs(): void {
 function render(settings: Settings): void {
   controls.enabled.checked = settings.enabled;
   controls.openingDelay.value = String(settings.openingDelaySeconds);
+  controls.sessionDuration.value = String(settings.sessionDurationMinutes);
+  controls.dailyUsageLimit.value = String(settings.dailyUsageLimitMinutes);
   controls.unlockDelay.value = String(settings.unlockDelaySeconds);
   controls.batchSize.value = String(settings.batchSize);
   controls.unlockBatchSize.value = String(settings.unlockBatchSize);
@@ -76,6 +80,8 @@ function readSettings(): Settings {
     enabled: controls.enabled.checked,
     mode: mode as GuardMode,
     openingDelaySeconds: Number(controls.openingDelay.value),
+    sessionDurationMinutes: Number(controls.sessionDuration.value),
+    dailyUsageLimitMinutes: Number(controls.dailyUsageLimit.value),
     unlockDelaySeconds: Number(controls.unlockDelay.value),
     batchSize: Number(controls.batchSize.value),
     unlockBatchSize: Number(controls.unlockBatchSize.value),
@@ -98,7 +104,8 @@ function readSettings(): Settings {
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   await saveSettings(readSettings());
-  status.textContent = "Guardado en este navegador.";
+  status.textContent =
+    "Guardado. Si hoy ya usaste una red, su nuevo techo se aplica mañana.";
   window.setTimeout(() => {
     status.textContent = "";
   }, 2400);
@@ -108,7 +115,7 @@ requiredElement<HTMLButtonElement>("#reset-day").addEventListener(
   "click",
   async () => {
     await resetDailyState();
-    status.textContent = "El contador de hoy vuelve a cero.";
+    status.textContent = "El contador de publicaciones vuelve a cero.";
   },
 );
 

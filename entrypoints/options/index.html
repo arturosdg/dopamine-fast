@@ -32,6 +32,45 @@
         <section class="panel">
           <div class="section-number">01</div>
           <div class="section-heading">
+            <h2>Tiempo consciente</h2>
+            <p>
+              Elige una intención por sesión y un techo diario que no se puede
+              desbloquear.
+            </p>
+          </div>
+
+          <div class="number-grid number-grid--two">
+            <label class="number-field">
+              <span>Sesión sugerida</span>
+              <input
+                id="session-duration"
+                name="sessionDurationMinutes"
+                type="number"
+                min="1"
+                max="60"
+                step="1"
+              />
+              <small>minutos, ajustables al entrar</small>
+            </label>
+
+            <label class="number-field">
+              <span>Máximo diario por red</span>
+              <input
+                id="daily-usage-limit"
+                name="dailyUsageLimitMinutes"
+                type="number"
+                min="5"
+                max="240"
+                step="5"
+              />
+              <small>minutos, fijo hasta mañana</small>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-number">02</div>
+          <div class="section-heading">
             <h2>Ritmo de entrada</h2>
             <p>Introduce una pausa antes de abrir un feed.</p>
           </div>
@@ -64,7 +103,7 @@
         </section>
 
         <section class="panel">
-          <div class="section-number">02</div>
+          <div class="section-number">03</div>
           <div class="section-heading">
             <h2>Tamaño del feed</h2>
             <p>Cada lote termina de verdad. Tú decides si abres otro.</p>
@@ -113,7 +152,7 @@
         </section>
 
         <section class="panel">
-          <div class="section-number">03</div>
+          <div class="section-number">04</div>
           <div class="section-heading">
             <h2>Fricción</h2>
             <p>Cuánto cuesta elegir conscientemente otro lote.</p>
@@ -158,7 +197,7 @@
         </section>
 
         <section class="panel">
-          <div class="section-number">04</div>
+          <div class="section-number">05</div>
           <div class="section-heading">
             <h2>Redes y ruido</h2>
             <p>La detección es inicial: afinaremos selectores al probarla.</p>
@@ -177,7 +216,7 @@
           <p id="save-status" role="status" aria-live="polite"></p>
           <div>
             <button class="button button--quiet" id="reset-day" type="button">
-              Reiniciar contador de hoy
+              Reiniciar publicaciones de hoy
             </button>
             <button class="button button--primary" type="submit">
               Guardar cambios

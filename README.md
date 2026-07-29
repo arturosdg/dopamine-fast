@@ -7,6 +7,8 @@ The MVP targets Firefox for Android and supports Reddit, X/Twitter and
 Instagram. It works on top of the websites you already use:
 
 - pauses before opening a supported feed;
+- asks how long you intend to stay and keeps that countdown visible;
+- enforces a separate daily time ceiling for each network;
 - hides best-effort suggested and promoted surfaces;
 - disables media autoplay;
 - reveals posts in finite batches;
@@ -62,6 +64,8 @@ Mozilla's Firefox Android extension development workflow.
 ```text
 entrypoints/content.ts
   ├─ opening pause
+  ├─ intentional session timer
+  ├─ hard daily time ceiling
   ├─ route activation
   └─ FeedLimiter
        ├─ platform selectors
@@ -77,10 +81,15 @@ lib/
   ├─ storage.ts
   ├─ platforms.ts
   ├─ feed-limiter.ts
+  ├─ usage-session.ts
   └─ intervention-ui.ts
 ```
 
-All preferences and daily counters use browser extension local storage.
+All preferences and daily counters use browser extension local storage. Usage
+time advances only while the supported feed tab is visible. The planned
+session can be renewed deliberately; the per-network daily ceiling has no
+in-page override or reset. Changes to that ceiling take effect on the next
+local calendar day.
 
 ## Releases and dependency updates
 

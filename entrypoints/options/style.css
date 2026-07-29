@@ -311,6 +311,10 @@ input {
     grid-template-columns: repeat(3, 1fr);
   }
 
+  .number-grid--two {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .number-field {
     grid-template-columns: 1fr;
   }

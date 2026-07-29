@@ -15,12 +15,30 @@ Keep the useful parts of social networks while giving every feed a real end.
 
 1. The user opens a supported social-network page.
 2. A configurable opening pause interrupts automatic entry.
-3. Dopamine Fast removes promoted and suggested content.
-4. The first 20 top-level post elements remain visible.
-5. The native feed is covered by an end-of-batch barrier after the twentieth
+3. The user chooses how many minutes the session should last.
+4. A floating countdown remains visible while the supported feed is active.
+5. Dopamine Fast removes promoted and suggested content.
+6. The first 20 top-level post elements remain visible.
+7. The native feed is covered by an end-of-batch barrier after the twentieth
    post.
-6. The user can leave or deliberately unlock 10 additional posts.
-7. A daily hard limit stops further unlocks.
+8. The user can leave or deliberately unlock 10 additional posts.
+9. Daily hard limits for both time and posts stop further use.
+
+## Time budgets
+
+- Before entry, the user selects an intentional session duration.
+- The configured default is 10 minutes and can be adjusted from 1 to 60
+  minutes at entry.
+- A compact floating counter shows the planned session time and the remaining
+  daily time for the current network.
+- Time advances only while the tab is visible.
+- When planned time ends, the user can leave or deliberately plan another
+  block.
+- A separate daily limit applies to each supported network. It persists across
+  reloads and sessions, resets on the next local calendar day and has no
+  in-page unlock.
+- The effective ceiling is fixed for the day. Configuration changes apply on
+  the next local calendar day, and the settings page cannot reset elapsed time.
 
 ## Unlock flow
 
@@ -80,6 +98,7 @@ The answers are stored only as aggregate local counts and are never transmitted.
 ## Privacy and permissions
 
 - Local storage only.
+- Time counters store elapsed seconds per network, never browsing content.
 - No backend or analytics.
 - No cookie permission.
 - Host access limited to supported domains.

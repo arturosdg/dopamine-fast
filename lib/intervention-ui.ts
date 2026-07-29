@@ -8,6 +8,25 @@ export interface EndOfBatchOptions {
   onUnlock(): Promise<number>;
 }
 
+export interface OpeningOptions {
+  platformLabel: string;
+  delaySeconds: number;
+  defaultSessionMinutes: number;
+  availableSeconds: number;
+}
+
+export interface UsageTimerOptions {
+  platformLabel: string;
+  plannedSeconds: number;
+  availableSeconds: number;
+}
+
+export interface SessionEndedOptions {
+  platformLabel: string;
+  defaultSessionMinutes: number;
+  availableSeconds: number;
+}
+
 const intentions = [
   ["specific", "Busco algo concreto"],
   ["reply", "Quiero responder o interactuar"],
@@ -17,47 +36,97 @@ const intentions = [
 
 export class InterventionUi {
   private readonly root: HTMLElement;
+  private readonly overlay: HTMLElement;
+  private readonly timer: HTMLElement;
   private previousHtmlOverflow = "";
   private previousBodyOverflow = "";
   private pageLocked = false;
+  private cancelPendingInteraction?: () => void;
 
   constructor(root: HTMLElement) {
     this.root = root;
+    this.overlay = document.createElement("div");
+    this.overlay.className = "df-overlay-slot";
+    this.timer = document.createElement("div");
+    this.timer.className = "df-timer-slot";
+    this.root.replaceChildren(this.overlay, this.timer);
   }
 
   hide(): void {
-    this.root.replaceChildren();
-    this.root.dataset.visible = "false";
+    const cancelPendingInteraction = this.cancelPendingInteraction;
+    this.cancelPendingInteraction = undefined;
+    cancelPendingInteraction?.();
+    this.overlay.replaceChildren();
     this.unlockPage();
   }
 
-  async showOpening(
-    platformLabel: string,
-    delaySeconds: number,
-  ): Promise<void> {
-    if (delaySeconds <= 0) return;
+  hideAll(): void {
+    this.hide();
+    this.hideUsageTimer();
+  }
 
+  showOpening(options: OpeningOptions): Promise<number> {
     this.lockPage();
-    this.root.dataset.visible = "true";
-    this.root.innerHTML = `
+    const maximumMinutes = Math.max(
+      1,
+      Math.min(60, Math.ceil(options.availableSeconds / 60)),
+    );
+    const defaultMinutes = Math.min(
+      options.defaultSessionMinutes,
+      maximumMinutes,
+    );
+    const defaultSessionLabel =
+      options.availableSeconds < 60 ? "<1 min" : `${defaultMinutes} min`;
+    this.overlay.innerHTML = `
       <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-opening-title">
         <article class="df-card df-card--opening">
           <p class="df-kicker">Una pausa antes de entrar</p>
-          <div class="df-countdown" aria-live="polite">${delaySeconds}</div>
-          <h1 id="df-opening-title">¿A qué vienes a ${platformLabel}?</h1>
-          <p class="df-copy">No tienes que responder. Solo deja que pase el impulso automático.</p>
+          ${
+            options.delaySeconds > 0
+              ? `<div class="df-countdown" aria-live="polite">${options.delaySeconds}</div>`
+              : `<div class="df-pause-mark df-pause-mark--centered" aria-hidden="true"></div>`
+          }
+          <h1 id="df-opening-title">¿Cuánto tiempo quieres dedicar a ${options.platformLabel}?</h1>
+          <p class="df-copy">
+            Elige ahora una sesión concreta. El contador seguirá visible mientras navegas.
+          </p>
+          <label class="df-time-choice">
+            <span>Esta sesión</span>
+            <output for="df-session-minutes">${defaultSessionLabel}</output>
+            <input
+              id="df-session-minutes"
+              type="range"
+              min="1"
+              max="${maximumMinutes}"
+              value="${defaultMinutes}"
+              step="1"
+              ${options.availableSeconds < 60 ? "disabled" : ""}
+            />
+          </label>
+          <p class="df-hard-limit-note">
+            Quedan <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong>
+            del límite diario de esta red.
+          </p>
           <div class="df-actions">
             <button class="df-button df-button--quiet" data-action="leave">Salir</button>
             <button class="df-button df-button--primary" data-action="continue" disabled>
-              Continuar en ${delaySeconds}s
+              ${
+                options.delaySeconds > 0
+                  ? `Continuar en ${options.delaySeconds}s`
+                  : `Entrar ${defaultSessionLabel}`
+              }
             </button>
           </div>
-          <button class="df-settings-link" data-action="settings">Ajustar esta pausa</button>
+          <button class="df-settings-link" data-action="settings">Ajustar tiempos y límites</button>
         </article>
       </section>
     `;
 
-    const countdown = this.requiredElement<HTMLElement>(".df-countdown");
+    const countdown = this.overlay.querySelector<HTMLElement>(".df-countdown");
+    const sessionInput =
+      this.requiredElement<HTMLInputElement>("#df-session-minutes");
+    const sessionOutput =
+      this.requiredElement<HTMLOutputElement>(".df-time-choice output");
     const continueButton =
       this.requiredElement<HTMLButtonElement>('[data-action="continue"]');
     const leaveButton =
@@ -70,32 +139,60 @@ export class InterventionUi {
       browser.runtime.openOptionsPage(),
     );
 
-    await new Promise<void>((resolve) => {
-      let remaining = delaySeconds;
-      const interval = window.setInterval(() => {
-        remaining -= 1;
-        countdown.textContent = String(Math.max(0, remaining));
-        continueButton.textContent =
-          remaining > 0 ? `Continuar en ${remaining}s` : "Entrar con intención";
+    sessionInput.addEventListener("input", () => {
+      const label =
+        options.availableSeconds < 60 ? "<1 min" : `${sessionInput.value} min`;
+      sessionOutput.value = label;
+      if (!continueButton.disabled) {
+        continueButton.textContent = `Entrar ${label}`;
+      }
+    });
 
-        if (remaining <= 0) {
-          window.clearInterval(interval);
-          continueButton.disabled = false;
-        }
-      }, 1000);
+    return new Promise<number>((resolve) => {
+      let remaining = options.delaySeconds;
+      let interval: number | undefined;
+      this.cancelPendingInteraction = () => {
+        if (interval !== undefined) window.clearInterval(interval);
+        resolve(0);
+      };
+      if (remaining <= 0) {
+        continueButton.disabled = false;
+      } else {
+        interval = window.setInterval(() => {
+          remaining -= 1;
+          if (countdown) countdown.textContent = String(Math.max(0, remaining));
+          continueButton.textContent =
+            remaining > 0
+              ? `Continuar en ${remaining}s`
+              : `Entrar ${
+                  options.availableSeconds < 60
+                    ? "<1 min"
+                    : `${sessionInput.value} min`
+                }`;
+
+          if (remaining <= 0) {
+            if (interval !== undefined) window.clearInterval(interval);
+            continueButton.disabled = false;
+          }
+        }, 1000);
+      }
 
       continueButton.addEventListener("click", () => {
-        window.clearInterval(interval);
+        if (interval !== undefined) window.clearInterval(interval);
+        const selectedSeconds = Math.min(
+          Number(sessionInput.value) * 60,
+          options.availableSeconds,
+        );
+        this.cancelPendingInteraction = undefined;
         this.hide();
-        resolve();
+        resolve(selectedSeconds);
       });
     });
   }
 
   showEndOfBatch(options: EndOfBatchOptions): void {
     this.lockPage();
-    this.root.dataset.visible = "true";
-    this.root.innerHTML = `
+    this.overlay.innerHTML = `
       <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-end-title">
         <article class="df-card">
           <div class="df-rule"></div>
@@ -123,9 +220,152 @@ export class InterventionUi {
       .addEventListener("click", () => history.back());
     this.requiredElement<HTMLButtonElement>('[data-action="settings"]')
       .addEventListener("click", () => browser.runtime.openOptionsPage());
-    this.root
+    this.overlay
       .querySelector<HTMLButtonElement>('[data-action="unlock"]')
       ?.addEventListener("click", () => this.showIntentionStep(options));
+  }
+
+  showSessionEnded(options: SessionEndedOptions): Promise<number> {
+    this.lockPage();
+    const maximumMinutes = Math.max(
+      1,
+      Math.min(60, Math.ceil(options.availableSeconds / 60)),
+    );
+    const defaultMinutes = Math.min(
+      options.defaultSessionMinutes,
+      maximumMinutes,
+    );
+    const defaultSessionLabel =
+      options.availableSeconds < 60 ? "<1 min" : `${defaultMinutes} min`;
+    this.overlay.innerHTML = `
+      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-session-end-title">
+        <article class="df-card">
+          <div class="df-rule"></div>
+          <p class="df-kicker">Tiempo elegido completado</p>
+          <h1 id="df-session-end-title">Tu sesión ya terminó.</h1>
+          <p class="df-copy">
+            Elegiste parar aquí. Si todavía tienes un motivo concreto, puedes planear otro bloque.
+          </p>
+          <label class="df-time-choice">
+            <span>Nuevo bloque</span>
+            <output for="df-extra-minutes">${defaultSessionLabel}</output>
+            <input
+              id="df-extra-minutes"
+              type="range"
+              min="1"
+              max="${maximumMinutes}"
+              value="${defaultMinutes}"
+              step="1"
+              ${options.availableSeconds < 60 ? "disabled" : ""}
+            />
+          </label>
+          <p class="df-hard-limit-note">
+            El techo diario no se puede ampliar:
+            <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong> disponibles.
+          </p>
+          <div class="df-actions">
+            <button class="df-button df-button--primary" data-action="leave">Salir de ${options.platformLabel}</button>
+            <button class="df-button df-button--quiet" data-action="extend">Planear otro bloque</button>
+          </div>
+          <button class="df-settings-link" data-action="settings">Cambiar el valor predeterminado</button>
+        </article>
+      </section>
+    `;
+
+    const input = this.requiredElement<HTMLInputElement>("#df-extra-minutes");
+    const output =
+      this.requiredElement<HTMLOutputElement>(".df-time-choice output");
+    input.addEventListener("input", () => {
+      output.value =
+        options.availableSeconds < 60 ? "<1 min" : `${input.value} min`;
+    });
+    this.requiredElement<HTMLButtonElement>('[data-action="leave"]')
+      .addEventListener("click", () => history.back());
+    this.requiredElement<HTMLButtonElement>('[data-action="settings"]')
+      .addEventListener("click", () => browser.runtime.openOptionsPage());
+
+    return new Promise<number>((resolve) => {
+      this.cancelPendingInteraction = () => resolve(0);
+      this.requiredElement<HTMLButtonElement>('[data-action="extend"]')
+        .addEventListener("click", () => {
+          const selectedSeconds = Math.min(
+            Number(input.value) * 60,
+            options.availableSeconds,
+          );
+          this.cancelPendingInteraction = undefined;
+          this.hide();
+          resolve(selectedSeconds);
+        });
+    });
+  }
+
+  showHardLimitReached(platformLabel: string): void {
+    const cancelPendingInteraction = this.cancelPendingInteraction;
+    this.cancelPendingInteraction = undefined;
+    cancelPendingInteraction?.();
+    this.lockPage();
+    this.overlay.innerHTML = `
+      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-hard-limit-title">
+        <article class="df-card">
+          <div class="df-lock-mark" aria-hidden="true"></div>
+          <p class="df-kicker">Límite diario completado</p>
+          <h1 id="df-hard-limit-title">${platformLabel} termina aquí por hoy.</h1>
+          <p class="df-copy">
+            Este límite no tiene desbloqueo. Volverá a estar disponible mañana.
+          </p>
+          <div class="df-actions df-actions--stack">
+            <button class="df-button df-button--primary" data-action="leave">Salir de ${platformLabel}</button>
+          </div>
+          <button class="df-settings-link" data-action="settings">Ver configuración</button>
+        </article>
+      </section>
+    `;
+
+    this.requiredElement<HTMLButtonElement>('[data-action="leave"]')
+      .addEventListener("click", () => history.back());
+    this.requiredElement<HTMLButtonElement>('[data-action="settings"]')
+      .addEventListener("click", () => browser.runtime.openOptionsPage());
+  }
+
+  showUsageTimer(options: UsageTimerOptions): void {
+    if (this.timer.childElementCount === 0) {
+      this.timer.innerHTML = `
+        <button class="df-usage-timer" type="button" title="Abrir los ajustes de Dopamine Fast">
+          <span class="df-usage-timer__pulse" aria-hidden="true"></span>
+          <span class="df-usage-timer__copy">
+            <strong data-timer="planned"></strong>
+            <small><span data-timer="platform"></span> · <span data-timer="daily"></span> hoy</small>
+          </span>
+        </button>
+      `;
+      this.timer
+        .querySelector<HTMLButtonElement>(".df-usage-timer")
+        ?.addEventListener("click", () => browser.runtime.openOptionsPage());
+    }
+
+    const timer = this.timer.querySelector<HTMLElement>(".df-usage-timer");
+    const planned =
+      this.timer.querySelector<HTMLElement>('[data-timer="planned"]');
+    const platform =
+      this.timer.querySelector<HTMLElement>('[data-timer="platform"]');
+    const daily = this.timer.querySelector<HTMLElement>('[data-timer="daily"]');
+    if (!timer || !planned || !platform || !daily) return;
+
+    planned.textContent = this.formatClock(options.plannedSeconds);
+    platform.textContent = options.platformLabel;
+    daily.textContent = this.formatFriendlyDuration(options.availableSeconds);
+    timer.dataset.urgent =
+      options.plannedSeconds <= 60 || options.availableSeconds <= 60
+        ? "true"
+        : "false";
+    timer.setAttribute(
+      "aria-label",
+      `${this.formatClock(options.plannedSeconds)} de sesión; ${this.formatFriendlyDuration(options.availableSeconds)} disponibles hoy en ${options.platformLabel}`,
+    );
+  }
+
+  hideUsageTimer(): void {
+    this.timer.replaceChildren();
   }
 
   private showIntentionStep(options: EndOfBatchOptions): void {
@@ -250,9 +490,25 @@ export class InterventionUi {
   }
 
   private requiredElement<T extends Element>(selector: string): T {
-    const element = this.root.querySelector<T>(selector);
+    const element = this.overlay.querySelector<T>(selector);
     if (!element) throw new Error(`Missing intervention UI element: ${selector}`);
     return element;
+  }
+
+  private formatClock(totalSeconds: number): string {
+    const safeSeconds = Math.max(0, Math.ceil(totalSeconds));
+    const minutes = Math.floor(safeSeconds / 60);
+    const seconds = safeSeconds % 60;
+    return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  private formatFriendlyDuration(totalSeconds: number): string {
+    const safeSeconds = Math.max(0, Math.ceil(totalSeconds));
+    if (safeSeconds < 60) return "<1 min";
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.ceil((safeSeconds % 3600) / 60);
+    if (hours === 0) return `${minutes} min`;
+    return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
   }
 
   private lockPage(): void {
