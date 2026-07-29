@@ -28,10 +28,10 @@ export interface SessionEndedOptions {
 }
 
 const intentions = [
-  ["specific", "Busco algo concreto"],
-  ["reply", "Quiero responder o interactuar"],
-  ["deliberate", "Quiero seguir leyendo"],
-  ["automatic", "Estoy bajando por inercia"],
+  ["specific", "I'm looking for something specific"],
+  ["reply", "I want to reply or interact"],
+  ["deliberate", "I want to keep reading"],
+  ["automatic", "I'm scrolling on autopilot"],
 ] as const;
 
 export class InterventionUi {
@@ -80,18 +80,18 @@ export class InterventionUi {
     this.overlay.innerHTML = `
       <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-opening-title">
         <article class="df-card df-card--opening">
-          <p class="df-kicker">Una pausa antes de entrar</p>
+          <p class="df-kicker">A pause before entering</p>
           ${
             options.delaySeconds > 0
               ? `<div class="df-countdown" aria-live="polite">${options.delaySeconds}</div>`
               : `<div class="df-pause-mark df-pause-mark--centered" aria-hidden="true"></div>`
           }
-          <h1 id="df-opening-title">¿Cuánto tiempo quieres dedicar a ${options.platformLabel}?</h1>
+          <h1 id="df-opening-title">How much time do you want to spend on ${options.platformLabel}?</h1>
           <p class="df-copy">
-            Elige ahora una sesión concreta. El contador seguirá visible mientras navegas.
+            Choose a defined session now. The timer will remain visible as you browse.
           </p>
           <label class="df-time-choice">
-            <span>Esta sesión</span>
+            <span>This session</span>
             <output for="df-session-minutes">${defaultSessionLabel}</output>
             <input
               id="df-session-minutes"
@@ -104,20 +104,20 @@ export class InterventionUi {
             />
           </label>
           <p class="df-hard-limit-note">
-            Quedan <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong>
-            del límite diario de esta red.
+            You have <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong>
+            left in today's limit for this network.
           </p>
           <div class="df-actions">
-            <button class="df-button df-button--quiet" data-action="leave">Salir</button>
+            <button class="df-button df-button--quiet" data-action="leave">Leave</button>
             <button class="df-button df-button--primary" data-action="continue" disabled>
               ${
                 options.delaySeconds > 0
-                  ? `Continuar en ${options.delaySeconds}s`
-                  : `Entrar ${defaultSessionLabel}`
+                  ? `Continue in ${options.delaySeconds}s`
+                  : `Start ${defaultSessionLabel} session`
               }
             </button>
           </div>
-          <button class="df-settings-link" data-action="settings">Ajustar tiempos y límites</button>
+          <button class="df-settings-link" data-action="settings">Adjust time and limits</button>
         </article>
       </section>
     `;
@@ -144,7 +144,7 @@ export class InterventionUi {
         options.availableSeconds < 60 ? "<1 min" : `${sessionInput.value} min`;
       sessionOutput.value = label;
       if (!continueButton.disabled) {
-        continueButton.textContent = `Entrar ${label}`;
+        continueButton.textContent = `Start ${label} session`;
       }
     });
 
@@ -163,12 +163,12 @@ export class InterventionUi {
           if (countdown) countdown.textContent = String(Math.max(0, remaining));
           continueButton.textContent =
             remaining > 0
-              ? `Continuar en ${remaining}s`
-              : `Entrar ${
+              ? `Continue in ${remaining}s`
+              : `Start ${
                   options.availableSeconds < 60
                     ? "<1 min"
                     : `${sessionInput.value} min`
-                }`;
+                } session`;
 
           if (remaining <= 0) {
             if (interval !== undefined) window.clearInterval(interval);
@@ -196,22 +196,22 @@ export class InterventionUi {
       <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-end-title">
         <article class="df-card">
           <div class="df-rule"></div>
-          <p class="df-kicker">Fin del lote</p>
-          <h1 id="df-end-title">Ya has terminado por ahora.</h1>
+          <p class="df-kicker">End of batch</p>
+          <h1 id="df-end-title">That's enough for now.</h1>
           <p class="df-copy">
             ${options.remainingToday > 0
-              ? `Quedan ${options.remainingToday} publicaciones en tu límite de hoy.`
-              : "Has alcanzado tu límite diario."}
+              ? `You have ${options.remainingToday} posts left in today's limit.`
+              : "You've reached today's limit."}
           </p>
           <div class="df-actions df-actions--stack">
-            <button class="df-button df-button--primary" data-action="leave">Salir de ${options.platformLabel}</button>
+            <button class="df-button df-button--primary" data-action="leave">Leave ${options.platformLabel}</button>
             ${
               options.canUnlock
-                ? `<button class="df-button df-button--quiet" data-action="unlock">Desbloquear ${options.unlockSize} más</button>`
+                ? `<button class="df-button df-button--quiet" data-action="unlock">Unlock ${options.unlockSize} more</button>`
                 : ""
             }
           </div>
-          <button class="df-settings-link" data-action="settings">Cambiar límites</button>
+          <button class="df-settings-link" data-action="settings">Change limits</button>
         </article>
       </section>
     `;
@@ -241,13 +241,13 @@ export class InterventionUi {
       <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-session-end-title">
         <article class="df-card">
           <div class="df-rule"></div>
-          <p class="df-kicker">Tiempo elegido completado</p>
-          <h1 id="df-session-end-title">Tu sesión ya terminó.</h1>
+          <p class="df-kicker">Planned time complete</p>
+          <h1 id="df-session-end-title">Your session has ended.</h1>
           <p class="df-copy">
-            Elegiste parar aquí. Si todavía tienes un motivo concreto, puedes planear otro bloque.
+            You chose to stop here. If you still have a specific reason, you can plan another block.
           </p>
           <label class="df-time-choice">
-            <span>Nuevo bloque</span>
+            <span>New block</span>
             <output for="df-extra-minutes">${defaultSessionLabel}</output>
             <input
               id="df-extra-minutes"
@@ -260,14 +260,14 @@ export class InterventionUi {
             />
           </label>
           <p class="df-hard-limit-note">
-            El techo diario no se puede ampliar:
-            <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong> disponibles.
+            Your daily ceiling cannot be extended:
+            <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong> remaining.
           </p>
           <div class="df-actions">
-            <button class="df-button df-button--primary" data-action="leave">Salir de ${options.platformLabel}</button>
-            <button class="df-button df-button--quiet" data-action="extend">Planear otro bloque</button>
+            <button class="df-button df-button--primary" data-action="leave">Leave ${options.platformLabel}</button>
+            <button class="df-button df-button--quiet" data-action="extend">Plan another block</button>
           </div>
-          <button class="df-settings-link" data-action="settings">Cambiar el valor predeterminado</button>
+          <button class="df-settings-link" data-action="settings">Change the default</button>
         </article>
       </section>
     `;
@@ -308,15 +308,15 @@ export class InterventionUi {
       <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-hard-limit-title">
         <article class="df-card">
           <div class="df-lock-mark" aria-hidden="true"></div>
-          <p class="df-kicker">Límite diario completado</p>
-          <h1 id="df-hard-limit-title">${platformLabel} termina aquí por hoy.</h1>
+          <p class="df-kicker">Daily limit reached</p>
+          <h1 id="df-hard-limit-title">${platformLabel} ends here for today.</h1>
           <p class="df-copy">
-            Este límite no tiene desbloqueo. Volverá a estar disponible mañana.
+            This limit cannot be unlocked. It will be available again tomorrow.
           </p>
           <div class="df-actions df-actions--stack">
-            <button class="df-button df-button--primary" data-action="leave">Salir de ${platformLabel}</button>
+            <button class="df-button df-button--primary" data-action="leave">Leave ${platformLabel}</button>
           </div>
-          <button class="df-settings-link" data-action="settings">Ver configuración</button>
+          <button class="df-settings-link" data-action="settings">View settings</button>
         </article>
       </section>
     `;
@@ -330,11 +330,11 @@ export class InterventionUi {
   showUsageTimer(options: UsageTimerOptions): void {
     if (this.timer.childElementCount === 0) {
       this.timer.innerHTML = `
-        <button class="df-usage-timer" type="button" title="Abrir los ajustes de Dopamine Fast">
+        <button class="df-usage-timer" type="button" title="Open Dopamine Fast settings">
           <span class="df-usage-timer__pulse" aria-hidden="true"></span>
           <span class="df-usage-timer__copy">
             <strong data-timer="planned"></strong>
-            <small><span data-timer="platform"></span> · <span data-timer="daily"></span> hoy</small>
+            <small><span data-timer="platform"></span> · <span data-timer="daily"></span> today</small>
           </span>
         </button>
       `;
@@ -360,7 +360,7 @@ export class InterventionUi {
         : "false";
     timer.setAttribute(
       "aria-label",
-      `${this.formatClock(options.plannedSeconds)} de sesión; ${this.formatFriendlyDuration(options.availableSeconds)} disponibles hoy en ${options.platformLabel}`,
+      `${this.formatClock(options.plannedSeconds)} left in this session; ${this.formatFriendlyDuration(options.availableSeconds)} available today on ${options.platformLabel}`,
     );
   }
 
@@ -371,8 +371,8 @@ export class InterventionUi {
   private showIntentionStep(options: EndOfBatchOptions): void {
     const card = this.requiredElement<HTMLElement>(".df-card");
     card.innerHTML = `
-      <p class="df-step">Paso 1 de 2</p>
-      <h1>¿Para qué quieres continuar?</h1>
+      <p class="df-step">Step 1 of 2</p>
+      <h1>Why do you want to continue?</h1>
       <div class="df-intentions">
         ${intentions
           .map(
@@ -384,7 +384,7 @@ export class InterventionUi {
           )
           .join("")}
       </div>
-      <button class="df-settings-link" data-action="back">Volver</button>
+      <button class="df-settings-link" data-action="back">Back</button>
     `;
 
     card
@@ -399,16 +399,16 @@ export class InterventionUi {
   private showHoldStep(options: EndOfBatchOptions): void {
     const card = this.requiredElement<HTMLElement>(".df-card");
     card.innerHTML = `
-      <p class="df-step">Paso 2 de 2</p>
+      <p class="df-step">Step 2 of 2</p>
       <div class="df-pause-mark" aria-hidden="true"></div>
-      <h1>Espera un momento.</h1>
-      <p class="df-copy">Después mantén pulsado para abrir otro lote.</p>
+      <h1>Pause for a moment.</h1>
+      <p class="df-copy">Then press and hold to open another batch.</p>
       <button class="df-hold" data-action="hold" disabled style="--df-hold-progress: 0%">
-        <span>Mantén pulsado</span>
+        <span>Press and hold</span>
         <span class="df-hold__progress" aria-hidden="true"></span>
       </button>
       <p class="df-wait" aria-live="polite"></p>
-      <button class="df-settings-link" data-action="back">Volver</button>
+      <button class="df-settings-link" data-action="back">Back</button>
     `;
 
     const holdButton =
@@ -418,7 +418,7 @@ export class InterventionUi {
 
     const updateWait = () => {
       waitLabel.textContent =
-        remaining > 0 ? `Disponible en ${remaining}s` : "Cuando quieras.";
+        remaining > 0 ? `Available in ${remaining}s` : "Whenever you're ready.";
     };
     updateWait();
 
@@ -453,7 +453,7 @@ export class InterventionUi {
       if (progress >= 1) {
         completed = true;
         holdButton.disabled = true;
-        holdButton.querySelector("span")!.textContent = "Preparando…";
+        holdButton.querySelector("span")!.textContent = "Preparing…";
         const granted = await options.onUnlock();
         if (granted > 0) {
           this.hide();

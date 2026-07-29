@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dopamine Fast — Ajustes</title>
+    <title>Dopamine Fast — Settings</title>
     <script type="module" src="./main.ts"></script>
   </head>
   <body>
     <main class="settings-shell">
       <header class="hero">
-        <p class="eyebrow">Dopamine Fast / Ajustes locales</p>
-        <h1>Haz que el feed<br />tenga un final.</h1>
+        <p class="eyebrow">Dopamine Fast / Local settings</p>
+        <h1>Give your feed<br />a real ending.</h1>
         <p class="hero-copy">
-          Estos límites viven solo en tu navegador. No analizamos ni enviamos
-          el contenido que ves.
+          These limits live only in your browser. We do not analyze or send
+          the content you see.
         </p>
       </header>
 
@@ -21,8 +21,8 @@
         <section class="panel panel--status">
           <label class="master-toggle">
             <span>
-              <strong>Protección activa</strong>
-              <small>Pausa y limita los feeds compatibles.</small>
+              <strong>Protection enabled</strong>
+              <small>Pause and limit supported feeds.</small>
             </span>
             <input id="enabled" name="enabled" type="checkbox" />
             <span class="switch" aria-hidden="true"></span>
@@ -32,16 +32,16 @@
         <section class="panel">
           <div class="section-number">01</div>
           <div class="section-heading">
-            <h2>Tiempo consciente</h2>
+            <h2>Intentional time</h2>
             <p>
-              Elige una intención por sesión y un techo diario que no se puede
-              desbloquear.
+              Choose an intention for each session and a daily ceiling that
+              cannot be unlocked.
             </p>
           </div>
 
           <div class="number-grid number-grid--two">
             <label class="number-field">
-              <span>Sesión sugerida</span>
+              <span>Suggested session</span>
               <input
                 id="session-duration"
                 name="sessionDurationMinutes"
@@ -50,11 +50,11 @@
                 max="60"
                 step="1"
               />
-              <small>minutos, ajustables al entrar</small>
+              <small>minutes, adjustable when entering</small>
             </label>
 
             <label class="number-field">
-              <span>Máximo diario por red</span>
+              <span>Daily maximum per network</span>
               <input
                 id="daily-usage-limit"
                 name="dailyUsageLimitMinutes"
@@ -63,7 +63,7 @@
                 max="240"
                 step="5"
               />
-              <small>minutos, fijo hasta mañana</small>
+              <small>minutes, fixed until tomorrow</small>
             </label>
           </div>
         </section>
@@ -71,12 +71,12 @@
         <section class="panel">
           <div class="section-number">02</div>
           <div class="section-heading">
-            <h2>Ritmo de entrada</h2>
-            <p>Introduce una pausa antes de abrir un feed.</p>
+            <h2>Entry pace</h2>
+            <p>Add a pause before opening a feed.</p>
           </div>
 
           <label class="field">
-            <span>Pausa al entrar</span>
+            <span>Pause before entering</span>
             <output id="opening-delay-output" for="opening-delay"></output>
             <input
               id="opening-delay"
@@ -89,7 +89,7 @@
           </label>
 
           <label class="field">
-            <span>Espera antes de desbloquear</span>
+            <span>Wait before unlocking</span>
             <output id="unlock-delay-output" for="unlock-delay"></output>
             <input
               id="unlock-delay"
@@ -105,13 +105,13 @@
         <section class="panel">
           <div class="section-number">03</div>
           <div class="section-heading">
-            <h2>Tamaño del feed</h2>
-            <p>Cada lote termina de verdad. Tú decides si abres otro.</p>
+            <h2>Feed size</h2>
+            <p>Every batch truly ends. You decide whether to open another.</p>
           </div>
 
           <div class="number-grid">
             <label class="number-field">
-              <span>Primer lote</span>
+              <span>First batch</span>
               <input
                 id="batch-size"
                 name="batchSize"
@@ -120,11 +120,11 @@
                 max="100"
                 step="5"
               />
-              <small>publicaciones</small>
+              <small>posts</small>
             </label>
 
             <label class="number-field">
-              <span>Lotes extra</span>
+              <span>Extra batches</span>
               <input
                 id="unlock-batch-size"
                 name="unlockBatchSize"
@@ -133,11 +133,11 @@
                 max="50"
                 step="5"
               />
-              <small>publicaciones</small>
+              <small>posts</small>
             </label>
 
             <label class="number-field">
-              <span>Máximo diario</span>
+              <span>Daily maximum</span>
               <input
                 id="daily-limit"
                 name="dailyLimit"
@@ -146,7 +146,7 @@
                 max="500"
                 step="10"
               />
-              <small>entre todas las redes</small>
+              <small>across all networks</small>
             </label>
           </div>
         </section>
@@ -154,36 +154,36 @@
         <section class="panel">
           <div class="section-number">04</div>
           <div class="section-heading">
-            <h2>Fricción</h2>
-            <p>Cuánto cuesta elegir conscientemente otro lote.</p>
+            <h2>Friction</h2>
+            <p>How much effort it takes to intentionally choose another batch.</p>
           </div>
 
           <div class="mode-grid">
             <label class="mode-card">
               <input type="radio" name="mode" value="gentle" />
               <span>
-                <strong>Suave</strong>
-                <small>Lotes extra sin máximo de desbloqueos.</small>
+                <strong>Gentle</strong>
+                <small>Extra batches without an unlock limit.</small>
               </span>
             </label>
             <label class="mode-card">
               <input type="radio" name="mode" value="balanced" />
               <span>
-                <strong>Equilibrado</strong>
-                <small>Hasta dos desbloqueos por día.</small>
+                <strong>Balanced</strong>
+                <small>Up to two unlocks per day.</small>
               </span>
             </label>
             <label class="mode-card">
               <input type="radio" name="mode" value="strict" />
               <span>
-                <strong>Estricto</strong>
-                <small>El máximo diario manda.</small>
+                <strong>Strict</strong>
+                <small>The daily maximum always applies.</small>
               </span>
             </label>
           </div>
 
           <label class="field">
-            <span>Mantener pulsado</span>
+            <span>Press-and-hold time</span>
             <output id="hold-output" for="hold-seconds"></output>
             <input
               id="hold-seconds"
@@ -199,16 +199,16 @@
         <section class="panel">
           <div class="section-number">05</div>
           <div class="section-heading">
-            <h2>Redes y ruido</h2>
-            <p>La detección es inicial: afinaremos selectores al probarla.</p>
+            <h2>Networks and noise</h2>
+            <p>Detection is an early version; selectors will evolve with testing.</p>
           </div>
 
           <div class="toggle-list">
             <label><span>Reddit</span><input id="site-reddit" type="checkbox" /></label>
             <label><span>X / Twitter</span><input id="site-x" type="checkbox" /></label>
             <label><span>Instagram</span><input id="site-instagram" type="checkbox" /></label>
-            <label><span>Ocultar sugerencias</span><input id="block-suggested" type="checkbox" /></label>
-            <label><span>Detener reproducción automática</span><input id="disable-autoplay" type="checkbox" /></label>
+            <label><span>Hide suggestions</span><input id="block-suggested" type="checkbox" /></label>
+            <label><span>Stop autoplay</span><input id="disable-autoplay" type="checkbox" /></label>
           </div>
         </section>
 
@@ -216,10 +216,10 @@
           <p id="save-status" role="status" aria-live="polite"></p>
           <div>
             <button class="button button--quiet" id="reset-day" type="button">
-              Reiniciar publicaciones de hoy
+              Reset today's post count
             </button>
             <button class="button button--primary" type="submit">
-              Guardar cambios
+              Save changes
             </button>
           </div>
         </footer>

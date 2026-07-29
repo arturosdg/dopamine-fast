@@ -8,6 +8,7 @@ Keep the useful parts of social networks while giving every feed a real end.
 
 - Firefox for Android
 - Reddit, X and Instagram mobile websites
+- English-language application interface
 - Authenticated browser sessions, including private content the user is already
   authorized to see
 
