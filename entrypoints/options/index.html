@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dopamine Fast — Ajustes</title>
+    <script type="module" src="./main.ts"></script>
+  </head>
+  <body>
+    <main class="settings-shell">
+      <header class="hero">
+        <p class="eyebrow">Dopamine Fast / Ajustes locales</p>
+        <h1>Haz que el feed<br />tenga un final.</h1>
+        <p class="hero-copy">
+          Estos límites viven solo en tu navegador. No analizamos ni enviamos
+          el contenido que ves.
+        </p>
+      </header>
+
+      <form id="settings-form">
+        <section class="panel panel--status">
+          <label class="master-toggle">
+            <span>
+              <strong>Protección activa</strong>
+              <small>Pausa y limita los feeds compatibles.</small>
+            </span>
+            <input id="enabled" name="enabled" type="checkbox" />
+            <span class="switch" aria-hidden="true"></span>
+          </label>
+        </section>
+
+        <section class="panel">
+          <div class="section-number">01</div>
+          <div class="section-heading">
+            <h2>Ritmo de entrada</h2>
+            <p>Introduce una pausa antes de abrir un feed.</p>
+          </div>
+
+          <label class="field">
+            <span>Pausa al entrar</span>
+            <output id="opening-delay-output" for="opening-delay"></output>
+            <input
+              id="opening-delay"
+              name="openingDelaySeconds"
+              type="range"
+              min="0"
+              max="30"
+              step="1"
+            />
+          </label>
+
+          <label class="field">
+            <span>Espera antes de desbloquear</span>
+            <output id="unlock-delay-output" for="unlock-delay"></output>
+            <input
+              id="unlock-delay"
+              name="unlockDelaySeconds"
+              type="range"
+              min="0"
+              max="30"
+              step="1"
+            />
+          </label>
+        </section>
+
+        <section class="panel">
+          <div class="section-number">02</div>
+          <div class="section-heading">
+            <h2>Tamaño del feed</h2>
+            <p>Cada lote termina de verdad. Tú decides si abres otro.</p>
+          </div>
+
+          <div class="number-grid">
+            <label class="number-field">
+              <span>Primer lote</span>
+              <input
+                id="batch-size"
+                name="batchSize"
+                type="number"
+                min="5"
+                max="100"
+                step="5"
+              />
+              <small>publicaciones</small>
+            </label>
+
+            <label class="number-field">
+              <span>Lotes extra</span>
+              <input
+                id="unlock-batch-size"
+                name="unlockBatchSize"
+                type="number"
+                min="5"
+                max="50"
+                step="5"
+              />
+              <small>publicaciones</small>
+            </label>
+
+            <label class="number-field">
+              <span>Máximo diario</span>
+              <input
+                id="daily-limit"
+                name="dailyLimit"
+                type="number"
+                min="10"
+                max="500"
+                step="10"
+              />
+              <small>entre todas las redes</small>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-number">03</div>
+          <div class="section-heading">
+            <h2>Fricción</h2>
+            <p>Cuánto cuesta elegir conscientemente otro lote.</p>
+          </div>
+
+          <div class="mode-grid">
+            <label class="mode-card">
+              <input type="radio" name="mode" value="gentle" />
+              <span>
+                <strong>Suave</strong>
+                <small>Lotes extra sin máximo de desbloqueos.</small>
+              </span>
+            </label>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="balanced" />
+              <span>
+                <strong>Equilibrado</strong>
+                <small>Hasta dos desbloqueos por día.</small>
+              </span>
+            </label>
+            <label class="mode-card">
+              <input type="radio" name="mode" value="strict" />
+              <span>
+                <strong>Estricto</strong>
+                <small>El máximo diario manda.</small>
+              </span>
+            </label>
+          </div>
+
+          <label class="field">
+            <span>Mantener pulsado</span>
+            <output id="hold-output" for="hold-seconds"></output>
+            <input
+              id="hold-seconds"
+              name="holdSeconds"
+              type="range"
+              min="1"
+              max="5"
+              step="1"
+            />
+          </label>
+        </section>
+
+        <section class="panel">
+          <div class="section-number">04</div>
+          <div class="section-heading">
+            <h2>Redes y ruido</h2>
+            <p>La detección es inicial: afinaremos selectores al probarla.</p>
+          </div>
+
+          <div class="toggle-list">
+            <label><span>Reddit</span><input id="site-reddit" type="checkbox" /></label>
+            <label><span>X / Twitter</span><input id="site-x" type="checkbox" /></label>
+            <label><span>Instagram</span><input id="site-instagram" type="checkbox" /></label>
+            <label><span>Ocultar sugerencias</span><input id="block-suggested" type="checkbox" /></label>
+            <label><span>Detener reproducción automática</span><input id="disable-autoplay" type="checkbox" /></label>
+          </div>
+        </section>
+
+        <footer class="form-footer">
+          <p id="save-status" role="status" aria-live="polite"></p>
+          <div>
+            <button class="button button--quiet" id="reset-day" type="button">
+              Reiniciar contador de hoy
+            </button>
+            <button class="button button--primary" type="submit">
+              Guardar cambios
+            </button>
+          </div>
+        </footer>
+      </form>
+    </main>
+  </body>
+</html>
