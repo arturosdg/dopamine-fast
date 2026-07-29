@@ -105,7 +105,7 @@ form.addEventListener("submit", async (event) => {
   event.preventDefault();
   await saveSettings(readSettings());
   status.textContent =
-    "Guardado. Si hoy ya usaste una red, su nuevo techo se aplica mañana.";
+    "Saved. If you already used a network today, its new ceiling applies tomorrow.";
   window.setTimeout(() => {
     status.textContent = "";
   }, 2400);
@@ -115,7 +115,7 @@ requiredElement<HTMLButtonElement>("#reset-day").addEventListener(
   "click",
   async () => {
     await resetDailyState();
-    status.textContent = "El contador de publicaciones vuelve a cero.";
+    status.textContent = "Today's post count has been reset.";
   },
 );
 

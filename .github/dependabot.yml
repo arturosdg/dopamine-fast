@@ -36,8 +36,10 @@ updates:
     versioning-strategy: "increase-if-necessary"
     open-pull-requests-limit: 10
     rebase-strategy: "auto"
+    # Conventional Commits: deps(deps): ... or deps(deps-dev): ...
     commit-message:
       prefix: "deps"
+      prefix-development: "deps"
       include: "scope"
     labels:
       - "dependencies"
@@ -59,6 +61,7 @@ updates:
         applies-to: "version-updates"
         patterns:
           - "*"
+    # Conventional Commits: deps(deps): ...
     commit-message:
       prefix: "deps"
       include: "scope"
