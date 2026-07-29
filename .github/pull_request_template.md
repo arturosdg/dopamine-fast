@@ -18,6 +18,8 @@
 ## Contribution checklist
 
 - [ ] The PR has one clear purpose and its title follows Conventional Commits.
+- [ ] The PR targets `main`; dependencies on other open PRs and their merge
+      order are documented above.
 - [ ] I added or updated tests for behavior that can be tested automatically.
 - [ ] I documented user-facing settings or behavior changes.
 - [ ] I did not add analytics, remote data collection or new permissions without

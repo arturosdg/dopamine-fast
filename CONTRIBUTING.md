@@ -49,6 +49,21 @@ The pull request template includes the expected validation, privacy and
 documentation checks. Items that do not apply can be left unchecked with a
 short explanation.
 
+## Pull request targets and dependencies
+
+All pull requests target `main`, the repository's integration and release
+branch. Do not use another feature branch as the PR base.
+
+When one change depends on another open PR, build its branch on top of the
+predecessor but still target `main`. Document the dependency and merge order in
+the PR body. The child PR will temporarily show a cumulative diff. After the
+predecessor is merged, rebase the child branch onto the latest `main`, push it
+with `--force-with-lease` and verify that its focused diff and CI checks are
+correct before merging.
+
+Pull requests are opened as drafts by automation. The maintainer decides when
+they are ready and performs every merge.
+
 ## Releases
 
 Release Please maintains the release pull request, `CHANGELOG.md`,
