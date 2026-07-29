@@ -1,77 +1,128 @@
 # Dopamine Fast
 
-Dopamine Fast is an open-source browser extension that keeps social websites
-usable while giving their feeds a real end.
+Dopamine Fast is a local-first browser extension that makes social feeds finite
+and intentional. It adds a pause before opening a feed, asks you to choose how
+long you want to stay, and gives every scrolling session a visible ending.
 
-The MVP targets Firefox for Android and supports Reddit, X/Twitter and
-Instagram. It works on top of the websites you already use:
+The extension works on top of the authenticated websites you already use. It
+does not build a new feed, copy posts, use platform APIs, inspect private
+messages, or send browsing data to a backend.
 
-- pauses before opening a supported feed;
-- asks how long you intend to stay and keeps that countdown visible;
-- enforces a separate daily time ceiling for each network;
-- hides best-effort suggested and promoted surfaces;
-- disables media autoplay;
-- reveals posts in finite batches;
-- adds a deliberate unlock flow before showing another batch;
-- enforces a local daily allowance.
+> **Project status:** early prototype. Reddit, X/Twitter, and Instagram are
+> supported, but their interfaces change frequently and the selectors still
+> require regular testing on mobile and desktop.
 
-It does not copy posts, inspect private messages, use platform APIs or send
-browsing data to a backend.
+![Dopamine Fast settings page](docs/screenshots/settings.png)
 
-## Status
+## Why it exists
 
-This is an early, selector-based prototype. Social websites change frequently,
-so platform selectors will need to be tested and adjusted against their current
-mobile interfaces.
+Social networks are useful, but their default experience is designed around an
+endless, algorithmic feed. Dopamine Fast keeps the useful parts of those sites
+available while adding deliberate friction around habitual scrolling:
 
-## Development
+1. A configurable countdown interrupts automatic feed opening.
+2. You choose an intended session length before entering.
+3. A floating timer keeps that decision visible while you browse.
+4. Posts are revealed in finite batches instead of an endless stream.
+5. Reaching the end requires a deliberate multi-step unlock.
+6. A per-network daily time ceiling cannot be extended from the page.
+
+Daily post allowances are shared across supported networks. Daily time
+ceilings are tracked independently for Reddit, X/Twitter, and Instagram.
+Preferences and aggregate counters stay in browser extension local storage.
+
+## Product tour
+
+The opening pause asks for a concrete time intention before the feed becomes
+available. The batch boundary then creates a real stopping point instead of
+loading more posts automatically.
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/screenshots/opening-pause.png" alt="Opening pause on a mobile feed" />
+    </td>
+    <td width="50%">
+      <img src="docs/screenshots/end-of-batch.png" alt="End-of-batch intervention on a mobile feed" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center"><strong>Choose the session before entering</strong></td>
+    <td align="center"><strong>Stop or deliberately unlock another batch</strong></td>
+  </tr>
+</table>
+
+## Features
+
+- Configurable delay before entering a supported feed.
+- Intentional session duration with a persistent floating countdown.
+- Non-extendable daily time ceiling for each network.
+- Finite initial and additional post batches.
+- Optional delay and press-and-hold step before revealing another batch.
+- Gentle, balanced, and strict friction modes.
+- Best-effort suppression of suggested and promoted surfaces.
+- Media autoplay prevention.
+- Per-network enable or disable controls.
+- Firefox and Chromium production builds.
+
+## Supported networks
+
+| Network | Feed limiting | Suggested-content suppression | Daily time ceiling |
+| --- | --- | --- | --- |
+| Reddit | Yes | Best effort | Independent |
+| X / Twitter | Yes | Best effort | Independent |
+| Instagram | Yes | Best effort | Independent |
+
+The limiter applies only to recognized feed routes. Direct profiles, messages,
+settings, and individual post pages are intended to remain available. Platform
+DOM changes may temporarily reduce detection accuracy; when confidence is low,
+the extension is designed to avoid hiding broad page containers.
+
+## Install for development
 
 Requirements:
 
 - Node.js 22 or newer
 - npm
-- Firefox
+- Firefox or a Chromium-based browser
 
-Install dependencies:
-
-```sh
-npm install
-```
-
-Start Firefox development mode:
+Install dependencies and start a development build:
 
 ```sh
-npm run dev
+npm ci
+npm run dev          # Firefox
+npm run dev:chrome   # Chromium
 ```
 
-Run validation:
+Build both production packages:
 
 ```sh
-npm run validate
-npm run zip
+npm run build
+npm run build:chrome
 ```
 
-The production Firefox build is written to `.output/firefox-mv2`.
+WXT writes the unpacked extensions to `.output/firefox-mv2` and
+`.output/chrome-mv3`. Run `npm run zip` to create distributable archives.
 
-## Firefox for Android
-
-WXT targets Manifest V2 for Firefox by default and Manifest V3 for Chromium.
-For Android testing, build the extension and load `.output/firefox-mv2` using
-Mozilla's Firefox Android extension development workflow.
+Firefox is the primary mobile target. For Android development, build the
+Firefox package and use Mozilla's current Firefox Android extension-testing
+workflow to load it.
 
 ## Architecture
 
+Dopamine Fast uses WXT, strict TypeScript, native DOM APIs, and CSS. There is no
+application UI framework or remote service.
+
 ```text
 entrypoints/content.ts
+  ├─ route and lifecycle orchestration
   ├─ opening pause
   ├─ intentional session timer
-  ├─ hard daily time ceiling
-  ├─ route activation
   └─ FeedLimiter
        ├─ platform selectors
-       ├─ finite batch
+       ├─ finite batches
        ├─ suggested-content suppression
-       └─ unlock intervention
+       └─ unlock interventions
 
 entrypoints/options/
   └─ local settings UI
@@ -85,11 +136,51 @@ lib/
   └─ intervention-ui.ts
 ```
 
-All preferences and daily counters use browser extension local storage. Usage
-time advances only while the supported feed tab is visible. The planned
-session can be renewed deliberately; the per-network daily ceiling has no
-in-page override or reset. Changes to that ceiling take effect on the next
-local calendar day.
+The content script is injected only on supported hosts. Its interface runs in
+an isolated shadow root, while settings and daily counters use browser
+extension local storage.
+
+See [PRODUCT_SPEC.md](PRODUCT_SPEC.md) for intended product behavior and
+[AGENTS.md](AGENTS.md) for the current architecture, invariants, known
+limitations, and contributor guidance.
+
+## Privacy and security
+
+Dopamine Fast requests access only to Reddit, X/Twitter, and Instagram, plus
+the browser's local storage permission. It has:
+
+- no account system;
+- no analytics or telemetry;
+- no cookie permission;
+- no background scraping;
+- no platform API credentials;
+- no remote backend.
+
+A “hard” limit means that the extension exposes no in-page bypass. It is not
+tamper-proof: users retain control over their browser, extension storage, and
+installed software.
+
+## Current limitations
+
+- Social-network selectors are inherently fragile and need ongoing manual
+  verification.
+- Concurrent tabs can race while updating local daily counters; serializing
+  those writes is the highest-priority state-hardening task.
+- Gentle and strict modes do not yet differ as much as the complete product
+  specification intends.
+- There is not yet a published browser-store installation.
+
+## Validation
+
+Run the complete local validation before submitting a code change:
+
+```sh
+npm run validate
+```
+
+This runs the TypeScript check, unit tests, and Firefox and Chromium production
+builds. Use `npm run zip` as well for manifest, asset, build, or packaging
+changes.
 
 ## Releases and dependency updates
 
@@ -102,13 +193,13 @@ Release Please manages versions through Conventional Commits:
 - `feat:` produces a minor release;
 - `feat!:` or `BREAKING CHANGE:` produces a major release.
 
-After changes reach `main`, Release Please opens or updates a release pull
-request. Merging that pull request creates the tag and GitHub Release, builds
-both browser packages and uploads ZIP files plus SHA-256 checksums.
+After releasable changes reach `main`, Release Please opens or updates a release
+pull request. Merging it creates the tag and GitHub Release, builds both browser
+packages, and uploads ZIP files with SHA-256 checksums.
 
 Dependabot checks npm and GitHub Actions weekly. Version updates are separated
-into patch, minor and major groups, with cooldowns of 3, 7 and 30 days. Security
-updates are not delayed by the cooldown.
+into patch, minor, and major groups with cooldowns of 3, 7, and 30 days.
+Security updates are not delayed by the cooldown.
 
 Third-party actions are pinned to commit SHAs. Dependabot keeps those pins
 current.
@@ -124,15 +215,9 @@ The release workflow submits to AMO when these Actions secrets exist:
 The first AMO listing must be created manually. Without these secrets, GitHub
 Releases continue working and the AMO step exits successfully with a notice.
 
-`RELEASE_PLEASE_TOKEN` is optional. When provided as a fine-grained token, PRs
-created by Release Please can trigger other GitHub workflows. Otherwise the
-workflow falls back to `GITHUB_TOKEN`.
-
-## Privacy
-
-Dopamine Fast requests access only to Reddit, X/Twitter and Instagram, plus the
-browser's local storage permission. It has no analytics, accounts, cookie
-permission or remote service.
+`RELEASE_PLEASE_TOKEN` is optional. When provided as a fine-grained token, pull
+requests created by Release Please can trigger other GitHub workflows.
+Otherwise the workflow falls back to `GITHUB_TOKEN`.
 
 ## Contributing
 
