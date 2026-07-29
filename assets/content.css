@@ -14,8 +14,16 @@
   line-height: 1.45;
 }
 
-.df-root[data-visible="false"] {
+.df-overlay-slot:empty,
+.df-timer-slot:empty {
   display: none;
+}
+
+.df-timer-slot {
+  position: fixed;
+  z-index: 2147483646;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(72px, calc(env(safe-area-inset-bottom) + 64px));
 }
 
 .df-backdrop {
@@ -96,6 +104,46 @@
   font-family: "Iowan Old Style", "Palatino Linotype", serif;
   font-size: 42px;
   font-variant-numeric: tabular-nums;
+}
+
+.df-time-choice {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  max-width: 390px;
+  margin: 20px auto 0;
+  padding: 14px 16px;
+  border: 1px solid var(--df-line);
+  background: rgba(255, 255, 255, 0.34);
+  color: var(--df-ink);
+  font-size: 13px;
+  font-weight: 800;
+  text-align: left;
+}
+
+.df-time-choice output {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  font-size: 20px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.df-time-choice input {
+  grid-column: 1 / -1;
+  width: 100%;
+  accent-color: var(--df-ink);
+}
+
+.df-hard-limit-note {
+  max-width: 390px;
+  margin: 12px auto 0;
+  color: var(--df-muted);
+  font-size: 12px;
+  text-align: left;
+}
+
+.df-hard-limit-note strong {
+  color: var(--df-ink);
 }
 
 .df-rule {
@@ -199,6 +247,95 @@
     );
 }
 
+.df-pause-mark--centered {
+  margin: 8px auto 28px;
+}
+
+.df-lock-mark {
+  width: 54px;
+  height: 44px;
+  margin-bottom: 28px;
+  border: 7px solid var(--df-ink);
+  border-top: 0;
+  background: var(--df-accent);
+  box-sizing: border-box;
+}
+
+.df-lock-mark::before {
+  display: block;
+  width: 28px;
+  height: 24px;
+  margin: -20px auto 0;
+  border: 6px solid var(--df-ink);
+  border-bottom: 0;
+  border-radius: 18px 18px 0 0;
+  content: "";
+  box-sizing: border-box;
+}
+
+.df-usage-timer {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  min-width: 142px;
+  align-items: center;
+  padding: 9px 12px;
+  border: 1px solid rgba(243, 239, 228, 0.5);
+  border-radius: 2px;
+  color: var(--df-paper);
+  background: rgba(23, 32, 24, 0.94);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
+  font: inherit;
+  text-align: left;
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+}
+
+.df-usage-timer__pulse {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--df-accent);
+  box-shadow: 0 0 0 4px rgba(204, 255, 0, 0.14);
+}
+
+.df-usage-timer__copy {
+  display: grid;
+  line-height: 1.05;
+}
+
+.df-usage-timer strong {
+  font-family: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
+  font-size: 22px;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.df-usage-timer small {
+  margin-top: 3px;
+  color: rgba(243, 239, 228, 0.68);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.df-usage-timer[data-urgent="true"] {
+  border-color: var(--df-ink);
+  color: var(--df-ink);
+  background: var(--df-accent);
+}
+
+.df-usage-timer[data-urgent="true"] small {
+  color: rgba(23, 32, 24, 0.68);
+}
+
+.df-usage-timer[data-urgent="true"] .df-usage-timer__pulse {
+  background: var(--df-ink);
+  animation: df-timer-pulse 1s ease-in-out infinite;
+}
+
 .df-hold {
   position: relative;
   isolation: isolate;
@@ -247,6 +384,13 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes df-timer-pulse {
+  50% {
+    opacity: 0.35;
+    transform: scale(0.72);
+  }
+}
+
 @media (min-width: 680px) {
   .df-backdrop {
     align-items: center;
@@ -260,7 +404,8 @@
 
 @media (prefers-reduced-motion: reduce) {
   .df-backdrop,
-  .df-card {
+  .df-card,
+  .df-usage-timer__pulse {
     animation: none;
   }
 }

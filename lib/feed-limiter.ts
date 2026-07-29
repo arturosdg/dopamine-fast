@@ -61,6 +61,12 @@ export class FeedLimiter {
     this.ui.hide();
   }
 
+  restoreEndOfBatch(): void {
+    if (!this.endVisible || this.destroyed) return;
+    this.endVisible = false;
+    void this.presentEndOfBatch();
+  }
+
   private scheduleProcess(): void {
     if (this.destroyed || this.processingTimer) return;
     this.processingTimer = window.setTimeout(() => {

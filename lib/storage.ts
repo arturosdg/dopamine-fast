@@ -2,9 +2,12 @@ import { storage } from "#imports";
 import {
   DEFAULT_SETTINGS,
   emptyDailyState,
+  emptyDailyUsageState,
   normalizeDailyState,
+  normalizeDailyUsageState,
   sanitizeSettings,
   type DailyState,
+  type DailyUsageState,
   type PlatformId,
   type Settings,
 } from "./models";
@@ -20,6 +23,13 @@ export const dailyStateItem = storage.defineItem<DailyState>(
   "local:dopamine-fast-daily-state",
   {
     defaultValue: emptyDailyState(),
+  },
+);
+
+export const dailyUsageStateItem = storage.defineItem<DailyUsageState>(
+  "local:dopamine-fast-daily-usage-state",
+  {
+    defaultValue: emptyDailyUsageState(),
   },
 );
 
@@ -62,6 +72,44 @@ export async function reserveAllowance(
   });
 
   return granted;
+}
+
+export async function getDailyUsageState(): Promise<DailyUsageState> {
+  const settings = await getSettings();
+  return normalizeDailyUsageState(
+    await dailyUsageStateItem.getValue(),
+    new Date(),
+    settings.dailyUsageLimitMinutes,
+  );
+}
+
+export async function addUsageSeconds(
+  platform: PlatformId,
+  elapsedSeconds: number,
+): Promise<number> {
+  const settings = await getSettings();
+  const stored = await dailyUsageStateItem.getValue();
+  const current = normalizeDailyUsageState(
+    stored,
+    new Date(),
+    settings.dailyUsageLimitMinutes,
+  );
+  const dailyLimitSeconds = current.dailyLimitMinutes * 60;
+  const increment = Math.max(0, Math.round(elapsedSeconds));
+  const usedSeconds = Math.min(
+    dailyLimitSeconds,
+    current.usedSecondsByPlatform[platform] + increment,
+  );
+
+  await dailyUsageStateItem.setValue({
+    ...current,
+    usedSecondsByPlatform: {
+      ...current.usedSecondsByPlatform,
+      [platform]: usedSeconds,
+    },
+  });
+
+  return Math.max(0, dailyLimitSeconds - usedSeconds);
 }
 
 export async function resetDailyState(): Promise<void> {

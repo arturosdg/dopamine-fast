@@ -5,6 +5,8 @@ export interface Settings {
   enabled: boolean;
   mode: GuardMode;
   openingDelaySeconds: number;
+  sessionDurationMinutes: number;
+  dailyUsageLimitMinutes: number;
   batchSize: number;
   unlockBatchSize: number;
   dailyLimit: number;
@@ -22,10 +24,18 @@ export interface DailyState {
   unlocks: number;
 }
 
+export interface DailyUsageState {
+  date: string;
+  dailyLimitMinutes: number;
+  usedSecondsByPlatform: Record<PlatformId, number>;
+}
+
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
   mode: "balanced",
   openingDelaySeconds: 5,
+  sessionDurationMinutes: 10,
+  dailyUsageLimitMinutes: 30,
   batchSize: 20,
   unlockBatchSize: 10,
   dailyLimit: 60,
@@ -57,6 +67,16 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
       input.openingDelaySeconds ?? DEFAULT_SETTINGS.openingDelaySeconds,
       0,
       60,
+    ),
+    sessionDurationMinutes: clampInteger(
+      input.sessionDurationMinutes ?? DEFAULT_SETTINGS.sessionDurationMinutes,
+      1,
+      60,
+    ),
+    dailyUsageLimitMinutes: clampInteger(
+      input.dailyUsageLimitMinutes ?? DEFAULT_SETTINGS.dailyUsageLimitMinutes,
+      5,
+      240,
     ),
     batchSize: clampInteger(
       input.batchSize ?? DEFAULT_SETTINGS.batchSize,
@@ -115,6 +135,53 @@ export function normalizeDailyState(
   date = new Date(),
 ): DailyState {
   return state?.date === localDateKey(date) ? state : emptyDailyState(date);
+}
+
+export function emptyDailyUsageState(
+  date = new Date(),
+  dailyLimitMinutes = 0,
+): DailyUsageState {
+  return {
+    date: localDateKey(date),
+    dailyLimitMinutes,
+    usedSecondsByPlatform: {
+      reddit: 0,
+      x: 0,
+      instagram: 0,
+    },
+  };
+}
+
+export function normalizeDailyUsageState(
+  state: DailyUsageState | null,
+  date = new Date(),
+  configuredLimitMinutes = DEFAULT_SETTINGS.dailyUsageLimitMinutes,
+): DailyUsageState {
+  if (state?.date !== localDateKey(date)) {
+    return emptyDailyUsageState(date, configuredLimitMinutes);
+  }
+
+  if (state.dailyLimitMinutes >= 5) return state;
+  return {
+    ...state,
+    dailyLimitMinutes: configuredLimitMinutes,
+  };
+}
+
+export function availableUsageSeconds(
+  settings: Settings,
+  state: DailyUsageState,
+  platform: PlatformId,
+): number {
+  const effectiveLimitMinutes =
+    state.dailyLimitMinutes >= 5
+      ? state.dailyLimitMinutes
+      : settings.dailyUsageLimitMinutes;
+  const dailyLimitSeconds = effectiveLimitMinutes * 60;
+  return Math.max(
+    0,
+    dailyLimitSeconds - state.usedSecondsByPlatform[platform],
+  );
 }
 
 export function availableAllowance(
