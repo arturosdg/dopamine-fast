@@ -125,6 +125,12 @@ Dopamine Fast requests access only to Reddit, X/Twitter and Instagram, plus the
 browser's local storage permission. It has no analytics, accounts, cookie
 permission or remote service.
 
+## Contributing
+
+Contributions are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) for the
+development workflow and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) for the
+behavior and product principles expected in this community.
+
 ## License
 
 MIT

@@ -1,5 +1,19 @@
 # Contributing
 
+Thanks for helping make social feeds calmer and more intentional. By
+participating, you agree to follow our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## What we look for
+
+Keep pull requests focused and explain the user problem they solve. Changes
+should preserve local-first storage, minimal permissions and user control.
+Features designed to increase engagement, collect unnecessary data or create
+new attention traps are outside the project's goals.
+
+Selector changes should fail safely and include the network, browser and device
+used for manual testing. Interface changes should include a screenshot or short
+recording when practical.
+
 ## Local validation
 
 Use Node.js 22 or newer:
@@ -30,6 +44,10 @@ feat!: replace the saved-settings format
 
 Pull request titles should follow the same format because squash merges use the
 pull request title as the commit message on `main`.
+
+The pull request template includes the expected validation, privacy and
+documentation checks. Items that do not apply can be left unchecked with a
+short explanation.
 
 ## Releases
 
