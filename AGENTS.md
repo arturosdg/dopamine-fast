@@ -114,6 +114,7 @@ pin third-party GitHub Actions to full commit SHAs.
 
 ```text
 entrypoints/
+  background.ts          Serialized owner for daily-state mutations and privileged navigation
   content.ts             Runtime composition root for supported pages
   options/
     index.html           Settings markup
@@ -123,9 +124,13 @@ lib/
   models.ts              Domain types, defaults, sanitization and pure rules
   storage.ts             WXT storage keys and persistence operations
   platforms.ts           Host/route detection and selector adapters
+  batch-gate-ui.ts       Inline end-of-batch control rendered inside the native feed
   feed-limiter.ts        DOM observation, post visibility and batch boundaries
   usage-session.ts       Visible-tab session timer and persistence lifecycle
   intervention-ui.ts     Shadow-DOM overlays, timer and deliberate interactions
+  runtime-messages.ts    Validated background/content message contracts
+  serial-queue.ts        Promise queue used by the background state owner
+  session-time.ts        Pure discrete time-choice construction
 assets/content.css       Injected shadow-root presentation
 tests/                   Vitest unit tests for pure domain/platform behavior
 public/                  Extension icons copied by WXT
@@ -155,14 +160,19 @@ Specific responsibilities:
 - `entrypoints/content.ts` composes services, reacts to SPA navigation/settings
   changes and owns activation cancellation. Keep policy and DOM algorithms out
   of it.
+- `entrypoints/background.ts` is the single owner for daily post/time mutations
+  and privileged options/leave navigation. Keep its message surface validated
+  and route new daily-state writes through its serialized queue.
 - `models.ts` must remain deterministic and easy to unit test. Put defaults,
   clamps, date normalization and pure budget calculations here.
 - `storage.ts` owns storage key names and all persistent reads/writes. Other
   modules must not introduce ad-hoc storage keys.
 - `platforms.ts` is the only home for network-specific hosts, feed routes,
-  selectors and recommendation markers.
+  selectors, stable post identities and recommendation markers.
 - `feed-limiter.ts` may manipulate feed elements, but it must restore every
   style it changes when destroyed.
+- `batch-gate-ui.ts` owns the inline end-of-batch control and must remain
+  isolated from host-page styles and text.
 - `usage-session.ts` owns timer state and persistence cadence, not overlay
   markup.
 - `intervention-ui.ts` owns rendering and direct UI interaction, not storage or
@@ -189,12 +199,11 @@ Preserve these invariants:
 - Repeated activation must cancel stale asynchronous UI results.
 - Teardown must clear timers, observers and listeners and restore page state.
 
-Important known limitation: `storage.ts` currently performs read-modify-write
-updates from content scripts. Two active tabs can race and lose post
-reservations or elapsed-time increments. Before describing daily ceilings as
-reliable across concurrent tabs, route mutations through one background owner
-(or another serialized transaction mechanism) and add multi-tab tests. This is
-the highest-priority architectural hardening.
+Daily post reservations, elapsed-time increments and post-counter resets are
+serialized through the background owner. Content scripts watch persisted time
+usage and lower their local remaining-time view when another tab advances it.
+Preserve this ownership model and add browser-level multi-tab coverage when an
+end-to-end harness is introduced.
 
 ## Platform adapter changes
 
@@ -232,6 +241,8 @@ Treat the host page as untrusted input:
 - Page locks must restore the original `html` and `body` overflow values.
 - Observers and DOM scans must be debounced and bounded; social feeds mutate
   continuously.
+- Virtualized feeds must count stable post identities in memory so removing old
+  DOM nodes cannot reopen the current batch. Do not persist those identities.
 
 A “hard” limit means no bypass exposed by the extension UI. Users still control
 their browser, storage and installed extensions; documentation must not imply

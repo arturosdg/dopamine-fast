@@ -24,7 +24,7 @@ available while adding deliberate friction around habitual scrolling:
 2. You choose an intended session length before entering.
 3. A floating timer keeps that decision visible while you browse.
 4. Posts are revealed in finite batches instead of an endless stream.
-5. Reaching the end requires a deliberate multi-step unlock.
+5. Reaching the end shows an inline control for loading the next batch.
 6. A per-network daily time ceiling cannot be extended from the page.
 
 Daily post allowances are shared across supported networks. Daily time
@@ -34,30 +34,19 @@ Preferences and aggregate counters stay in browser extension local storage.
 ## Product tour
 
 The opening pause asks for a concrete time intention before the feed becomes
-available. The batch boundary then creates a real stopping point instead of
-loading more posts automatically.
+available. At the batch boundary, the feed ends with an inline button instead
+of loading more posts automatically.
 
-<table>
-  <tr>
-    <td width="50%">
-      <img src="docs/screenshots/opening-pause.png" alt="Opening pause on a mobile feed" />
-    </td>
-    <td width="50%">
-      <img src="docs/screenshots/end-of-batch.png" alt="End-of-batch intervention on a mobile feed" />
-    </td>
-  </tr>
-  <tr>
-    <td align="center"><strong>Choose the session before entering</strong></td>
-    <td align="center"><strong>Stop or deliberately unlock another batch</strong></td>
-  </tr>
-</table>
+![Opening pause on a mobile feed](docs/screenshots/opening-pause.png)
 
 ## Features
 
 - Configurable delay before entering a supported feed.
-- Intentional session duration with a persistent floating countdown.
+- Intentional session duration, adjusted through deliberate button steps, with
+  a persistent floating countdown.
 - Non-extendable daily time ceiling for each network.
 - Finite initial and additional post batches.
+- Stable per-session post counting for virtualized feeds such as Reddit.
 - Optional delay and press-and-hold step before revealing another batch.
 - Gentle, balanced, and strict friction modes.
 - Best-effort suppression of suggested and promoted surfaces.
@@ -122,18 +111,23 @@ entrypoints/content.ts
        ├─ platform selectors
        ├─ finite batches
        ├─ suggested-content suppression
-       └─ unlock interventions
+       └─ inline load-more gate
+
+entrypoints/background.ts
+  └─ serialized daily post and time mutations
 
 entrypoints/options/
   └─ local settings UI
 
 lib/
+  ├─ batch-gate-ui.ts
   ├─ models.ts
   ├─ storage.ts
   ├─ platforms.ts
   ├─ feed-limiter.ts
   ├─ usage-session.ts
-  └─ intervention-ui.ts
+  ├─ intervention-ui.ts
+  └─ session-time.ts
 ```
 
 The content script is injected only on supported hosts. Its interface runs in
@@ -164,8 +158,8 @@ installed software.
 
 - Social-network selectors are inherently fragile and need ongoing manual
   verification.
-- Concurrent tabs can race while updating local daily counters; serializing
-  those writes is the highest-priority state-hardening task.
+- Active tabs reconcile their daily time counters whenever the background
+  owner persists usage from any supported tab.
 - Gentle and strict modes do not yet differ as much as the complete product
   specification intends.
 - There is not yet a published browser-store installation.

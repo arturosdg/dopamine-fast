@@ -20,40 +20,42 @@ Keep the useful parts of social networks while giving every feed a real end.
 4. A floating countdown remains visible while the supported feed is active.
 5. Dopamine Fast removes promoted and suggested content.
 6. The first 20 top-level post elements remain visible.
-7. The native feed is covered by an end-of-batch barrier after the twentieth
-   post.
-8. The user can leave or deliberately unlock 10 additional posts.
+7. The native feed ends with an inline load-more control after the twentieth
+   post; no full-screen intervention is shown for a batch boundary.
+8. The user can deliberately reveal 10 additional posts from that control.
 9. Daily hard limits for both time and posts stop further use.
 
 ## Time budgets
 
 - Before entry, the user selects an intentional session duration.
+- Session duration changes use discrete buttons instead of a slider, so adding
+  more time requires a separate deliberate press for each step.
 - The configured default is 10 minutes and can be adjusted from 1 to 60
   minutes at entry.
 - A compact floating counter shows the planned session time and the remaining
   daily time for the current network.
 - Time advances only while the tab is visible.
 - When planned time ends, the user can leave or deliberately plan another
-  block.
+  block after a 10-second pause. The next duration cannot be selected until
+  that pause has completed.
+- Leaving an intervention replaces the current social-feed tab with a blank
+  tab instead of relying on browser history.
 - A separate daily limit applies to each supported network. It persists across
   reloads and sessions, resets on the next local calendar day and has no
   in-page unlock.
+- Daily post and time mutations are serialized by the extension background
+  context, and active tabs reconcile against persisted usage from other tabs.
 - The effective ceiling is fixed for the day. Configuration changes apply on
   the next local calendar day, and the settings page cannot reset elapsed time.
 
 ## Unlock flow
 
-The balanced-mode unlock requires:
-
-1. Selecting an intention:
-   - Find something specific
-   - Reply or interact
-   - Continue reading deliberately
-   - I am scrolling automatically
-2. Waiting through a short pause.
-3. Holding the unlock control for three seconds.
-
-The answers are stored only as aggregate local counts and are never transmitted.
+The end of a batch is rendered inside the native feed. The inline control shows
+how many posts remain in the daily allowance, waits through the configured
+pause and requires holding the load-more button for the configured duration.
+Completing it reveals only the next configured batch.
+Virtualized feeds are counted by stable post identity for the active page
+session, so recycling DOM elements cannot reset the batch.
 
 ## Modes
 
@@ -66,7 +68,7 @@ The answers are stored only as aggregate local counts and are never transmitted.
 ### Balanced
 
 - One initial batch and two additional batches.
-- Intent selection, pause and hold are required.
+- The inline pause and hold are required.
 
 ### Strict
 

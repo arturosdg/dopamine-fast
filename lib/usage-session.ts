@@ -73,6 +73,17 @@ export class UsageSession {
     return this.availableSeconds;
   }
 
+  syncAvailableSeconds(availableSeconds: number): void {
+    if (this.state === "destroyed" || this.state === "hard-end") return;
+    this.availableSeconds = Math.min(
+      this.availableSeconds,
+      Math.max(0, Math.round(availableSeconds)),
+    );
+    this.plannedSeconds = Math.min(this.plannedSeconds, this.availableSeconds);
+    this.render();
+    if (this.availableSeconds <= 0) this.finishHardLimit();
+  }
+
   private tick(): void {
     if (this.state !== "running" || document.visibilityState !== "visible") {
       return;

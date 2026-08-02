@@ -7,6 +7,7 @@ import {
   getDailyUsageState,
   getSettings,
   reserveAllowance,
+  dailyUsageStateItem,
   settingsItem,
 } from "../lib/storage";
 import { UsageSession } from "../lib/usage-session";
@@ -111,7 +112,6 @@ export default defineContentScript({
       limiter = new FeedLimiter(
         adapter,
         settings,
-        intervention,
         initialAllowance,
       );
       limiter.start();
@@ -135,8 +135,8 @@ export default defineContentScript({
             ) {
               return;
             }
+            if (extensionSeconds <= 0) return;
             session.extend(extensionSeconds);
-            limiter?.restoreEndOfBatch();
           })();
         },
         onHardLimitReached() {
@@ -168,9 +168,32 @@ export default defineContentScript({
       void activate();
     });
 
+    const unwatchUsage = dailyUsageStateItem.watch(() => {
+      const session = usageSession;
+      const watchedActivation = activationId;
+      if (!session) return;
+
+      void (async () => {
+        const [settings, usageState] = await Promise.all([
+          getSettings(),
+          getDailyUsageState(),
+        ]);
+        if (
+          watchedActivation !== activationId ||
+          session !== usageSession
+        ) {
+          return;
+        }
+        session.syncAvailableSeconds(
+          availableUsageSeconds(settings, usageState, adapter.id),
+        );
+      })();
+    });
+
     ctx.onInvalidated(() => {
       window.clearInterval(navigationTimer);
       unwatchSettings();
+      unwatchUsage();
       limiter?.destroy();
       void usageSession?.destroy();
       shadowUi.remove();

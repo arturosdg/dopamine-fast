@@ -11,6 +11,11 @@ import {
   type PlatformId,
   type Settings,
 } from "./models";
+import type {
+  AddUsageSecondsResponse,
+  ReserveAllowanceResponse,
+  RuntimeMessage,
+} from "./runtime-messages";
 
 export const settingsItem = storage.defineItem<Settings>(
   "local:dopamine-fast-settings",
@@ -42,6 +47,23 @@ export async function saveSettings(settings: Settings): Promise<void> {
 }
 
 export async function reserveAllowance(
+  platform: PlatformId,
+  requested: number,
+  isUnlock = false,
+): Promise<number> {
+  const response = await browser.runtime.sendMessage<
+    RuntimeMessage,
+    ReserveAllowanceResponse
+  >({
+    type: "dopamine-fast:reserve-allowance",
+    platform,
+    requested,
+    isUnlock,
+  });
+  return response.granted;
+}
+
+export async function reserveAllowanceFromStorage(
   platform: PlatformId,
   requested: number,
   isUnlock = false,
@@ -87,6 +109,21 @@ export async function addUsageSeconds(
   platform: PlatformId,
   elapsedSeconds: number,
 ): Promise<number> {
+  const response = await browser.runtime.sendMessage<
+    RuntimeMessage,
+    AddUsageSecondsResponse
+  >({
+    type: "dopamine-fast:add-usage-seconds",
+    platform,
+    elapsedSeconds,
+  });
+  return response.remainingSeconds;
+}
+
+export async function addUsageSecondsFromStorage(
+  platform: PlatformId,
+  elapsedSeconds: number,
+): Promise<number> {
   const settings = await getSettings();
   const stored = await dailyUsageStateItem.getValue();
   const current = normalizeDailyUsageState(
@@ -113,5 +150,11 @@ export async function addUsageSeconds(
 }
 
 export async function resetDailyState(): Promise<void> {
+  await browser.runtime.sendMessage<RuntimeMessage>({
+    type: "dopamine-fast:reset-daily-state",
+  });
+}
+
+export async function resetDailyStateFromStorage(): Promise<void> {
   await dailyStateItem.setValue(emptyDailyState());
 }
