@@ -32,4 +32,21 @@ describe("platform adapters", () => {
       reddit.isFeedRoute(new URL("https://reddit.com/settings/privacy")),
     ).toBe(false);
   });
+
+  it("includes the current narrow Reddit post-unit fallback", () => {
+    const reddit = getPlatformAdapter("reddit.com")!;
+
+    expect(reddit.postSelectors).toContain('[data-testid="post-unit"]');
+  });
+
+  it("uses Reddit's stable post id across virtualized DOM replacements", () => {
+    const reddit = getPlatformAdapter("reddit.com")!;
+    const post = {
+      id: "t3_example",
+      getAttribute: () => null,
+      querySelector: () => null,
+    } as unknown as HTMLElement;
+
+    expect(reddit.getPostKey(post)).toBe("t3_example");
+  });
 });

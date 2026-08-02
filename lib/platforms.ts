@@ -6,6 +6,7 @@ export interface PlatformAdapter {
   postSelectors: string[];
   suggestedSelectors: string[];
   suggestedTokens: string[];
+  getPostKey(element: HTMLElement): string | undefined;
   isFeedRoute(url: URL): boolean;
 }
 
@@ -14,6 +15,7 @@ const reddit: PlatformAdapter = {
   label: "Reddit",
   postSelectors: [
     "shreddit-post",
+    '[data-testid="post-unit"]',
     '[data-testid="post-container"]',
     'article[data-testid="post"]',
   ],
@@ -31,6 +33,14 @@ const reddit: PlatformAdapter = {
     "recommended for you",
     "recomendado para ti",
   ],
+  getPostKey(element) {
+    return (
+      element.id ||
+      element.getAttribute("thingid") ||
+      element.querySelector<HTMLElement>("shreddit-post[id]")?.id ||
+      undefined
+    );
+  },
   isFeedRoute(url) {
     return (
       !url.pathname.includes("/comments/") &&
@@ -58,6 +68,13 @@ const x: PlatformAdapter = {
     "who to follow",
     "a quién seguir",
   ],
+  getPostKey(element) {
+    const href = element
+      .querySelector<HTMLAnchorElement>('a[href*="/status/"]')
+      ?.getAttribute("href");
+    const match = href?.match(/\/status\/(\d+)/);
+    return match?.[1] ? `status:${match[1]}` : undefined;
+  },
   isFeedRoute(url) {
     return url.pathname === "/home" || url.pathname.startsWith("/i/lists/");
   },
@@ -80,6 +97,15 @@ const instagram: PlatformAdapter = {
     "sponsored",
     "patrocinado",
   ],
+  getPostKey(element) {
+    const href = element
+      .querySelector<HTMLAnchorElement>('a[href^="/p/"], a[href^="/reel/"]')
+      ?.getAttribute("href");
+    const match = href?.match(/^\/(p|reel)\/([^/]+)/);
+    return match?.[1] && match[2]
+      ? `${match[1]}:${match[2]}`
+      : undefined;
+  },
   isFeedRoute(url) {
     return url.pathname === "/";
   },

@@ -1,12 +1,5 @@
-export interface EndOfBatchOptions {
-  platformLabel: string;
-  unlockSize: number;
-  remainingToday: number;
-  canUnlock: boolean;
-  unlockDelaySeconds: number;
-  holdSeconds: number;
-  onUnlock(): Promise<number>;
-}
+import type { RuntimeMessage } from "./runtime-messages";
+import { sessionMinuteChoices } from "./session-time";
 
 export interface OpeningOptions {
   platformLabel: string;
@@ -27,12 +20,7 @@ export interface SessionEndedOptions {
   availableSeconds: number;
 }
 
-const intentions = [
-  ["specific", "I'm looking for something specific"],
-  ["reply", "I want to reply or interact"],
-  ["deliberate", "I want to keep reading"],
-  ["automatic", "I'm scrolling on autopilot"],
-] as const;
+const SESSION_REPLAN_DELAY_SECONDS = 10;
 
 export class InterventionUi {
   private readonly root: HTMLElement;
@@ -90,19 +78,14 @@ export class InterventionUi {
           <p class="df-copy">
             Choose a defined session now. The timer will remain visible as you browse.
           </p>
-          <label class="df-time-choice">
+          <div class="df-time-choice df-time-stepper">
             <span>This session</span>
-            <output for="df-session-minutes">${defaultSessionLabel}</output>
-            <input
-              id="df-session-minutes"
-              type="range"
-              min="1"
-              max="${maximumMinutes}"
-              value="${defaultMinutes}"
-              step="1"
-              ${options.availableSeconds < 60 ? "disabled" : ""}
-            />
-          </label>
+            <output aria-live="polite">${defaultSessionLabel}</output>
+            <div class="df-time-buttons" role="group" aria-label="Adjust session length">
+              <button type="button" data-action="time-less" aria-label="Choose a shorter session">Less</button>
+              <button type="button" data-action="time-more" aria-label="Add more session time">Add time</button>
+            </div>
+          </div>
           <p class="df-hard-limit-note">
             You have <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong>
             left in today's limit for this network.
@@ -123,10 +106,6 @@ export class InterventionUi {
     `;
 
     const countdown = this.overlay.querySelector<HTMLElement>(".df-countdown");
-    const sessionInput =
-      this.requiredElement<HTMLInputElement>("#df-session-minutes");
-    const sessionOutput =
-      this.requiredElement<HTMLOutputElement>(".df-time-choice output");
     const continueButton =
       this.requiredElement<HTMLButtonElement>('[data-action="continue"]');
     const leaveButton =
@@ -134,19 +113,19 @@ export class InterventionUi {
     const settingsButton =
       this.requiredElement<HTMLButtonElement>('[data-action="settings"]');
 
-    leaveButton.addEventListener("click", () => history.back());
-    settingsButton.addEventListener("click", () =>
-      browser.runtime.openOptionsPage(),
+    leaveButton.addEventListener("click", () => this.leaveFeed());
+    settingsButton.addEventListener("click", () => this.openOptions());
+    const timeStepper = this.bindTimeStepper(
+      this.overlay,
+      maximumMinutes,
+      defaultMinutes,
+      options.availableSeconds,
+      (label) => {
+        if (!continueButton.disabled) {
+          continueButton.textContent = `Start ${label} session`;
+        }
+      },
     );
-
-    sessionInput.addEventListener("input", () => {
-      const label =
-        options.availableSeconds < 60 ? "<1 min" : `${sessionInput.value} min`;
-      sessionOutput.value = label;
-      if (!continueButton.disabled) {
-        continueButton.textContent = `Start ${label} session`;
-      }
-    });
 
     return new Promise<number>((resolve) => {
       let remaining = options.delaySeconds;
@@ -164,11 +143,7 @@ export class InterventionUi {
           continueButton.textContent =
             remaining > 0
               ? `Continue in ${remaining}s`
-              : `Start ${
-                  options.availableSeconds < 60
-                    ? "<1 min"
-                    : `${sessionInput.value} min`
-                } session`;
+              : `Start ${timeStepper.getLabel()} session`;
 
           if (remaining <= 0) {
             if (interval !== undefined) window.clearInterval(interval);
@@ -180,7 +155,7 @@ export class InterventionUi {
       continueButton.addEventListener("click", () => {
         if (interval !== undefined) window.clearInterval(interval);
         const selectedSeconds = Math.min(
-          Number(sessionInput.value) * 60,
+          timeStepper.getMinutes() * 60,
           options.availableSeconds,
         );
         this.cancelPendingInteraction = undefined;
@@ -190,43 +165,81 @@ export class InterventionUi {
     });
   }
 
-  showEndOfBatch(options: EndOfBatchOptions): void {
+  showSessionEnded(options: SessionEndedOptions): Promise<number> {
     this.lockPage();
     this.overlay.innerHTML = `
-      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-end-title">
+      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-session-end-title">
         <article class="df-card">
           <div class="df-rule"></div>
-          <p class="df-kicker">End of batch</p>
-          <h1 id="df-end-title">That's enough for now.</h1>
+          <p class="df-kicker">Planned time complete</p>
+          <h1 id="df-session-end-title">Your session has ended.</h1>
           <p class="df-copy">
-            ${options.remainingToday > 0
-              ? `You have ${options.remainingToday} posts left in today's limit.`
-              : "You've reached today's limit."}
+            You chose to stop here. Leave now, or pause before deliberately planning more time.
           </p>
-          <div class="df-actions df-actions--stack">
+          <p class="df-hard-limit-note">
+            Your daily ceiling cannot be extended:
+            <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong> remaining.
+          </p>
+          <div class="df-actions">
             <button class="df-button df-button--primary" data-action="leave">Leave ${options.platformLabel}</button>
-            ${
-              options.canUnlock
-                ? `<button class="df-button df-button--quiet" data-action="unlock">Unlock ${options.unlockSize} more</button>`
-                : ""
-            }
+            <button class="df-button df-button--quiet" data-action="plan" disabled>
+              Plan another block in ${SESSION_REPLAN_DELAY_SECONDS}s
+            </button>
           </div>
-          <button class="df-settings-link" data-action="settings">Change limits</button>
+          <p class="df-wait" aria-live="polite">Take a moment before deciding.</p>
+          <button class="df-settings-link" data-action="settings">Change the default</button>
         </article>
       </section>
     `;
 
-    this.requiredElement<HTMLButtonElement>('[data-action="leave"]')
-      .addEventListener("click", () => history.back());
+    const leaveButton =
+      this.requiredElement<HTMLButtonElement>('[data-action="leave"]');
+    const planButton =
+      this.requiredElement<HTMLButtonElement>('[data-action="plan"]');
+    const waitLabel = this.requiredElement<HTMLElement>(".df-wait");
     this.requiredElement<HTMLButtonElement>('[data-action="settings"]')
-      .addEventListener("click", () => browser.runtime.openOptionsPage());
-    this.overlay
-      .querySelector<HTMLButtonElement>('[data-action="unlock"]')
-      ?.addEventListener("click", () => this.showIntentionStep(options));
+      .addEventListener("click", () => this.openOptions());
+
+    return new Promise<number>((resolve) => {
+      let remaining = SESSION_REPLAN_DELAY_SECONDS;
+      const interval = window.setInterval(() => {
+        remaining -= 1;
+        planButton.textContent =
+          remaining > 0
+            ? `Plan another block in ${remaining}s`
+            : "Plan another block";
+        if (remaining <= 0) {
+          window.clearInterval(interval);
+          planButton.disabled = false;
+          waitLabel.textContent = "You can now plan another block.";
+        }
+      }, 1000);
+
+      const finishWithoutExtension = () => {
+        window.clearInterval(interval);
+        this.cancelPendingInteraction = undefined;
+        resolve(0);
+      };
+      this.cancelPendingInteraction = () => {
+        window.clearInterval(interval);
+        resolve(0);
+      };
+      leaveButton.addEventListener("click", () => {
+        finishWithoutExtension();
+        this.leaveFeed();
+      });
+      planButton.addEventListener("click", () => {
+        if (planButton.disabled) return;
+        window.clearInterval(interval);
+        this.showSessionPlanning(options, resolve);
+      });
+    });
   }
 
-  showSessionEnded(options: SessionEndedOptions): Promise<number> {
-    this.lockPage();
+  private showSessionPlanning(
+    options: SessionEndedOptions,
+    resolve: (seconds: number) => void,
+  ): void {
     const maximumMinutes = Math.max(
       1,
       Math.min(60, Math.ceil(options.availableSeconds / 60)),
@@ -237,65 +250,54 @@ export class InterventionUi {
     );
     const defaultSessionLabel =
       options.availableSeconds < 60 ? "<1 min" : `${defaultMinutes} min`;
-    this.overlay.innerHTML = `
-      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-session-end-title">
-        <article class="df-card">
-          <div class="df-rule"></div>
-          <p class="df-kicker">Planned time complete</p>
-          <h1 id="df-session-end-title">Your session has ended.</h1>
-          <p class="df-copy">
-            You chose to stop here. If you still have a specific reason, you can plan another block.
-          </p>
-          <label class="df-time-choice">
-            <span>New block</span>
-            <output for="df-extra-minutes">${defaultSessionLabel}</output>
-            <input
-              id="df-extra-minutes"
-              type="range"
-              min="1"
-              max="${maximumMinutes}"
-              value="${defaultMinutes}"
-              step="1"
-              ${options.availableSeconds < 60 ? "disabled" : ""}
-            />
-          </label>
-          <p class="df-hard-limit-note">
-            Your daily ceiling cannot be extended:
-            <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong> remaining.
-          </p>
-          <div class="df-actions">
-            <button class="df-button df-button--primary" data-action="leave">Leave ${options.platformLabel}</button>
-            <button class="df-button df-button--quiet" data-action="extend">Plan another block</button>
-          </div>
-          <button class="df-settings-link" data-action="settings">Change the default</button>
-        </article>
-      </section>
+    const card = this.requiredElement<HTMLElement>(".df-card");
+    card.innerHTML = `
+      <p class="df-kicker">Plan another block</p>
+      <h1>How much longer?</h1>
+      <p class="df-copy">Choose a defined block within today's remaining ceiling.</p>
+      <div class="df-time-choice df-time-stepper">
+        <span>New block</span>
+        <output aria-live="polite">${defaultSessionLabel}</output>
+        <div class="df-time-buttons" role="group" aria-label="Adjust new block length">
+          <button type="button" data-action="time-less" aria-label="Choose a shorter block">Less</button>
+          <button type="button" data-action="time-more" aria-label="Add more time to the block">Add time</button>
+        </div>
+      </div>
+      <div class="df-actions">
+        <button class="df-button df-button--quiet" data-action="leave">Leave ${options.platformLabel}</button>
+        <button class="df-button df-button--primary" data-action="extend">Start ${defaultSessionLabel} block</button>
+      </div>
+      <button class="df-settings-link" data-action="settings">Change the default</button>
     `;
 
-    const input = this.requiredElement<HTMLInputElement>("#df-extra-minutes");
-    const output =
-      this.requiredElement<HTMLOutputElement>(".df-time-choice output");
-    input.addEventListener("input", () => {
-      output.value =
-        options.availableSeconds < 60 ? "<1 min" : `${input.value} min`;
-    });
+    const extendButton =
+      this.requiredElement<HTMLButtonElement>('[data-action="extend"]');
+    const timeStepper = this.bindTimeStepper(
+      card,
+      maximumMinutes,
+      defaultMinutes,
+      options.availableSeconds,
+      (label) => {
+        extendButton.textContent = `Start ${label} block`;
+      },
+    );
     this.requiredElement<HTMLButtonElement>('[data-action="leave"]')
-      .addEventListener("click", () => history.back());
+      .addEventListener("click", () => {
+        this.cancelPendingInteraction = undefined;
+        resolve(0);
+        this.leaveFeed();
+      });
     this.requiredElement<HTMLButtonElement>('[data-action="settings"]')
-      .addEventListener("click", () => browser.runtime.openOptionsPage());
-
-    return new Promise<number>((resolve) => {
-      this.cancelPendingInteraction = () => resolve(0);
-      this.requiredElement<HTMLButtonElement>('[data-action="extend"]')
-        .addEventListener("click", () => {
-          const selectedSeconds = Math.min(
-            Number(input.value) * 60,
-            options.availableSeconds,
-          );
-          this.cancelPendingInteraction = undefined;
-          this.hide();
-          resolve(selectedSeconds);
-        });
+      .addEventListener("click", () => this.openOptions());
+    this.cancelPendingInteraction = () => resolve(0);
+    extendButton.addEventListener("click", () => {
+      const selectedSeconds = Math.min(
+        timeStepper.getMinutes() * 60,
+        options.availableSeconds,
+      );
+      this.cancelPendingInteraction = undefined;
+      this.hide();
+      resolve(selectedSeconds);
     });
   }
 
@@ -322,9 +324,9 @@ export class InterventionUi {
     `;
 
     this.requiredElement<HTMLButtonElement>('[data-action="leave"]')
-      .addEventListener("click", () => history.back());
+      .addEventListener("click", () => this.leaveFeed());
     this.requiredElement<HTMLButtonElement>('[data-action="settings"]')
-      .addEventListener("click", () => browser.runtime.openOptionsPage());
+      .addEventListener("click", () => this.openOptions());
   }
 
   showUsageTimer(options: UsageTimerOptions): void {
@@ -340,7 +342,7 @@ export class InterventionUi {
       `;
       this.timer
         .querySelector<HTMLButtonElement>(".df-usage-timer")
-        ?.addEventListener("click", () => browser.runtime.openOptionsPage());
+        ?.addEventListener("click", () => this.openOptions());
     }
 
     const timer = this.timer.querySelector<HTMLElement>(".df-usage-timer");
@@ -353,7 +355,7 @@ export class InterventionUi {
 
     planned.textContent = this.formatClock(options.plannedSeconds);
     platform.textContent = options.platformLabel;
-    daily.textContent = this.formatFriendlyDuration(options.availableSeconds);
+    daily.textContent = this.formatClock(options.availableSeconds);
     timer.dataset.urgent =
       options.plannedSeconds <= 60 || options.availableSeconds <= 60
         ? "true"
@@ -368,131 +370,72 @@ export class InterventionUi {
     this.timer.replaceChildren();
   }
 
-  private showIntentionStep(options: EndOfBatchOptions): void {
-    const card = this.requiredElement<HTMLElement>(".df-card");
-    card.innerHTML = `
-      <p class="df-step">Step 1 of 2</p>
-      <h1>Why do you want to continue?</h1>
-      <div class="df-intentions">
-        ${intentions
-          .map(
-            ([value, label]) => `
-              <button class="df-intention" data-intention="${value}">
-                <span>${label}</span><span aria-hidden="true">→</span>
-              </button>
-            `,
-          )
-          .join("")}
-      </div>
-      <button class="df-settings-link" data-action="back">Back</button>
-    `;
-
-    card
-      .querySelectorAll<HTMLButtonElement>("[data-intention]")
-      .forEach((button) => {
-        button.addEventListener("click", () => this.showHoldStep(options));
-      });
-    this.requiredElement<HTMLButtonElement>('[data-action="back"]')
-      .addEventListener("click", () => this.showEndOfBatch(options));
-  }
-
-  private showHoldStep(options: EndOfBatchOptions): void {
-    const card = this.requiredElement<HTMLElement>(".df-card");
-    card.innerHTML = `
-      <p class="df-step">Step 2 of 2</p>
-      <div class="df-pause-mark" aria-hidden="true"></div>
-      <h1>Pause for a moment.</h1>
-      <p class="df-copy">Then press and hold to open another batch.</p>
-      <button class="df-hold" data-action="hold" disabled style="--df-hold-progress: 0%">
-        <span>Press and hold</span>
-        <span class="df-hold__progress" aria-hidden="true"></span>
-      </button>
-      <p class="df-wait" aria-live="polite"></p>
-      <button class="df-settings-link" data-action="back">Back</button>
-    `;
-
-    const holdButton =
-      this.requiredElement<HTMLButtonElement>('[data-action="hold"]');
-    const waitLabel = this.requiredElement<HTMLElement>(".df-wait");
-    let remaining = options.unlockDelaySeconds;
-
-    const updateWait = () => {
-      waitLabel.textContent =
-        remaining > 0 ? `Available in ${remaining}s` : "Whenever you're ready.";
-    };
-    updateWait();
-
-    const countdown = window.setInterval(() => {
-      remaining -= 1;
-      updateWait();
-      if (remaining <= 0) {
-        window.clearInterval(countdown);
-        holdButton.disabled = false;
-      }
-    }, 1000);
-
-    let holdStarted = 0;
-    let animationFrame = 0;
-    let completed = false;
-
-    const cancelHold = () => {
-      if (completed) return;
-      holdStarted = 0;
-      window.cancelAnimationFrame(animationFrame);
-      holdButton.style.setProperty("--df-hold-progress", "0%");
-    };
-
-    const updateHold = async (now: number) => {
-      const duration = options.holdSeconds * 1000;
-      const progress = Math.min(1, (now - holdStarted) / duration);
-      holdButton.style.setProperty(
-        "--df-hold-progress",
-        `${Math.round(progress * 100)}%`,
-      );
-
-      if (progress >= 1) {
-        completed = true;
-        holdButton.disabled = true;
-        holdButton.querySelector("span")!.textContent = "Preparing…";
-        const granted = await options.onUnlock();
-        if (granted > 0) {
-          this.hide();
-        } else {
-          this.showEndOfBatch({
-            ...options,
-            canUnlock: false,
-            remainingToday: 0,
-          });
-        }
-        return;
-      }
-
-      animationFrame = window.requestAnimationFrame(updateHold);
-    };
-
-    holdButton.addEventListener("pointerdown", (event) => {
-      if (holdButton.disabled) return;
-      event.preventDefault();
-      holdStarted = performance.now();
-      holdButton.setPointerCapture(event.pointerId);
-      animationFrame = window.requestAnimationFrame(updateHold);
-    });
-    holdButton.addEventListener("pointerup", cancelHold);
-    holdButton.addEventListener("pointercancel", cancelHold);
-    holdButton.addEventListener("lostpointercapture", cancelHold);
-
-    this.requiredElement<HTMLButtonElement>('[data-action="back"]')
-      .addEventListener("click", () => {
-        window.clearInterval(countdown);
-        cancelHold();
-        this.showEndOfBatch(options);
-      });
-  }
-
   private requiredElement<T extends Element>(selector: string): T {
     const element = this.overlay.querySelector<T>(selector);
     if (!element) throw new Error(`Missing intervention UI element: ${selector}`);
     return element;
+  }
+
+  private bindTimeStepper(
+    root: ParentNode,
+    maximumMinutes: number,
+    initialMinutes: number,
+    availableSeconds: number,
+    onChange: (label: string) => void,
+  ): { getMinutes(): number; getLabel(): string } {
+    const output = root.querySelector<HTMLOutputElement>(
+      ".df-time-stepper output",
+    );
+    const lessButton = root.querySelector<HTMLButtonElement>(
+      '[data-action="time-less"]',
+    );
+    const moreButton = root.querySelector<HTMLButtonElement>(
+      '[data-action="time-more"]',
+    );
+    if (!output || !lessButton || !moreButton) {
+      throw new Error("Missing session time stepper element");
+    }
+
+    const choices = sessionMinuteChoices(maximumMinutes, initialMinutes);
+    let selectedIndex = Math.max(0, choices.indexOf(initialMinutes));
+
+    const getMinutes = () => choices[selectedIndex] ?? 1;
+    const getLabel = () =>
+      availableSeconds < 60 ? "<1 min" : `${getMinutes()} min`;
+    const render = () => {
+      const label = getLabel();
+      output.value = label;
+      lessButton.disabled = selectedIndex === 0 || availableSeconds < 60;
+      moreButton.disabled =
+        selectedIndex === choices.length - 1 || availableSeconds < 60;
+      onChange(label);
+    };
+
+    lessButton.addEventListener("click", () => {
+      if (selectedIndex === 0) return;
+      selectedIndex -= 1;
+      render();
+    });
+    moreButton.addEventListener("click", () => {
+      if (selectedIndex >= choices.length - 1) return;
+      selectedIndex += 1;
+      render();
+    });
+    render();
+
+    return { getMinutes, getLabel };
+  }
+
+  private openOptions(): void {
+    void browser.runtime.sendMessage<RuntimeMessage>({
+      type: "dopamine-fast:open-options",
+    });
+  }
+
+  private leaveFeed(): void {
+    void browser.runtime.sendMessage<RuntimeMessage>({
+      type: "dopamine-fast:leave-feed",
+    });
   }
 
   private formatClock(totalSeconds: number): string {
