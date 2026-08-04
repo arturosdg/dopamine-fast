@@ -28,8 +28,8 @@ available while adding deliberate friction around habitual scrolling:
 6. Reaching the end shows an inline control for loading the next batch.
 7. A per-network daily time ceiling cannot be extended from the page.
 
-Daily post allowances are shared across supported networks. Daily time
-ceilings are tracked independently for Reddit, X/Twitter, and Instagram.
+Daily post allowances and time ceilings are tracked independently for Reddit,
+X/Twitter, and Instagram.
 Preferences and aggregate counters stay in browser extension local storage.
 Elapsed seconds per network are retained for the 30 most recent days with
 activity; active session countdowns are not stored in that history.
@@ -54,6 +54,8 @@ of loading more posts automatically.
 - Intentional search on X and Reddit: autocomplete is suppressed, and X Explore
   stays empty until a query is submitted. X result tabs and Reddit's Popular,
   News and Explore shortcuts are also hidden.
+- Instagram's Reels destination is hidden; a directly opened reel remains
+  usable without vertical navigation into an endless sequence.
 - Non-extendable daily time ceiling for each network.
 - Finite initial and additional post batches.
 - Stable per-session post counting for virtualized feeds such as Reddit.

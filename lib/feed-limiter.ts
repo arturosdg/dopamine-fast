@@ -160,9 +160,14 @@ export class FeedLimiter {
   ): Promise<void> {
     const state = normalizeDailyState(await dailyStateItem.getValue());
     if (this.destroyed || requestId !== this.gateRequestId) return;
-    const remainingToday = availableAllowance(this.settings, state);
+    const remainingToday = availableAllowance(
+      this.settings,
+      state,
+      this.adapter.id,
+    );
     const balancedUnlockAvailable =
-      this.settings.mode !== "balanced" || state.unlocks < 2;
+      this.settings.mode !== "balanced" ||
+      state.unlocksByPlatform[this.adapter.id] < 2;
     const canUnlock = remainingToday > 0 && balancedUnlockAvailable;
 
     const showGate = placement === "after"

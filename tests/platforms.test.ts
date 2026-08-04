@@ -33,6 +33,43 @@ describe("platform adapters", () => {
     ).toBe(false);
   });
 
+  it("recognizes Instagram reel routes as single-item views", () => {
+    const instagram = getPlatformAdapter("instagram.com")!;
+
+    expect(
+      instagram.singleItemView?.isRoute(
+        new URL("https://instagram.com/reel/ABC123/"),
+      ),
+    ).toBe(true);
+    expect(
+      instagram.singleItemView?.isRoute(
+        new URL("https://instagram.com/reels/ABC123/"),
+      ),
+    ).toBe(true);
+    expect(
+      instagram.singleItemView?.isRoute(
+        new URL("https://instagram.com/reels/"),
+      ),
+    ).toBe(true);
+    expect(
+      instagram.singleItemView?.isRoute(
+        new URL("https://instagram.com/direct/inbox/"),
+      ),
+    ).toBe(false);
+  });
+
+  it("hides Instagram's generic Reels navigation destination", () => {
+    const instagram = getPlatformAdapter("instagram.com")!;
+
+    expect(instagram.intentionalSearch?.navigationSelectors).toContain(
+      'a[href="/reels/"]',
+    );
+    expect(instagram.intentionalSearch?.alwaysHideNavigation).toBe(true);
+    expect(instagram.singleItemView?.navigationSelectors).toContain(
+      'main [role="toolbar"]',
+    );
+  });
+
   it("includes the current narrow Reddit post-unit fallback", () => {
     const reddit = getPlatformAdapter("reddit.com")!;
 

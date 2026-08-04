@@ -5,6 +5,7 @@ import { IntentionalSearchController } from "../lib/intentional-search";
 import { availableUsageSeconds, localDateKey } from "../lib/models";
 import { getPlatformAdapter } from "../lib/platforms";
 import { PreferredFeedController } from "../lib/preferred-feed";
+import { SingleItemViewController } from "../lib/single-item-view";
 import {
   getDailyUsageState,
   getSettings,
@@ -64,6 +65,7 @@ export default defineContentScript({
     let limiter: FeedLimiter | undefined;
     let intentionalSearch: IntentionalSearchController | undefined;
     let preferredFeed: PreferredFeedController | undefined;
+    let singleItemView: SingleItemViewController | undefined;
     let usageSession: UsageSession | undefined;
     let currentUrl = "";
     let activationId = 0;
@@ -76,6 +78,8 @@ export default defineContentScript({
       intentionalSearch = undefined;
       preferredFeed?.destroy();
       preferredFeed = undefined;
+      singleItemView?.destroy();
+      singleItemView = undefined;
       const previousUsageSession = usageSession;
       usageSession = undefined;
       await previousUsageSession?.destroy();
@@ -89,9 +93,23 @@ export default defineContentScript({
         return;
       }
 
-      if (settings.blockSuggested && adapter.intentionalSearch) {
-        intentionalSearch = new IntentionalSearchController(adapter, url);
+      if (
+        adapter.intentionalSearch &&
+        (settings.blockSuggested ||
+          adapter.intentionalSearch.alwaysHideNavigation)
+      ) {
+        intentionalSearch = new IntentionalSearchController(
+          adapter,
+          url,
+          settings.blockSuggested,
+        );
         intentionalSearch.start();
+      }
+
+      if (adapter.singleItemView?.isRoute(url)) {
+        singleItemView = new SingleItemViewController(adapter.singleItemView);
+        singleItemView.start();
+        return;
       }
 
       if (!adapter.isFeedRoute(url)) return;
@@ -225,6 +243,7 @@ export default defineContentScript({
       limiter?.destroy();
       intentionalSearch?.destroy();
       preferredFeed?.destroy();
+      singleItemView?.destroy();
       void usageSession?.destroy();
       shadowUi.remove();
     });
