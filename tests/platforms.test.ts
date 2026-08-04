@@ -70,6 +70,16 @@ describe("platform adapters", () => {
     );
   });
 
+  it("defines Instagram's Following feed tabs narrowly", () => {
+    const instagram = getPlatformAdapter("instagram.com")!;
+
+    expect(instagram.preferredFeed).toEqual({
+      tabSelector: 'main [role="tablist"] [role="tab"]',
+      preferredTokens: ["following", "siguiendo"],
+      hiddenTokens: ["for you", "para ti"],
+    });
+  });
+
   it("includes the current narrow Reddit post-unit fallback", () => {
     const reddit = getPlatformAdapter("reddit.com")!;
 

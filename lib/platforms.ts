@@ -194,6 +194,11 @@ const instagram: PlatformAdapter = {
     "sponsored",
     "patrocinado",
   ],
+  preferredFeed: {
+    tabSelector: 'main [role="tablist"] [role="tab"]',
+    preferredTokens: ["following", "siguiendo"],
+    hiddenTokens: ["for you", "para ti"],
+  },
   intentionalSearch: {
     inputSelectors: [],
     suggestionSelectors: [],

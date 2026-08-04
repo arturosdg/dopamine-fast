@@ -114,7 +114,10 @@ export default defineContentScript({
 
       if (!adapter.isFeedRoute(url)) return;
 
-      if (adapter.id === "x" && settings.xFollowingOnly) {
+      const followingOnly =
+        (adapter.id === "x" && settings.xFollowingOnly) ||
+        (adapter.id === "instagram" && settings.instagramFollowingOnly);
+      if (followingOnly) {
         preferredFeed = new PreferredFeedController(adapter);
         preferredFeed.start();
       }

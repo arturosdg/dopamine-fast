@@ -15,6 +15,7 @@ export interface Settings {
   blockSuggested: boolean;
   disableAutoplay: boolean;
   xFollowingOnly: boolean;
+  instagramFollowingOnly: boolean;
   enabledSites: Record<PlatformId, boolean>;
 }
 
@@ -46,6 +47,7 @@ export const DEFAULT_SETTINGS: Settings = {
   blockSuggested: true,
   disableAutoplay: true,
   xFollowingOnly: false,
+  instagramFollowingOnly: false,
   enabledSites: {
     reddit: true,
     x: true,
@@ -110,6 +112,10 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
       typeof input.xFollowingOnly === "boolean"
         ? input.xFollowingOnly
         : DEFAULT_SETTINGS.xFollowingOnly,
+    instagramFollowingOnly:
+      typeof input.instagramFollowingOnly === "boolean"
+        ? input.instagramFollowingOnly
+        : DEFAULT_SETTINGS.instagramFollowingOnly,
     enabledSites: {
       ...DEFAULT_SETTINGS.enabledSites,
       ...input.enabledSites,

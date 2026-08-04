@@ -41,6 +41,15 @@ inline `--x-height` property. On a direct reel route the controller therefore:
 This is a presentation-layer boundary. Instagram may still prefetch additional
 media, and the extension does not intercept requests or use Instagram APIs.
 
+## Following-only feed
+
+The authenticated home feed exposed `Para ti` and `Siguiendo` as two
+`[role="tab"]` elements inside a `main [role="tablist"]`. Both used
+`aria-selected` to identify the active feed. The optional Following-only mode
+uses that scoped contract to select `Following` or `Siguiendo` and hide only
+the exact `For you` or `Para ti` tab. The hidden tab's original inline display
+style is restored during teardown.
+
 ## Manual verification checklist
 
 1. Reload the unpacked extension after building the Chromium target.

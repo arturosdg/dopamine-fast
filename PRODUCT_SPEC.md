@@ -114,6 +114,8 @@ visible area while the batch is closed.
 ### Instagram
 
 - Keep followed-account posts and direct profile visits.
+- When the optional Following-only setting is enabled, select Following and
+  hide For You while the home feed is active.
 - Hide suggested posts, Explore recommendations, Reels surfaces and promoted
   posts.
 - Hide the generic Reels navigation destination. When an individual reel or

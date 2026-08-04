@@ -22,6 +22,7 @@ describe("settings", () => {
       dailyLimit: -10,
       holdSeconds: 0,
       xFollowingOnly: "yes" as unknown as boolean,
+      instagramFollowingOnly: "yes" as unknown as boolean,
     });
 
     expect(settings.openingDelaySeconds).toBe(60);
@@ -32,6 +33,7 @@ describe("settings", () => {
     expect(settings.dailyLimit).toBe(10);
     expect(settings.holdSeconds).toBe(1);
     expect(settings.xFollowingOnly).toBe(false);
+    expect(settings.instagramFollowingOnly).toBe(false);
     expect(settings.enabledSites).toEqual(DEFAULT_SETTINGS.enabledSites);
   });
 
@@ -39,6 +41,13 @@ describe("settings", () => {
     expect(sanitizeSettings({ xFollowingOnly: true }).xFollowingOnly).toBe(
       true,
     );
+  });
+
+  it("keeps an explicit Instagram Following preference", () => {
+    expect(
+      sanitizeSettings({ instagramFollowingOnly: true })
+        .instagramFollowingOnly,
+    ).toBe(true);
   });
 });
 

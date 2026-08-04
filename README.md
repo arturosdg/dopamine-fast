@@ -50,7 +50,8 @@ of loading more posts automatically.
 - Configurable delay before entering a supported feed.
 - Intentional session duration, adjusted through deliberate button steps, with
   a persistent floating countdown.
-- Optional Following-only mode for X that selects Following and hides For You.
+- Optional Following-only modes for X and Instagram that select Following and
+  hide For You.
 - Intentional search on X and Reddit: autocomplete is suppressed, and X Explore
   stays empty until a query is submitted. X result tabs and Reddit's Popular,
   News and Explore shortcuts are also hidden.
