@@ -74,20 +74,20 @@ On a supported feed route, the content script:
 8. Enforces the daily time ceiling without an in-page extension or reset.
 9. Shows an end-of-batch intervention before revealing more posts.
 
-Post and time budgets intentionally have different scopes:
+Post and time budgets use independent per-network enforcement:
 
-- `DailyState.revealed` and `DailyState.unlocks` are global across all supported
-  networks for the local calendar day.
-- `DailyState.revealedByPlatform` is aggregate reporting data; it does not
-  currently enforce a separate post limit.
+- `DailyState.revealedByPlatform` and `DailyState.unlocksByPlatform` enforce
+  post and unlock limits independently for each supported network.
+- `DailyState.revealed` and `DailyState.unlocks` remain aggregate reporting
+  totals derived from their per-platform records.
 - `DailyUsageState.usedSecondsByPlatform` enforces an independent time ceiling
   for each network.
 - The effective time ceiling is captured when the day's state is created.
   Changing the setting applies on the next local calendar day.
 
 Mode behavior currently differs mainly in unlock policy: balanced mode permits
-two extra batches per day, while gentle and strict are still primarily bounded
-by the global daily post maximum. The stricter fail-closed behavior described
+two extra batches per network per day, while gentle and strict are still
+primarily bounded by the per-network daily post maximum. The stricter fail-closed behavior described
 in `PRODUCT_SPEC.md` is not fully implemented; do not claim otherwise.
 
 ## Technology and extension constraints
@@ -131,6 +131,7 @@ lib/
   usage-history.ts       Pure normalization and retention for usage statistics
   preferred-feed.ts      Optional preferred-feed selection and tab restoration
   intentional-search.ts Search suggestion and discovery-surface suppression
+  single-item-view.ts   Scroll lock for explicitly opened single-item surfaces
   intervention-ui.ts     Shadow-DOM overlays, timer and deliberate interactions
   runtime-messages.ts    Validated background/content message contracts
   serial-queue.ts        Promise queue used by the background state owner
@@ -175,6 +176,8 @@ Specific responsibilities:
   browser or DOM dependencies.
 - `preferred-feed.ts` applies an adapter-defined preferred tab and restores any
   tab styles it changes during teardown.
+- `single-item-view.ts` blocks vertical feed navigation on an explicitly
+  opened item and restores page styles and listeners during teardown.
 - `platforms.ts` is the only home for network-specific hosts, feed routes,
   selectors, stable post identities and recommendation markers.
 - `feed-limiter.ts` may manipulate feed elements, but it must restore every

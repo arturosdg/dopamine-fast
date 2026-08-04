@@ -14,6 +14,7 @@ export interface PlatformAdapter {
   intentionalSearch?: {
     inputSelectors: string[];
     suggestionSelectors: string[];
+    alwaysHideNavigation?: boolean;
     shadowHostSelectors?: string[];
     shadowInputSelectors?: string[];
     shadowSuggestionSelectors?: string[];
@@ -24,6 +25,12 @@ export interface PlatformAdapter {
       selectors: string[];
     }>;
     navigationSelectors?: string[];
+  };
+  singleItemView?: {
+    isRoute(url: URL): boolean;
+    itemSelector: string;
+    itemRootSelector: string;
+    navigationSelectors: string[];
   };
   getPostKey(element: HTMLElement): string | undefined;
   isFeedRoute(url: URL): boolean;
@@ -187,13 +194,37 @@ const instagram: PlatformAdapter = {
     "sponsored",
     "patrocinado",
   ],
+  intentionalSearch: {
+    inputSelectors: [],
+    suggestionSelectors: [],
+    alwaysHideNavigation: true,
+    navigationSelectors: [
+      'a[href="/reels/"]',
+      'nav a[href^="/reels/"]',
+      '[role="navigation"] a[href^="/reels/"]',
+    ],
+  },
+  singleItemView: {
+    isRoute(url) {
+      return (
+        url.pathname === "/reels/" ||
+        /^\/reels?\/[^/]+\/?$/.test(url.pathname)
+      );
+    },
+    itemSelector: 'main [role="group"][aria-label="Video player"]',
+    itemRootSelector: '[style*="--x-height"]',
+    navigationSelectors: ['main [role="toolbar"]'],
+  },
   getPostKey(element) {
     const href = element
-      .querySelector<HTMLAnchorElement>('a[href^="/p/"], a[href^="/reel/"]')
+      .querySelector<HTMLAnchorElement>(
+        'a[href^="/p/"], a[href^="/reel/"], a[href^="/reels/"]',
+      )
       ?.getAttribute("href");
-    const match = href?.match(/^\/(p|reel)\/([^/]+)/);
+    const match = href?.match(/^\/(p|reels?)\/([^/]+)/);
+    const type = match?.[1] === "reels" ? "reel" : match?.[1];
     return match?.[1] && match[2]
-      ? `${match[1]}:${match[2]}`
+      ? `${type}:${match[2]}`
       : undefined;
   },
   isFeedRoute(url) {

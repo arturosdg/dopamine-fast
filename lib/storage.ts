@@ -86,7 +86,10 @@ export async function reserveAllowanceFromStorage(
   const current = normalizeDailyState(stored);
   const granted = Math.min(
     Math.max(0, requested),
-    Math.max(0, settings.dailyLimit - current.revealed),
+    Math.max(
+      0,
+      settings.dailyLimit - current.revealedByPlatform[platform],
+    ),
   );
 
   if (granted === 0) {
@@ -104,6 +107,10 @@ export async function reserveAllowanceFromStorage(
       [platform]: current.revealedByPlatform[platform] + granted,
     },
     unlocks: current.unlocks + (isUnlock ? 1 : 0),
+    unlocksByPlatform: {
+      ...current.unlocksByPlatform,
+      [platform]: current.unlocksByPlatform[platform] + (isUnlock ? 1 : 0),
+    },
   });
 
   return granted;

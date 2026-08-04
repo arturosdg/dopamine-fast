@@ -61,11 +61,42 @@ describe("daily state", () => {
   it("calculates the remaining allowance", () => {
     const state = {
       ...emptyDailyState(today),
-      revealed: 35,
+      revealed: 45,
+      revealedByPlatform: {
+        reddit: 35,
+        x: 10,
+        instagram: 0,
+      },
     };
     expect(
-      availableAllowance({ ...DEFAULT_SETTINGS, dailyLimit: 60 }, state),
+      availableAllowance(
+        { ...DEFAULT_SETTINGS, dailyLimit: 60 },
+        state,
+        "reddit",
+      ),
     ).toBe(25);
+    expect(
+      availableAllowance(
+        { ...DEFAULT_SETTINGS, dailyLimit: 60 },
+        state,
+        "instagram",
+      ),
+    ).toBe(60);
+  });
+
+  it("migrates legacy daily state to per-network unlock counters", () => {
+    const legacy = {
+      date: localDateKey(today),
+      revealed: 30,
+      revealedByPlatform: { reddit: 20, x: 10, instagram: 0 },
+      unlocks: 2,
+    };
+
+    expect(normalizeDailyState(legacy, today)).toEqual({
+      ...legacy,
+      unlocks: 0,
+      unlocksByPlatform: { reddit: 0, x: 0, instagram: 0 },
+    });
   });
 
   it("resets stale time usage and calculates a per-network hard limit", () => {
