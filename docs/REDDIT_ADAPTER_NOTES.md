@@ -13,7 +13,28 @@ finite-feed work reproducible.
 - Profile: temporary copy of the maintainer's normal Firefox profile
 - Observed viewport height: 860 CSS pixels
 
-Android and Chromium were not manually verified during this inspection.
+Android was not manually verified during this inspection. Chromium search and
+navigation were inspected separately below.
+
+## Chromium search and navigation inspection
+
+- Date: 2026-08-04
+- Browser: authenticated Chrome desktop session with Spanish Reddit UI
+- Page: `https://www.reddit.com/`
+- Observed viewport: 1173 by 769 CSS pixels
+
+The open search suggestion panel is owned by `reddit-search-large`. In the
+inspected layout it exposed one `[role="menu"]` and one `ul`; older role-based
+listbox and option selectors did not match. The adapter keeps both contracts
+and scopes them to the search component so unrelated menus remain available.
+
+The responsive left navigation uses `reddit-sidebar-nav`. Popular, News and
+Explore are matched there by their `/r/popular`, `/r/news` and `/explore`
+destinations. The href selectors stay inside that navigation component so a
+user-requested link to `r/news` in a post or search result is not hidden.
+Reddit also renders a folded navigation variant under semantic `nav` or
+`[role="navigation"]` containers, so the same exact destinations are matched
+there without broadening suppression into `main`, posts or search results.
 
 ## Current post structure
 

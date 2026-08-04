@@ -7,6 +7,19 @@ export interface BatchGateOptions {
   onUnlock(): Promise<number>;
 }
 
+const GATE_TOP_OFFSET = 16;
+
+export function tightenScrollCeiling(
+  currentCeiling: number | undefined,
+  scrollY: number,
+  gateTop: number,
+): number {
+  const candidate = Math.max(0, scrollY + gateTop - GATE_TOP_OFFSET);
+  return currentCeiling === undefined
+    ? candidate
+    : Math.min(currentCeiling, candidate);
+}
+
 export class BatchGateUi {
   private readonly host = document.createElement("div");
   private readonly shadow = this.host.attachShadow({ mode: "closed" });
@@ -16,6 +29,7 @@ export class BatchGateUi {
   private countdownTimer?: number;
   private animationFrame?: number;
   private scrollGuardActive = false;
+  private scrollCeiling?: number;
 
   constructor() {
     this.host.dataset.dopamineFastBatchGate = "true";
@@ -80,6 +94,7 @@ export class BatchGateUi {
         this.host,
       );
     }
+    this.updateScrollCeiling();
   }
 
   hide(): void {
@@ -89,6 +104,7 @@ export class BatchGateUi {
     this.boundary = undefined;
     this.placement = "after";
     this.renderKey = "";
+    this.scrollCeiling = undefined;
   }
 
   destroy(): void {
@@ -101,7 +117,7 @@ export class BatchGateUi {
 
     const style = document.createElement("style");
     style.textContent = `
-      :host { display: block; width: 100%; }
+      :host { display: block; width: 100%; min-height: max(180px, calc(100vh - 16px)); contain: layout style; }
       .gate { box-sizing: border-box; width: min(100%, 680px); margin: 20px auto; padding: 24px; border: 1px solid rgba(128, 128, 128, .35); border-radius: 12px; background: #151716; color: #f0f1ed; font: 14px/1.45 system-ui, sans-serif; text-align: center; }
       .label { margin: 0 0 6px; color: #a5aaa6; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
       .copy { margin: 0 0 16px; font-size: 15px; }
@@ -246,11 +262,28 @@ export class BatchGateUi {
 
   private readonly keepGateInView = (): void => {
     if (!this.scrollGuardActive || !this.host.isConnected) return;
+    this.updateScrollCeiling();
+    if (
+      this.scrollCeiling !== undefined &&
+      window.scrollY > this.scrollCeiling
+    ) {
+      window.scrollTo({ top: this.scrollCeiling, behavior: "auto" });
+      return;
+    }
     const top = this.host.getBoundingClientRect().top;
-    if (top >= 16) return;
+    if (top >= GATE_TOP_OFFSET) return;
     window.scrollTo({
-      top: Math.max(0, window.scrollY + top - 16),
+      top: Math.max(0, window.scrollY + top - GATE_TOP_OFFSET),
       behavior: "auto",
     });
   };
+
+  private updateScrollCeiling(): void {
+    if (!this.host.isConnected) return;
+    this.scrollCeiling = tightenScrollCeiling(
+      this.scrollCeiling,
+      window.scrollY,
+      this.host.getBoundingClientRect().top,
+    );
+  }
 }

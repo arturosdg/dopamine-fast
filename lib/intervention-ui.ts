@@ -6,6 +6,7 @@ export interface OpeningOptions {
   delaySeconds: number;
   defaultSessionMinutes: number;
   availableSeconds: number;
+  usageMetrics: Array<{ label: string; usedSeconds: number }>;
 }
 
 export interface UsageTimerOptions {
@@ -78,6 +79,21 @@ export class InterventionUi {
           <p class="df-copy">
             Choose a defined session now. The timer will remain visible as you browse.
           </p>
+          <section class="df-usage-summary" aria-labelledby="df-usage-summary-title">
+            <p id="df-usage-summary-title">Time spent today</p>
+            <div class="df-usage-summary__items">
+              ${options.usageMetrics
+                .map(
+                  (metric) => `
+                    <div class="df-usage-summary__item">
+                      <span>${metric.label}</span>
+                      <strong>${this.formatUsageDuration(metric.usedSeconds)}</strong>
+                    </div>
+                  `,
+                )
+                .join("")}
+            </div>
+          </section>
           <div class="df-time-choice df-time-stepper">
             <span>This session</span>
             <output aria-live="polite">${defaultSessionLabel}</output>
@@ -450,6 +466,16 @@ export class InterventionUi {
     if (safeSeconds < 60) return "<1 min";
     const hours = Math.floor(safeSeconds / 3600);
     const minutes = Math.ceil((safeSeconds % 3600) / 60);
+    if (hours === 0) return `${minutes} min`;
+    return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
+  }
+
+  private formatUsageDuration(totalSeconds: number): string {
+    const safeSeconds = Math.max(0, Math.round(totalSeconds));
+    if (safeSeconds === 0) return "0 min";
+    if (safeSeconds < 60) return "<1 min";
+    const hours = Math.floor(safeSeconds / 3600);
+    const minutes = Math.floor((safeSeconds % 3600) / 60);
     if (hours === 0) return `${minutes} min`;
     return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
   }

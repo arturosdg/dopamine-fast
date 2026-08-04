@@ -33,6 +33,7 @@ const controls = {
   holdOutput: requiredElement<HTMLOutputElement>("#hold-output"),
   reddit: requiredElement<HTMLInputElement>("#site-reddit"),
   x: requiredElement<HTMLInputElement>("#site-x"),
+  xFollowingOnly: requiredElement<HTMLInputElement>("#x-following-only"),
   instagram: requiredElement<HTMLInputElement>("#site-instagram"),
   blockSuggested: requiredElement<HTMLInputElement>("#block-suggested"),
   disableAutoplay: requiredElement<HTMLInputElement>("#disable-autoplay"),
@@ -62,6 +63,7 @@ function render(settings: Settings): void {
   controls.holdSeconds.value = String(settings.holdSeconds);
   controls.reddit.checked = settings.enabledSites.reddit;
   controls.x.checked = settings.enabledSites.x;
+  controls.xFollowingOnly.checked = settings.xFollowingOnly;
   controls.instagram.checked = settings.enabledSites.instagram;
   controls.blockSuggested.checked = settings.blockSuggested;
   controls.disableAutoplay.checked = settings.disableAutoplay;
@@ -89,6 +91,7 @@ function readSettings(): Settings {
     holdSeconds: Number(controls.holdSeconds.value),
     blockSuggested: controls.blockSuggested.checked,
     disableAutoplay: controls.disableAutoplay.checked,
+    xFollowingOnly: controls.xFollowingOnly.checked,
     enabledSites: {
       reddit: controls.reddit.checked,
       x: controls.x.checked,
@@ -100,6 +103,14 @@ function readSettings(): Settings {
 [controls.openingDelay, controls.unlockDelay, controls.holdSeconds].forEach(
   (control) => control.addEventListener("input", updateOutputs),
 );
+
+controls.xFollowingOnly.addEventListener("change", async () => {
+  await saveSettings(readSettings());
+  status.textContent = "X feed preference applied.";
+  window.setTimeout(() => {
+    status.textContent = "";
+  }, 2400);
+});
 
 form.addEventListener("submit", async (event) => {
   event.preventDefault();

@@ -4,17 +4,24 @@ import {
   type PlatformAdapter,
 } from "./platforms";
 import { BatchGateUi } from "./batch-gate-ui";
+import { planFeedVisibility } from "./feed-boundary";
 import { dailyStateItem, reserveAllowance } from "./storage";
 import { availableAllowance, normalizeDailyState, type Settings } from "./models";
 
-interface OriginalDisplay {
+interface OriginalProperty {
   value: string;
   priority: string;
 }
 
+interface OriginalStyles {
+  display: OriginalProperty;
+  visibility: OriginalProperty;
+  pointerEvents: OriginalProperty;
+}
+
 export class FeedLimiter {
   private allowance: number;
-  private readonly hidden = new Map<HTMLElement, OriginalDisplay>();
+  private readonly hidden = new Map<HTMLElement, OriginalStyles>();
   private readonly revealedPostKeys = new Set<string>();
   private readonly fallbackPostKeys = new WeakMap<HTMLElement, string>();
   private readonly gate = new BatchGateUi();
@@ -45,8 +52,8 @@ export class FeedLimiter {
     this.destroyed = true;
     this.mutationObserver.disconnect();
     if (this.processingTimer) window.clearTimeout(this.processingTimer);
-    this.hidden.forEach((display, element) => {
-      element.style.setProperty("display", display.value, display.priority);
+    this.hidden.forEach((styles, element) => {
+      this.restoreHiddenStyles(element, styles);
       delete element.dataset.dopamineFastHidden;
     });
     this.hidden.clear();
@@ -88,20 +95,24 @@ export class FeedLimiter {
       return !suggested;
     });
 
+    const visibility = planFeedVisibility(
+      regularPosts.map((post) => this.getPostKey(post)),
+      this.revealedPostKeys,
+      this.allowance,
+    );
+    visibility.newlyRevealedKeys.forEach((postKey) =>
+      this.revealedPostKeys.add(postKey),
+    );
+
     let firstBlockedPost: HTMLElement | undefined;
     let lastVisiblePost: HTMLElement | undefined;
-    regularPosts.forEach((post) => {
-      const postKey = this.getPostKey(post);
-      if (
-        this.revealedPostKeys.has(postKey) ||
-        this.revealedPostKeys.size < this.allowance
-      ) {
-        this.revealedPostKeys.add(postKey);
+    regularPosts.forEach((post, index) => {
+      if (visibility.visible[index] === true) {
         this.showElement(post);
         lastVisiblePost = post;
       } else {
         firstBlockedPost ??= post;
-        this.hideElement(post);
+        this.hideElement(post, true);
       }
     });
 
@@ -179,22 +190,59 @@ export class FeedLimiter {
     });
   }
 
-  private hideElement(element: HTMLElement): void {
+  private hideElement(element: HTMLElement, preserveLayout = false): void {
     if (!this.hidden.has(element)) {
       this.hidden.set(element, {
-        value: element.style.getPropertyValue("display"),
-        priority: element.style.getPropertyPriority("display"),
+        display: this.originalProperty(element, "display"),
+        visibility: this.originalProperty(element, "visibility"),
+        pointerEvents: this.originalProperty(element, "pointer-events"),
       });
     }
     element.dataset.dopamineFastHidden = "true";
+    if (preserveLayout) {
+      element.style.setProperty("visibility", "hidden", "important");
+      element.style.setProperty("pointer-events", "none", "important");
+      return;
+    }
     element.style.setProperty("display", "none", "important");
   }
 
   private showElement(element: HTMLElement): void {
     const original = this.hidden.get(element);
     if (!original) return;
-    element.style.setProperty("display", original.value, original.priority);
+    this.restoreHiddenStyles(element, original);
     delete element.dataset.dopamineFastHidden;
     this.hidden.delete(element);
+  }
+
+  private originalProperty(
+    element: HTMLElement,
+    property: string,
+  ): OriginalProperty {
+    return {
+      value: element.style.getPropertyValue(property),
+      priority: element.style.getPropertyPriority(property),
+    };
+  }
+
+  private restoreHiddenStyles(
+    element: HTMLElement,
+    styles: OriginalStyles,
+  ): void {
+    element.style.setProperty(
+      "display",
+      styles.display.value,
+      styles.display.priority,
+    );
+    element.style.setProperty(
+      "visibility",
+      styles.visibility.value,
+      styles.visibility.priority,
+    );
+    element.style.setProperty(
+      "pointer-events",
+      styles.pointerEvents.value,
+      styles.pointerEvents.priority,
+    );
   }
 }

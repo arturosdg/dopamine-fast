@@ -28,6 +28,8 @@ Keep the useful parts of social networks while giving every feed a real end.
 ## Time budgets
 
 - Before entry, the user selects an intentional session duration.
+- The opening screen shows today's elapsed time for Reddit, X and Instagram
+  before another session is planned.
 - Session duration changes use discrete buttons instead of a slider, so adding
   more time requires a separate deliberate press for each step.
 - The configured default is 10 minutes and can be adjusted from 1 to 60
@@ -45,6 +47,9 @@ Keep the useful parts of social networks while giving every feed a real end.
   in-page unlock.
 - Daily post and time mutations are serialized by the extension background
   context, and active tabs reconcile against persisted usage from other tabs.
+- Aggregate elapsed seconds are retained locally for the 30 most recent days
+  with activity so usage statistics survive calendar resets. Active session
+  countdowns are not stored as history.
 - The effective ceiling is fixed for the day. Configuration changes apply on
   the next local calendar day, and the settings page cannot reset elapsed time.
 
@@ -56,6 +61,10 @@ pause and requires holding the load-more button for the configured duration.
 Completing it reveals only the next configured batch.
 Virtualized feeds are counted by stable post identity for the active page
 session, so recycling DOM elements cannot reset the batch.
+Blocked posts retain their layout geometry while becoming invisible and
+non-interactive. Together with a terminal control that reserves the remaining
+viewport, this keeps a platform's native infinite-loader sentinel outside the
+visible area while the batch is closed.
 
 ## Modes
 
@@ -82,12 +91,24 @@ session, so recycling DOM elements cannot reset the batch.
 
 - Keep explicitly visited subreddits and subscribed content.
 - Hide promoted posts, recommended communities and related-post modules.
+- Hide search autocomplete and recommended results so a query must be entered
+  deliberately before Reddit returns content.
+- Hide Reddit's Popular, News and Explore navigation shortcuts while suggested
+  content blocking is enabled.
 - Limit listing pages to the active batch.
 
 ### X
 
 - Prefer the Following feed.
+- When the optional Following-only setting is enabled, select Following and
+  hide the For You tab. If the expected tabs cannot be identified confidently,
+  leave X's navigation unchanged.
 - Hide For You, trends, promoted posts, Discover more and follow suggestions.
+- Keep the Explore search box available while hiding its discovery tabs,
+  trending content, account suggestions and autocomplete until the user submits
+  a query.
+- Hide the result-category tabs and discovery sidebar after a submitted X
+  search, leaving only the query and its results.
 - Limit the timeline to the active batch.
 
 ### Instagram
@@ -101,7 +122,8 @@ session, so recycling DOM elements cannot reset the batch.
 ## Privacy and permissions
 
 - Local storage only.
-- Time counters store elapsed seconds per network, never browsing content.
+- Time counters store aggregate elapsed seconds per network for the 30 most
+  recent days with activity, never browsing content.
 - No backend or analytics.
 - No cookie permission.
 - Host access limited to supported domains.

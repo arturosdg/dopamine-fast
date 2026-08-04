@@ -6,6 +6,25 @@ export interface PlatformAdapter {
   postSelectors: string[];
   suggestedSelectors: string[];
   suggestedTokens: string[];
+  preferredFeed?: {
+    tabSelector: string;
+    preferredTokens: string[];
+    hiddenTokens: string[];
+  };
+  intentionalSearch?: {
+    inputSelectors: string[];
+    suggestionSelectors: string[];
+    shadowHostSelectors?: string[];
+    shadowInputSelectors?: string[];
+    shadowSuggestionSelectors?: string[];
+    navigationShadowHostSelectors?: string[];
+    shadowNavigationSelectors?: string[];
+    routeRules?: Array<{
+      paths: string[];
+      selectors: string[];
+    }>;
+    navigationSelectors?: string[];
+  };
   getPostKey(element: HTMLElement): string | undefined;
   isFeedRoute(url: URL): boolean;
 }
@@ -33,6 +52,50 @@ const reddit: PlatformAdapter = {
     "recommended for you",
     "recomendado para ti",
   ],
+  intentionalSearch: {
+    inputSelectors: [
+      "reddit-search-large input",
+      'header input[name="q"]',
+      'header input[type="search"]',
+    ],
+    suggestionSelectors: [
+      'reddit-search-large [role="menu"]',
+      "reddit-search-large ul",
+      'reddit-search-large [role="listbox"]',
+      'reddit-search-large [role="option"]',
+      '[data-testid="search-suggestions"]',
+      '[id*="search-suggestion"]',
+    ],
+    shadowHostSelectors: ["reddit-search-large", "faceplate-search-input"],
+    shadowInputSelectors: ["input"],
+    shadowSuggestionSelectors: [
+      '[role="menu"]',
+      "ul",
+      '[role="listbox"]',
+      '[role="option"]',
+      '[id*="search-suggestion"]',
+    ],
+    navigationSelectors: [
+      'reddit-sidebar-nav a[href*="/r/popular"]',
+      'reddit-sidebar-nav a[href*="/r/news"]',
+      'reddit-sidebar-nav a[href*="/explore"]',
+      'nav a[href*="/r/popular"]',
+      'nav a[href*="/r/news"]',
+      'nav a[href*="/explore"]',
+      '[role="navigation"] a[href*="/r/popular"]',
+      '[role="navigation"] a[href*="/r/news"]',
+      '[role="navigation"] a[href*="/explore"]',
+    ],
+    navigationShadowHostSelectors: ["reddit-sidebar-nav"],
+    shadowNavigationSelectors: [
+      'a[href*="/r/popular"]',
+      'a[href*="/r/news"]',
+      'a[href*="/explore"]',
+      'nav [href*="/r/popular"]',
+      'nav [href*="/r/news"]',
+      'nav [href*="/explore"]',
+    ],
+  },
   getPostKey(element) {
     return (
       element.id ||
@@ -68,6 +131,33 @@ const x: PlatformAdapter = {
     "who to follow",
     "a quién seguir",
   ],
+  preferredFeed: {
+    tabSelector: 'main [role="tablist"] [role="tab"]',
+    preferredTokens: ["following", "siguiendo"],
+    hiddenTokens: ["for you", "para ti"],
+  },
+  intentionalSearch: {
+    inputSelectors: ['input[data-testid="SearchBox_Search_Input"]'],
+    suggestionSelectors: ['[data-testid="typeaheadDropdown"]'],
+    routeRules: [
+      {
+        paths: ["/explore"],
+        selectors: [
+          '[data-testid="primaryColumn"] [role="tablist"]',
+          '[data-testid="primaryColumn"] [role="region"]',
+          '[data-testid="primaryColumn"] [role="status"]',
+          '[data-testid="sidebarColumn"]',
+        ],
+      },
+      {
+        paths: ["/search"],
+        selectors: [
+          '[data-testid="primaryColumn"] [role="tablist"]',
+          '[data-testid="sidebarColumn"]',
+        ],
+      },
+    ],
+  },
   getPostKey(element) {
     const href = element
       .querySelector<HTMLAnchorElement>('a[href*="/status/"]')

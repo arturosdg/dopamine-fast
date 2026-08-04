@@ -1,15 +1,19 @@
 import "../assets/content.css";
 import { FeedLimiter } from "../lib/feed-limiter";
 import { InterventionUi } from "../lib/intervention-ui";
-import { availableUsageSeconds } from "../lib/models";
+import { IntentionalSearchController } from "../lib/intentional-search";
+import { availableUsageSeconds, localDateKey } from "../lib/models";
 import { getPlatformAdapter } from "../lib/platforms";
+import { PreferredFeedController } from "../lib/preferred-feed";
 import {
   getDailyUsageState,
   getSettings,
+  getUsageHistory,
   reserveAllowance,
   dailyUsageStateItem,
   settingsItem,
 } from "../lib/storage";
+import { usageForDate } from "../lib/usage-history";
 import { UsageSession } from "../lib/usage-session";
 
 export default defineContentScript({
@@ -58,6 +62,8 @@ export default defineContentScript({
     if (!intervention) return;
 
     let limiter: FeedLimiter | undefined;
+    let intentionalSearch: IntentionalSearchController | undefined;
+    let preferredFeed: PreferredFeedController | undefined;
     let usageSession: UsageSession | undefined;
     let currentUrl = "";
     let activationId = 0;
@@ -66,6 +72,10 @@ export default defineContentScript({
       const thisActivation = ++activationId;
       limiter?.destroy();
       limiter = undefined;
+      intentionalSearch?.destroy();
+      intentionalSearch = undefined;
+      preferredFeed?.destroy();
+      preferredFeed = undefined;
       const previousUsageSession = usageSession;
       usageSession = undefined;
       await previousUsageSession?.destroy();
@@ -74,15 +84,27 @@ export default defineContentScript({
 
       const url = new URL(location.href);
       const settings = await getSettings();
-      if (
-        !settings.enabled ||
-        !settings.enabledSites[adapter.id] ||
-        !adapter.isFeedRoute(url)
-      ) {
+      if (thisActivation !== activationId) return;
+      if (!settings.enabled || !settings.enabledSites[adapter.id]) {
         return;
       }
 
-      const usageState = await getDailyUsageState();
+      if (settings.blockSuggested && adapter.intentionalSearch) {
+        intentionalSearch = new IntentionalSearchController(adapter, url);
+        intentionalSearch.start();
+      }
+
+      if (!adapter.isFeedRoute(url)) return;
+
+      if (adapter.id === "x" && settings.xFollowingOnly) {
+        preferredFeed = new PreferredFeedController(adapter);
+        preferredFeed.start();
+      }
+
+      const [usageState, usageHistory] = await Promise.all([
+        getDailyUsageState(),
+        getUsageHistory(),
+      ]);
       const availableSeconds = availableUsageSeconds(
         settings,
         usageState,
@@ -93,12 +115,18 @@ export default defineContentScript({
         intervention.showHardLimitReached(adapter.label);
         return;
       }
+      const todayUsage = usageForDate(usageHistory, localDateKey());
 
       const plannedSeconds = await intervention.showOpening({
         platformLabel: adapter.label,
         delaySeconds: settings.openingDelaySeconds,
         defaultSessionMinutes: settings.sessionDurationMinutes,
         availableSeconds,
+        usageMetrics: [
+          { label: "Reddit", usedSeconds: todayUsage.reddit },
+          { label: "X", usedSeconds: todayUsage.x },
+          { label: "Instagram", usedSeconds: todayUsage.instagram },
+        ],
       });
       if (thisActivation !== activationId) return;
       if (plannedSeconds <= 0) return;
@@ -195,6 +223,8 @@ export default defineContentScript({
       unwatchSettings();
       unwatchUsage();
       limiter?.destroy();
+      intentionalSearch?.destroy();
+      preferredFeed?.destroy();
       void usageSession?.destroy();
       shadowUi.remove();
     });
