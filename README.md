@@ -21,15 +21,21 @@ endless, algorithmic feed. Dopamine Fast keeps the useful parts of those sites
 available while adding deliberate friction around habitual scrolling:
 
 1. A configurable countdown interrupts automatic feed opening.
-2. You choose an intended session length before entering.
-3. A floating timer keeps that decision visible while you browse.
-4. Posts are revealed in finite batches instead of an endless stream.
-5. Reaching the end shows an inline control for loading the next batch.
-6. A per-network daily time ceiling cannot be extended from the page.
+2. A small summary shows today's time spent on each supported network.
+3. You choose an intended session length before entering.
+4. A floating timer keeps that decision visible while you browse.
+5. Posts are revealed in finite batches instead of an endless stream.
+6. Reaching the end shows an inline control for loading the next batch.
+7. A per-network daily time ceiling cannot be extended from the page.
 
 Daily post allowances are shared across supported networks. Daily time
 ceilings are tracked independently for Reddit, X/Twitter, and Instagram.
 Preferences and aggregate counters stay in browser extension local storage.
+Elapsed seconds per network are retained for the 30 most recent days with
+activity; active session countdowns are not stored in that history.
+At a closed batch boundary, blocked posts retain their layout geometry while
+becoming invisible and non-interactive. The inline control also occupies the
+remaining viewport, keeping native infinite-scroll loaders out of view.
 
 ## Product tour
 
@@ -44,6 +50,10 @@ of loading more posts automatically.
 - Configurable delay before entering a supported feed.
 - Intentional session duration, adjusted through deliberate button steps, with
   a persistent floating countdown.
+- Optional Following-only mode for X that selects Following and hides For You.
+- Intentional search on X and Reddit: autocomplete is suppressed, and X Explore
+  stays empty until a query is submitted. X result tabs and Reddit's Popular,
+  News and Explore shortcuts are also hidden.
 - Non-extendable daily time ceiling for each network.
 - Finite initial and additional post batches.
 - Stable per-session post counting for virtualized feeds such as Reddit.
@@ -126,6 +136,7 @@ lib/
   ├─ platforms.ts
   ├─ feed-limiter.ts
   ├─ usage-session.ts
+  ├─ usage-history.ts
   ├─ intervention-ui.ts
   └─ session-time.ts
 ```

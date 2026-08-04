@@ -49,4 +49,22 @@ describe("platform adapters", () => {
 
     expect(reddit.getPostKey(post)).toBe("t3_example");
   });
+
+  it("defines deliberate search surfaces without broad page selectors", () => {
+    const reddit = getPlatformAdapter("reddit.com")!;
+    const x = getPlatformAdapter("x.com")!;
+
+    expect(reddit.intentionalSearch?.suggestionSelectors).toContain(
+      'reddit-search-large [role="listbox"]',
+    );
+    expect(reddit.intentionalSearch?.navigationSelectors).toContain(
+      'reddit-sidebar-nav a[href*="/r/popular"]',
+    );
+    expect(reddit.intentionalSearch?.navigationSelectors).toContain(
+      'nav a[href*="/r/news"]',
+    );
+    expect(x.intentionalSearch?.routeRules?.[0]?.selectors).toContain(
+      '[data-testid="primaryColumn"] [role="tablist"]',
+    );
+  });
 });

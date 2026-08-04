@@ -16,6 +16,12 @@ import type {
   ReserveAllowanceResponse,
   RuntimeMessage,
 } from "./runtime-messages";
+import {
+  emptyUsageHistory,
+  normalizeUsageHistory,
+  recordUsageState,
+  type UsageHistory,
+} from "./usage-history";
 
 export const settingsItem = storage.defineItem<Settings>(
   "local:dopamine-fast-settings",
@@ -35,6 +41,13 @@ export const dailyUsageStateItem = storage.defineItem<DailyUsageState>(
   "local:dopamine-fast-daily-usage-state",
   {
     defaultValue: emptyDailyUsageState(),
+  },
+);
+
+export const usageHistoryItem = storage.defineItem<UsageHistory>(
+  "local:dopamine-fast-usage-history",
+  {
+    defaultValue: emptyUsageHistory(),
   },
 );
 
@@ -120,12 +133,24 @@ export async function addUsageSeconds(
   return response.remainingSeconds;
 }
 
+export async function getUsageHistory(): Promise<UsageHistory> {
+  const [storedHistory, currentUsage] = await Promise.all([
+    usageHistoryItem.getValue(),
+    getDailyUsageState(),
+  ]);
+  return recordUsageState(normalizeUsageHistory(storedHistory), currentUsage);
+}
+
 export async function addUsageSecondsFromStorage(
   platform: PlatformId,
   elapsedSeconds: number,
 ): Promise<number> {
   const settings = await getSettings();
-  const stored = await dailyUsageStateItem.getValue();
+  const [stored, storedHistory] = await Promise.all([
+    dailyUsageStateItem.getValue(),
+    usageHistoryItem.getValue(),
+  ]);
+  const historyWithStoredDay = recordUsageState(storedHistory, stored);
   const current = normalizeDailyUsageState(
     stored,
     new Date(),
@@ -138,13 +163,18 @@ export async function addUsageSecondsFromStorage(
     current.usedSecondsByPlatform[platform] + increment,
   );
 
-  await dailyUsageStateItem.setValue({
+  const nextState: DailyUsageState = {
     ...current,
     usedSecondsByPlatform: {
       ...current.usedSecondsByPlatform,
       [platform]: usedSeconds,
     },
-  });
+  };
+
+  await dailyUsageStateItem.setValue(nextState);
+  await usageHistoryItem.setValue(
+    recordUsageState(historyWithStoredDay, nextState),
+  );
 
   return Math.max(0, dailyLimitSeconds - usedSeconds);
 }

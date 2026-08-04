@@ -21,6 +21,7 @@ describe("settings", () => {
       unlockBatchSize: 300,
       dailyLimit: -10,
       holdSeconds: 0,
+      xFollowingOnly: "yes" as unknown as boolean,
     });
 
     expect(settings.openingDelaySeconds).toBe(60);
@@ -30,7 +31,14 @@ describe("settings", () => {
     expect(settings.unlockBatchSize).toBe(50);
     expect(settings.dailyLimit).toBe(10);
     expect(settings.holdSeconds).toBe(1);
+    expect(settings.xFollowingOnly).toBe(false);
     expect(settings.enabledSites).toEqual(DEFAULT_SETTINGS.enabledSites);
+  });
+
+  it("keeps an explicit X Following preference", () => {
+    expect(sanitizeSettings({ xFollowingOnly: true }).xFollowingOnly).toBe(
+      true,
+    );
   });
 });
 

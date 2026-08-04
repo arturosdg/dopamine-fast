@@ -125,8 +125,12 @@ lib/
   storage.ts             WXT storage keys and persistence operations
   platforms.ts           Host/route detection and selector adapters
   batch-gate-ui.ts       Inline end-of-batch control rendered inside the native feed
+  feed-boundary.ts       Pure contiguous visibility planning for finite batches
   feed-limiter.ts        DOM observation, post visibility and batch boundaries
   usage-session.ts       Visible-tab session timer and persistence lifecycle
+  usage-history.ts       Pure normalization and retention for usage statistics
+  preferred-feed.ts      Optional preferred-feed selection and tab restoration
+  intentional-search.ts Search suggestion and discovery-surface suppression
   intervention-ui.ts     Shadow-DOM overlays, timer and deliberate interactions
   runtime-messages.ts    Validated background/content message contracts
   serial-queue.ts        Promise queue used by the background state owner
@@ -167,6 +171,10 @@ Specific responsibilities:
   clamps, date normalization and pure budget calculations here.
 - `storage.ts` owns storage key names and all persistent reads/writes. Other
   modules must not introduce ad-hoc storage keys.
+- `usage-history.ts` normalizes the bounded daily time history and has no
+  browser or DOM dependencies.
+- `preferred-feed.ts` applies an adapter-defined preferred tab and restores any
+  tab styles it changes during teardown.
 - `platforms.ts` is the only home for network-specific hosts, feed routes,
   selectors, stable post identities and recommendation markers.
 - `feed-limiter.ts` may manipulate feed elements, but it must restore every
