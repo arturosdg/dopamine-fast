@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.3.0](https://github.com/arturosdg/dopamine-fast/compare/v0.2.0...v0.3.0) (2026-08-04)
+
+
+### Features
+
+* add intentional browsing controls ([3c9a0fe](https://github.com/arturosdg/dopamine-fast/commit/3c9a0fe270730630d70ba5e4db38dfd92bdb3467))
+* add intentional browsing controls ([b34d236](https://github.com/arturosdg/dopamine-fast/commit/b34d2360cff6dfff7d43799f4a9e19116f0c4c9f))
+* **instagram:** add following-only feed ([ee8043d](https://github.com/arturosdg/dopamine-fast/commit/ee8043db5390e75ea90925c9d8df405686fad5d3))
+* **instagram:** isolate reels and post budgets ([67396c2](https://github.com/arturosdg/dopamine-fast/commit/67396c242343b1dbd5216424d01b16d1c231ddd9))
+* **instagram:** isolate reels and post budgets ([7332156](https://github.com/arturosdg/dopamine-fast/commit/7332156ea771f0b259a47ec1a82c3e4ff80ab8b6))
+
+
+### Bug Fixes
+
+* enforce deliberate session and feed limits ([dd92202](https://github.com/arturosdg/dopamine-fast/commit/dd92202d3006acc55c37024a7023dc1676b1e3b5))
+* enforce deliberate session and feed limits ([e9022d9](https://github.com/arturosdg/dopamine-fast/commit/e9022d9dbb33e095da2b469d82a8f40f8ee66435))
+
 ## [0.2.0](https://github.com/arturosdg/dopamine-fast/compare/v0.1.0...v0.2.0) (2026-07-29)
 
 
