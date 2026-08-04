@@ -23,7 +23,7 @@ Keep the useful parts of social networks while giving every feed a real end.
 7. The native feed ends with an inline load-more control after the twentieth
    post; no full-screen intervention is shown for a batch boundary.
 8. The user can deliberately reveal 10 additional posts from that control.
-9. Daily hard limits for both time and posts stop further use.
+9. Per-network daily hard limits for both time and posts stop further use.
 
 ## Time budgets
 
@@ -56,7 +56,7 @@ Keep the useful parts of social networks while giving every feed a real end.
 ## Unlock flow
 
 The end of a batch is rendered inside the native feed. The inline control shows
-how many posts remain in the daily allowance, waits through the configured
+how many posts remain in that network's daily allowance, waits through the configured
 pause and requires holding the load-more button for the configured duration.
 Completing it reveals only the next configured batch.
 Virtualized feeds are counted by stable post identity for the active page
@@ -76,7 +76,7 @@ visible area while the batch is closed.
 
 ### Balanced
 
-- One initial batch and two additional batches.
+- One initial batch and two additional batches per network.
 - The inline pause and hold are required.
 
 ### Strict
@@ -114,8 +114,13 @@ visible area while the batch is closed.
 ### Instagram
 
 - Keep followed-account posts and direct profile visits.
+- When the optional Following-only setting is enabled, select Following and
+  hide For You while the home feed is active.
 - Hide suggested posts, Explore recommendations, Reels surfaces and promoted
   posts.
+- Hide the generic Reels navigation destination. When an individual reel or
+  the Reels route is opened directly, keep the first opened item usable while
+  blocking vertical wheel, keyboard and touch navigation to another reel.
 - Stop after the active batch or after Instagram's own caught-up marker,
   whichever comes first.
 

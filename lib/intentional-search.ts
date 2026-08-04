@@ -16,6 +16,7 @@ export class IntentionalSearchController {
   constructor(
     private readonly adapter: PlatformAdapter,
     private readonly url: URL,
+    private readonly suppressSuggestions = true,
   ) {}
 
   start(): void {
@@ -53,21 +54,25 @@ export class IntentionalSearchController {
     );
     [...roots, ...navigationRoots].forEach((root) => this.observe(root));
     const shadowRoots = roots.slice(1);
-    this.hideMatches([document], config.suggestionSelectors);
-    this.hideMatches(shadowRoots, config.shadowSuggestionSelectors ?? []);
-    this.hideControlledPopups([document], roots, config.inputSelectors);
-    this.hideControlledPopups(
-      shadowRoots,
-      roots,
-      config.shadowInputSelectors ?? [],
-    );
-    this.hideMatches([document], config.navigationSelectors ?? []);
-    this.hideMatches(
-      navigationRoots.slice(1),
-      config.shadowNavigationSelectors ?? [],
-    );
+    if (this.suppressSuggestions) {
+      this.hideMatches([document], config.suggestionSelectors);
+      this.hideMatches(shadowRoots, config.shadowSuggestionSelectors ?? []);
+      this.hideControlledPopups([document], roots, config.inputSelectors);
+      this.hideControlledPopups(
+        shadowRoots,
+        roots,
+        config.shadowInputSelectors ?? [],
+      );
+      this.hideMatches([document], selectorsForRoute(config, this.url));
+    }
 
-    this.hideMatches([document], selectorsForRoute(config, this.url));
+    if (this.suppressSuggestions || config.alwaysHideNavigation) {
+      this.hideMatches([document], config.navigationSelectors ?? []);
+      this.hideMatches(
+        navigationRoots.slice(1),
+        config.shadowNavigationSelectors ?? [],
+      );
+    }
   }
 
   private observe(root: Node): void {

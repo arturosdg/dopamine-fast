@@ -35,6 +35,9 @@ const controls = {
   x: requiredElement<HTMLInputElement>("#site-x"),
   xFollowingOnly: requiredElement<HTMLInputElement>("#x-following-only"),
   instagram: requiredElement<HTMLInputElement>("#site-instagram"),
+  instagramFollowingOnly: requiredElement<HTMLInputElement>(
+    "#instagram-following-only",
+  ),
   blockSuggested: requiredElement<HTMLInputElement>("#block-suggested"),
   disableAutoplay: requiredElement<HTMLInputElement>("#disable-autoplay"),
 };
@@ -65,6 +68,7 @@ function render(settings: Settings): void {
   controls.x.checked = settings.enabledSites.x;
   controls.xFollowingOnly.checked = settings.xFollowingOnly;
   controls.instagram.checked = settings.enabledSites.instagram;
+  controls.instagramFollowingOnly.checked = settings.instagramFollowingOnly;
   controls.blockSuggested.checked = settings.blockSuggested;
   controls.disableAutoplay.checked = settings.disableAutoplay;
   requiredElement<HTMLInputElement>(
@@ -92,6 +96,7 @@ function readSettings(): Settings {
     blockSuggested: controls.blockSuggested.checked,
     disableAutoplay: controls.disableAutoplay.checked,
     xFollowingOnly: controls.xFollowingOnly.checked,
+    instagramFollowingOnly: controls.instagramFollowingOnly.checked,
     enabledSites: {
       reddit: controls.reddit.checked,
       x: controls.x.checked,
@@ -107,6 +112,14 @@ function readSettings(): Settings {
 controls.xFollowingOnly.addEventListener("change", async () => {
   await saveSettings(readSettings());
   status.textContent = "X feed preference applied.";
+  window.setTimeout(() => {
+    status.textContent = "";
+  }, 2400);
+});
+
+controls.instagramFollowingOnly.addEventListener("change", async () => {
+  await saveSettings(readSettings());
+  status.textContent = "Instagram feed preference applied.";
   window.setTimeout(() => {
     status.textContent = "";
   }, 2400);

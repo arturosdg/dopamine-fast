@@ -15,6 +15,7 @@ export interface Settings {
   blockSuggested: boolean;
   disableAutoplay: boolean;
   xFollowingOnly: boolean;
+  instagramFollowingOnly: boolean;
   enabledSites: Record<PlatformId, boolean>;
 }
 
@@ -23,6 +24,7 @@ export interface DailyState {
   revealed: number;
   revealedByPlatform: Record<PlatformId, number>;
   unlocks: number;
+  unlocksByPlatform: Record<PlatformId, number>;
 }
 
 export interface DailyUsageState {
@@ -45,6 +47,7 @@ export const DEFAULT_SETTINGS: Settings = {
   blockSuggested: true,
   disableAutoplay: true,
   xFollowingOnly: false,
+  instagramFollowingOnly: false,
   enabledSites: {
     reddit: true,
     x: true,
@@ -109,6 +112,10 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
       typeof input.xFollowingOnly === "boolean"
         ? input.xFollowingOnly
         : DEFAULT_SETTINGS.xFollowingOnly,
+    instagramFollowingOnly:
+      typeof input.instagramFollowingOnly === "boolean"
+        ? input.instagramFollowingOnly
+        : DEFAULT_SETTINGS.instagramFollowingOnly,
     enabledSites: {
       ...DEFAULT_SETTINGS.enabledSites,
       ...input.enabledSites,
@@ -133,14 +140,29 @@ export function emptyDailyState(date = new Date()): DailyState {
       instagram: 0,
     },
     unlocks: 0,
+    unlocksByPlatform: {
+      reddit: 0,
+      x: 0,
+      instagram: 0,
+    },
   };
 }
 
 export function normalizeDailyState(
-  state: DailyState | null,
+  state: Partial<DailyState> | null,
   date = new Date(),
 ): DailyState {
-  return state?.date === localDateKey(date) ? state : emptyDailyState(date);
+  if (state?.date !== localDateKey(date)) return emptyDailyState(date);
+
+  const revealedByPlatform = normalizePlatformCounts(state.revealedByPlatform);
+  const unlocksByPlatform = normalizePlatformCounts(state.unlocksByPlatform);
+  return {
+    date: state.date,
+    revealed: sumPlatformCounts(revealedByPlatform),
+    revealedByPlatform,
+    unlocks: sumPlatformCounts(unlocksByPlatform),
+    unlocksByPlatform,
+  };
 }
 
 export function emptyDailyUsageState(
@@ -193,6 +215,28 @@ export function availableUsageSeconds(
 export function availableAllowance(
   settings: Settings,
   state: DailyState,
+  platform: PlatformId,
 ): number {
-  return Math.max(0, settings.dailyLimit - state.revealed);
+  return Math.max(
+    0,
+    settings.dailyLimit - state.revealedByPlatform[platform],
+  );
+}
+
+function normalizePlatformCounts(
+  counts: Partial<Record<PlatformId, number>> | undefined,
+): Record<PlatformId, number> {
+  return {
+    reddit: normalizeCount(counts?.reddit),
+    x: normalizeCount(counts?.x),
+    instagram: normalizeCount(counts?.instagram),
+  };
+}
+
+function normalizeCount(value: number | undefined): number {
+  return Number.isFinite(value) ? Math.max(0, Math.round(value ?? 0)) : 0;
+}
+
+function sumPlatformCounts(counts: Record<PlatformId, number>): number {
+  return counts.reddit + counts.x + counts.instagram;
 }
