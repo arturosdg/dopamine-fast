@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.3.1](https://github.com/arturosdg/dopamine-fast/compare/v0.3.0...v0.3.1) (2026-08-05)
+
+
+### Bug Fixes
+
+* **ui:** remove unsafe HTML assignments ([be34c15](https://github.com/arturosdg/dopamine-fast/commit/be34c15ca31c2ba08b9950b65569d8f8c57b04d3))
+* **ui:** remove unsafe HTML assignments ([3d646b9](https://github.com/arturosdg/dopamine-fast/commit/3d646b9348617cb5f85c8dbf6d727274d1545109))
+
 ## [0.3.0](https://github.com/arturosdg/dopamine-fast/compare/v0.2.0...v0.3.0) (2026-08-04)
 
 
