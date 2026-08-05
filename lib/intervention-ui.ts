@@ -1,5 +1,12 @@
 import type { RuntimeMessage } from "./runtime-messages";
 import { sessionMinuteChoices } from "./session-time";
+import {
+  createHardLimitView,
+  createOpeningView,
+  createSessionEndedView,
+  createSessionPlanningView,
+  createUsageTimerView,
+} from "./intervention-views";
 
 export interface OpeningOptions {
   platformLabel: string;
@@ -66,60 +73,18 @@ export class InterventionUi {
     );
     const defaultSessionLabel =
       options.availableSeconds < 60 ? "<1 min" : `${defaultMinutes} min`;
-    this.overlay.innerHTML = `
-      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-opening-title">
-        <article class="df-card df-card--opening">
-          <p class="df-kicker">A pause before entering</p>
-          ${
-            options.delaySeconds > 0
-              ? `<div class="df-countdown" aria-live="polite">${options.delaySeconds}</div>`
-              : `<div class="df-pause-mark df-pause-mark--centered" aria-hidden="true"></div>`
-          }
-          <h1 id="df-opening-title">How much time do you want to spend on ${options.platformLabel}?</h1>
-          <p class="df-copy">
-            Choose a defined session now. The timer will remain visible as you browse.
-          </p>
-          <section class="df-usage-summary" aria-labelledby="df-usage-summary-title">
-            <p id="df-usage-summary-title">Time spent today</p>
-            <div class="df-usage-summary__items">
-              ${options.usageMetrics
-                .map(
-                  (metric) => `
-                    <div class="df-usage-summary__item">
-                      <span>${metric.label}</span>
-                      <strong>${this.formatUsageDuration(metric.usedSeconds)}</strong>
-                    </div>
-                  `,
-                )
-                .join("")}
-            </div>
-          </section>
-          <div class="df-time-choice df-time-stepper">
-            <span>This session</span>
-            <output aria-live="polite">${defaultSessionLabel}</output>
-            <div class="df-time-buttons" role="group" aria-label="Adjust session length">
-              <button type="button" data-action="time-less" aria-label="Choose a shorter session">Less</button>
-              <button type="button" data-action="time-more" aria-label="Add more session time">Add time</button>
-            </div>
-          </div>
-          <p class="df-hard-limit-note">
-            You have <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong>
-            left in today's limit for this network.
-          </p>
-          <div class="df-actions">
-            <button class="df-button df-button--quiet" data-action="leave">Leave</button>
-            <button class="df-button df-button--primary" data-action="continue" disabled>
-              ${
-                options.delaySeconds > 0
-                  ? `Continue in ${options.delaySeconds}s`
-                  : `Start ${defaultSessionLabel} session`
-              }
-            </button>
-          </div>
-          <button class="df-settings-link" data-action="settings">Adjust time and limits</button>
-        </article>
-      </section>
-    `;
+    this.overlay.replaceChildren(
+      createOpeningView({
+        platformLabel: options.platformLabel,
+        delaySeconds: options.delaySeconds,
+        defaultSessionLabel,
+        availableLabel: this.formatFriendlyDuration(options.availableSeconds),
+        usageMetrics: options.usageMetrics.map((metric) => ({
+          label: metric.label,
+          duration: this.formatUsageDuration(metric.usedSeconds),
+        })),
+      }),
+    );
 
     const countdown = this.overlay.querySelector<HTMLElement>(".df-countdown");
     const continueButton =
@@ -183,30 +148,13 @@ export class InterventionUi {
 
   showSessionEnded(options: SessionEndedOptions): Promise<number> {
     this.lockPage();
-    this.overlay.innerHTML = `
-      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-session-end-title">
-        <article class="df-card">
-          <div class="df-rule"></div>
-          <p class="df-kicker">Planned time complete</p>
-          <h1 id="df-session-end-title">Your session has ended.</h1>
-          <p class="df-copy">
-            You chose to stop here. Leave now, or pause before deliberately planning more time.
-          </p>
-          <p class="df-hard-limit-note">
-            Your daily ceiling cannot be extended:
-            <strong>${this.formatFriendlyDuration(options.availableSeconds)}</strong> remaining.
-          </p>
-          <div class="df-actions">
-            <button class="df-button df-button--primary" data-action="leave">Leave ${options.platformLabel}</button>
-            <button class="df-button df-button--quiet" data-action="plan" disabled>
-              Plan another block in ${SESSION_REPLAN_DELAY_SECONDS}s
-            </button>
-          </div>
-          <p class="df-wait" aria-live="polite">Take a moment before deciding.</p>
-          <button class="df-settings-link" data-action="settings">Change the default</button>
-        </article>
-      </section>
-    `;
+    this.overlay.replaceChildren(
+      createSessionEndedView({
+        platformLabel: options.platformLabel,
+        availableLabel: this.formatFriendlyDuration(options.availableSeconds),
+        replanDelaySeconds: SESSION_REPLAN_DELAY_SECONDS,
+      }),
+    );
 
     const leaveButton =
       this.requiredElement<HTMLButtonElement>('[data-action="leave"]');
@@ -267,24 +215,12 @@ export class InterventionUi {
     const defaultSessionLabel =
       options.availableSeconds < 60 ? "<1 min" : `${defaultMinutes} min`;
     const card = this.requiredElement<HTMLElement>(".df-card");
-    card.innerHTML = `
-      <p class="df-kicker">Plan another block</p>
-      <h1>How much longer?</h1>
-      <p class="df-copy">Choose a defined block within today's remaining ceiling.</p>
-      <div class="df-time-choice df-time-stepper">
-        <span>New block</span>
-        <output aria-live="polite">${defaultSessionLabel}</output>
-        <div class="df-time-buttons" role="group" aria-label="Adjust new block length">
-          <button type="button" data-action="time-less" aria-label="Choose a shorter block">Less</button>
-          <button type="button" data-action="time-more" aria-label="Add more time to the block">Add time</button>
-        </div>
-      </div>
-      <div class="df-actions">
-        <button class="df-button df-button--quiet" data-action="leave">Leave ${options.platformLabel}</button>
-        <button class="df-button df-button--primary" data-action="extend">Start ${defaultSessionLabel} block</button>
-      </div>
-      <button class="df-settings-link" data-action="settings">Change the default</button>
-    `;
+    card.replaceChildren(
+      createSessionPlanningView({
+        platformLabel: options.platformLabel,
+        defaultSessionLabel,
+      }),
+    );
 
     const extendButton =
       this.requiredElement<HTMLButtonElement>('[data-action="extend"]');
@@ -322,22 +258,7 @@ export class InterventionUi {
     this.cancelPendingInteraction = undefined;
     cancelPendingInteraction?.();
     this.lockPage();
-    this.overlay.innerHTML = `
-      <section class="df-backdrop" role="dialog" aria-modal="true" aria-labelledby="df-hard-limit-title">
-        <article class="df-card">
-          <div class="df-lock-mark" aria-hidden="true"></div>
-          <p class="df-kicker">Daily limit reached</p>
-          <h1 id="df-hard-limit-title">${platformLabel} ends here for today.</h1>
-          <p class="df-copy">
-            This limit cannot be unlocked. It will be available again tomorrow.
-          </p>
-          <div class="df-actions df-actions--stack">
-            <button class="df-button df-button--primary" data-action="leave">Leave ${platformLabel}</button>
-          </div>
-          <button class="df-settings-link" data-action="settings">View settings</button>
-        </article>
-      </section>
-    `;
+    this.overlay.replaceChildren(createHardLimitView(platformLabel));
 
     this.requiredElement<HTMLButtonElement>('[data-action="leave"]')
       .addEventListener("click", () => this.leaveFeed());
@@ -347,15 +268,7 @@ export class InterventionUi {
 
   showUsageTimer(options: UsageTimerOptions): void {
     if (this.timer.childElementCount === 0) {
-      this.timer.innerHTML = `
-        <button class="df-usage-timer" type="button" title="Open Dopamine Fast settings">
-          <span class="df-usage-timer__pulse" aria-hidden="true"></span>
-          <span class="df-usage-timer__copy">
-            <strong data-timer="planned"></strong>
-            <small><span data-timer="platform"></span> · <span data-timer="daily"></span> today</small>
-          </span>
-        </button>
-      `;
+      this.timer.replaceChildren(createUsageTimerView());
       this.timer
         .querySelector<HTMLButtonElement>(".df-usage-timer")
         ?.addEventListener("click", () => this.openOptions());
