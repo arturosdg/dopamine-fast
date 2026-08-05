@@ -8,7 +8,7 @@ The extension works on top of the authenticated websites you already use. It
 does not build a new feed, copy posts, use platform APIs, inspect private
 messages, or send browsing data to a backend.
 
-> **Project status:** early prototype. Reddit, X/Twitter, and Instagram are
+> **Project status:** early prototype. Reddit, X/Twitter, Instagram, and YouTube are
 > supported, but their interfaces change frequently and the selectors still
 > require regular testing on mobile and desktop.
 
@@ -29,7 +29,7 @@ available while adding deliberate friction around habitual scrolling:
 7. A per-network daily time ceiling cannot be extended from the page.
 
 Daily post allowances and time ceilings are tracked independently for Reddit,
-X/Twitter, and Instagram.
+X/Twitter, Instagram, and YouTube.
 Preferences and aggregate counters stay in browser extension local storage.
 Elapsed seconds per network are retained for the 30 most recent days with
 activity; active session countdowns are not stored in that history.
@@ -57,6 +57,11 @@ of loading more posts automatically.
   News and Explore shortcuts are also hidden.
 - Instagram's Reels destination is hidden; a directly opened reel remains
   usable without vertical navigation into an endless sequence.
+- YouTube Shorts surfaces are hidden, and directly opened Shorts use the
+  standard video player instead of the vertical Shorts feed.
+- Optional YouTube Subscriptions-only mode redirects Home to Subscriptions and
+  hides Home. Next-video and recommendation surfaces around requested videos
+  are always hidden.
 - Non-extendable daily time ceiling for each network.
 - Finite initial and additional post batches.
 - Stable per-session post counting for virtualized feeds such as Reddit.
@@ -74,6 +79,7 @@ of loading more posts automatically.
 | Reddit | Yes | Best effort | Independent |
 | X / Twitter | Yes | Best effort | Independent |
 | Instagram | Yes | Best effort | Independent |
+| YouTube | Yes | Best effort | Independent |
 
 The limiter applies only to recognized feed routes. Direct profiles, messages,
 settings, and individual post pages are intended to remain available. Platform
@@ -154,7 +160,7 @@ limitations, and contributor guidance.
 
 ## Privacy and security
 
-Dopamine Fast requests access only to Reddit, X/Twitter, and Instagram, plus
+Dopamine Fast requests access only to Reddit, X/Twitter, Instagram, and YouTube, plus
 the browser's local storage permission. It has:
 
 - no account system;

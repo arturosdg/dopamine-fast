@@ -38,6 +38,10 @@ const controls = {
   instagramFollowingOnly: requiredElement<HTMLInputElement>(
     "#instagram-following-only",
   ),
+  youtube: requiredElement<HTMLInputElement>("#site-youtube"),
+  youtubeSubscriptionsOnly: requiredElement<HTMLInputElement>(
+    "#youtube-subscriptions-only",
+  ),
   blockSuggested: requiredElement<HTMLInputElement>("#block-suggested"),
   disableAutoplay: requiredElement<HTMLInputElement>("#disable-autoplay"),
 };
@@ -69,6 +73,8 @@ function render(settings: Settings): void {
   controls.xFollowingOnly.checked = settings.xFollowingOnly;
   controls.instagram.checked = settings.enabledSites.instagram;
   controls.instagramFollowingOnly.checked = settings.instagramFollowingOnly;
+  controls.youtube.checked = settings.enabledSites.youtube;
+  controls.youtubeSubscriptionsOnly.checked = settings.youtubeSubscriptionsOnly;
   controls.blockSuggested.checked = settings.blockSuggested;
   controls.disableAutoplay.checked = settings.disableAutoplay;
   requiredElement<HTMLInputElement>(
@@ -97,10 +103,12 @@ function readSettings(): Settings {
     disableAutoplay: controls.disableAutoplay.checked,
     xFollowingOnly: controls.xFollowingOnly.checked,
     instagramFollowingOnly: controls.instagramFollowingOnly.checked,
+    youtubeSubscriptionsOnly: controls.youtubeSubscriptionsOnly.checked,
     enabledSites: {
       reddit: controls.reddit.checked,
       x: controls.x.checked,
       instagram: controls.instagram.checked,
+      youtube: controls.youtube.checked,
     },
   });
 }
@@ -120,6 +128,14 @@ controls.xFollowingOnly.addEventListener("change", async () => {
 controls.instagramFollowingOnly.addEventListener("change", async () => {
   await saveSettings(readSettings());
   status.textContent = "Instagram feed preference applied.";
+  window.setTimeout(() => {
+    status.textContent = "";
+  }, 2400);
+});
+
+controls.youtubeSubscriptionsOnly.addEventListener("change", async () => {
+  await saveSettings(readSettings());
+  status.textContent = "YouTube feed preference applied.";
   window.setTimeout(() => {
     status.textContent = "";
   }, 2400);

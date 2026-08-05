@@ -11,13 +11,20 @@ describe("runtime messages", () => {
       }),
     ).toBe(true);
     expect(isRuntimeMessage({ type: "dopamine-fast:leave-feed" })).toBe(true);
+    expect(
+      isRuntimeMessage({
+        type: "dopamine-fast:add-usage-seconds",
+        platform: "youtube",
+        elapsedSeconds: 5,
+      }),
+    ).toBe(true);
   });
 
   it("rejects malformed and unknown messages", () => {
     expect(
       isRuntimeMessage({
         type: "dopamine-fast:add-usage-seconds",
-        platform: "youtube",
+        platform: "tiktok",
         elapsedSeconds: 5,
       }),
     ).toBe(false);

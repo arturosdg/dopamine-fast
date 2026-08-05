@@ -7,7 +7,7 @@ Keep the useful parts of social networks while giving every feed a real end.
 ## Initial target
 
 - Firefox for Android
-- Reddit, X and Instagram mobile websites
+- Reddit, X, Instagram and YouTube mobile websites
 - English-language application interface
 - Authenticated browser sessions, including private content the user is already
   authorized to see
@@ -28,7 +28,7 @@ Keep the useful parts of social networks while giving every feed a real end.
 ## Time budgets
 
 - Before entry, the user selects an intentional session duration.
-- The opening screen shows today's elapsed time for Reddit, X and Instagram
+- The opening screen shows today's elapsed time for Reddit, X, Instagram and YouTube
   before another session is planned.
 - Session duration changes use discrete buttons instead of a slider, so adding
   more time requires a separate deliberate press for each step.
@@ -123,6 +123,19 @@ visible area while the batch is closed.
   blocking vertical wheel, keyboard and touch navigation to another reel.
 - Stop after the active batch or after Instagram's own caught-up marker,
   whichever comes first.
+
+### YouTube
+
+- Limit Home and the Subscriptions feed to the active finite batch while
+  leaving search, channels, comments and explicitly opened videos available.
+- Hide Shorts navigation and Shorts shelves. Convert an explicitly opened
+  `/shorts/{id}` route to the standard `/watch?v={id}` player so the requested
+  video remains available without vertical Shorts navigation.
+- When the optional Subscriptions-only setting is enabled, redirect Home to
+  `/feed/subscriptions` and hide Home navigation.
+- Always hide next-video, related-video, Shorts and end-screen recommendation
+  surfaces on requested video pages.
+- Treat YouTube post and time budgets independently from every other network.
 
 ## Privacy and permissions
 
