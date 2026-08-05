@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.4.0](https://github.com/arturosdg/dopamine-fast/compare/v0.3.1...v0.4.0) (2026-08-05)
+
+
+### Features
+
+* **youtube:** add intentional subscriptions feed ([f3bf43d](https://github.com/arturosdg/dopamine-fast/commit/f3bf43df276e90496e8e5488239887e937ee8d73))
+* **youtube:** add intentional subscriptions feed ([840e364](https://github.com/arturosdg/dopamine-fast/commit/840e364daddec8b2d8dd9028acc13b74a5829069))
+
+
+### Bug Fixes
+
+* **youtube:** always hide watch recommendations ([e586f26](https://github.com/arturosdg/dopamine-fast/commit/e586f26fe73e0c4df0b0ec655afda880a2c34591))
+
 ## [0.3.1](https://github.com/arturosdg/dopamine-fast/compare/v0.3.0...v0.3.1) (2026-08-05)
 
 
