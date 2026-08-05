@@ -301,6 +301,14 @@ const youtube: PlatformAdapter = {
         ],
       },
       { selector: "ytm-reel-shelf-renderer, ytd-reel-shelf-renderer" },
+      {
+        selector:
+          "#related, ytd-watch-next-secondary-results-renderer, ytm-single-column-watch-next-results-renderer > ytm-item-section-renderer",
+      },
+      {
+        selector:
+          ".ytp-autonav-endscreen-upnext-container, .ytp-endscreen-content",
+      },
     ],
     subscriptionsOnly: [
       {
@@ -315,14 +323,6 @@ const youtube: PlatformAdapter = {
         selector: "ytm-pivot-bar-item-renderer [role=\"tab\"]",
         exactTokens: ["home", "inicio"],
         ancestorSelectors: ["ytm-pivot-bar-item-renderer"],
-      },
-      {
-        selector:
-          "#related, ytd-watch-next-secondary-results-renderer, ytm-single-column-watch-next-results-renderer > ytm-item-section-renderer",
-      },
-      {
-        selector:
-          ".ytp-autonav-endscreen-upnext-container, .ytp-endscreen-content",
       },
     ],
   },

@@ -60,8 +60,8 @@ of loading more posts automatically.
 - YouTube Shorts surfaces are hidden, and directly opened Shorts use the
   standard video player instead of the vertical Shorts feed.
 - Optional YouTube Subscriptions-only mode redirects Home to Subscriptions and
-  hides Home plus next-video and recommendation surfaces around requested
-  videos.
+  hides Home. Next-video and recommendation surfaces around requested videos
+  are always hidden.
 - Non-extendable daily time ceiling for each network.
 - Finite initial and additional post batches.
 - Stable per-session post counting for virtualized feeds such as Reddit.

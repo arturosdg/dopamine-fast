@@ -60,8 +60,8 @@ children of `ytm-single-column-watch-next-results-renderer`:
 - two regular recommendation sections containing `/watch` links; and
 - one Shorts recommendation section containing 15 `/shorts/` links.
 
-Subscriptions-only mode hides only those direct recommendation sections.
-The player, title, channel controls, actions and comments remain available.
+Dopamine Fast always hides only those direct recommendation sections. The
+player, title, channel controls, actions and comments remain available.
 
 ## Known limitations
 

@@ -133,8 +133,8 @@ visible area while the batch is closed.
   video remains available without vertical Shorts navigation.
 - When the optional Subscriptions-only setting is enabled, redirect Home to
   `/feed/subscriptions` and hide Home navigation.
-- In Subscriptions-only mode, hide next-video, related-video, Shorts and
-  end-screen recommendation surfaces on requested video pages.
+- Always hide next-video, related-video, Shorts and end-screen recommendation
+  surfaces on requested video pages.
 - Treat YouTube post and time budgets independently from every other network.
 
 ## Privacy and permissions

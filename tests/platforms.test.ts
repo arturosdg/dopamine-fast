@@ -112,10 +112,15 @@ describe("platform adapters", () => {
       true,
     );
     expect(
-      config.subscriptionsOnly.some((rule) =>
+      config.always.some((rule) =>
         rule.selector.includes("ytm-single-column-watch-next-results-renderer"),
       ),
     ).toBe(true);
+    expect(
+      config.subscriptionsOnly.some((rule) =>
+        rule.selector.includes("ytm-single-column-watch-next-results-renderer"),
+      ),
+    ).toBe(false);
   });
 
   it("defines Instagram's Following feed tabs narrowly", () => {
