@@ -23,6 +23,11 @@ describe("settings", () => {
       holdSeconds: 0,
       xFollowingOnly: "yes" as unknown as boolean,
       instagramFollowingOnly: "yes" as unknown as boolean,
+      youtubeSubscriptionsOnly: "yes" as unknown as boolean,
+      enabledSites: {
+        ...DEFAULT_SETTINGS.enabledSites,
+        youtube: "yes" as unknown as boolean,
+      },
     });
 
     expect(settings.openingDelaySeconds).toBe(60);
@@ -34,6 +39,7 @@ describe("settings", () => {
     expect(settings.holdSeconds).toBe(1);
     expect(settings.xFollowingOnly).toBe(false);
     expect(settings.instagramFollowingOnly).toBe(false);
+    expect(settings.youtubeSubscriptionsOnly).toBe(false);
     expect(settings.enabledSites).toEqual(DEFAULT_SETTINGS.enabledSites);
   });
 
@@ -48,6 +54,16 @@ describe("settings", () => {
       sanitizeSettings({ instagramFollowingOnly: true })
         .instagramFollowingOnly,
     ).toBe(true);
+  });
+
+  it("keeps an explicit YouTube subscriptions preference", () => {
+    const settings = sanitizeSettings({
+      youtubeSubscriptionsOnly: true,
+      enabledSites: { ...DEFAULT_SETTINGS.enabledSites, youtube: false },
+    });
+
+    expect(settings.youtubeSubscriptionsOnly).toBe(true);
+    expect(settings.enabledSites.youtube).toBe(false);
   });
 });
 
@@ -75,6 +91,7 @@ describe("daily state", () => {
         reddit: 35,
         x: 10,
         instagram: 0,
+        youtube: 0,
       },
     };
     expect(
@@ -97,14 +114,14 @@ describe("daily state", () => {
     const legacy = {
       date: localDateKey(today),
       revealed: 30,
-      revealedByPlatform: { reddit: 20, x: 10, instagram: 0 },
+      revealedByPlatform: { reddit: 20, x: 10, instagram: 0, youtube: 0 },
       unlocks: 2,
     };
 
     expect(normalizeDailyState(legacy, today)).toEqual({
       ...legacy,
       unlocks: 0,
-      unlocksByPlatform: { reddit: 0, x: 0, instagram: 0 },
+      unlocksByPlatform: { reddit: 0, x: 0, instagram: 0, youtube: 0 },
     });
   });
 
@@ -115,6 +132,7 @@ describe("daily state", () => {
         reddit: 900,
         x: 0,
         instagram: 0,
+        youtube: 0,
       },
     };
     const currentUsage = normalizeDailyUsageState(staleUsage, today, 10);
@@ -150,5 +168,21 @@ describe("daily state", () => {
         "reddit",
       ),
     ).toBe(1200);
+  });
+
+  it("adds safe YouTube counters to current-day legacy usage", () => {
+    const legacy = {
+      date: localDateKey(today),
+      dailyLimitMinutes: 30,
+      usedSecondsByPlatform: { reddit: 60, x: 0, instagram: 0 },
+    };
+
+    expect(normalizeDailyUsageState(legacy, today, 30)).toEqual({
+      ...legacy,
+      usedSecondsByPlatform: {
+        ...legacy.usedSecondsByPlatform,
+        youtube: 0,
+      },
+    });
   });
 });

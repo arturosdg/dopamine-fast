@@ -17,6 +17,7 @@ describe("usage history", () => {
             reddit: 62.4,
             x: -8,
             instagram: Number.POSITIVE_INFINITY,
+            youtube: 12.8,
           },
         },
         { date: "2026-02-31", usedSecondsByPlatform: { reddit: 500 } },
@@ -26,7 +27,12 @@ describe("usage history", () => {
     expect(history.days).toEqual([
       {
         date: "2026-08-03",
-        usedSecondsByPlatform: { reddit: 62, x: 0, instagram: 0 },
+        usedSecondsByPlatform: {
+          reddit: 62,
+          x: 0,
+          instagram: 0,
+          youtube: 13,
+        },
       },
     ]);
   });
@@ -43,7 +49,12 @@ describe("usage history", () => {
         ].join("-");
         return {
           date: key,
-          usedSecondsByPlatform: { reddit: index, x: 0, instagram: 0 },
+          usedSecondsByPlatform: {
+            reddit: index,
+            x: 0,
+            instagram: 0,
+            youtube: 0,
+          },
         };
       },
     );
@@ -72,6 +83,7 @@ describe("usage history", () => {
       reddit: 0,
       x: 0,
       instagram: 0,
+      youtube: 0,
     });
   });
 
@@ -83,7 +95,12 @@ describe("usage history", () => {
         days: [
           {
             date: "2026-08-03",
-            usedSecondsByPlatform: { reddit: 120, x: 30, instagram: 0 },
+            usedSecondsByPlatform: {
+              reddit: 120,
+              x: 30,
+              instagram: 0,
+              youtube: 0,
+            },
           },
         ],
       },
@@ -94,6 +111,7 @@ describe("usage history", () => {
       reddit: 120,
       x: 30,
       instagram: 0,
+      youtube: 0,
     });
   });
 });

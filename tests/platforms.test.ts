@@ -7,6 +7,8 @@ describe("platform adapters", () => {
     expect(getPlatformAdapter("x.com")?.id).toBe("x");
     expect(getPlatformAdapter("twitter.com")?.id).toBe("x");
     expect(getPlatformAdapter("www.instagram.com")?.id).toBe("instagram");
+    expect(getPlatformAdapter("www.youtube.com")?.id).toBe("youtube");
+    expect(getPlatformAdapter("m.youtube.com")?.id).toBe("youtube");
   });
 
   it("limits only feed routes on X and Instagram", () => {
@@ -68,6 +70,52 @@ describe("platform adapters", () => {
     expect(instagram.singleItemView?.navigationSelectors).toContain(
       'main [role="toolbar"]',
     );
+  });
+
+  it("limits YouTube feeds but leaves requested videos outside the limiter", () => {
+    const youtube = getPlatformAdapter("youtube.com")!;
+
+    expect(youtube.isFeedRoute(new URL("https://youtube.com/"))).toBe(true);
+    expect(
+      youtube.isFeedRoute(
+        new URL("https://youtube.com/feed/subscriptions"),
+      ),
+    ).toBe(true);
+    expect(
+      youtube.isFeedRoute(new URL("https://youtube.com/watch?v=example")),
+    ).toBe(false);
+    expect(
+      youtube.isFeedRoute(new URL("https://youtube.com/results?search_query=x")),
+    ).toBe(false);
+  });
+
+  it("converts a requested YouTube Short into the standard player", () => {
+    const youtube = getPlatformAdapter("youtube.com")!;
+    const canonical = youtube.surfaceSuppression?.canonicalUrl(
+      new URL("https://youtube.com/shorts/ABC_123"),
+    );
+
+    expect(canonical?.href).toBe("https://youtube.com/watch?v=ABC_123");
+    expect(
+      youtube.surfaceSuppression?.canonicalUrl(
+        new URL("https://youtube.com/watch?v=ABC_123"),
+      ),
+    ).toBeUndefined();
+  });
+
+  it("scopes YouTube Shorts and watch recommendations to platform containers", () => {
+    const youtube = getPlatformAdapter("youtube.com")!;
+    const config = youtube.surfaceSuppression!;
+
+    expect(config.subscriptionsPath).toBe("/feed/subscriptions");
+    expect(config.always.some((rule) => rule.selector.includes('/shorts/'))).toBe(
+      true,
+    );
+    expect(
+      config.subscriptionsOnly.some((rule) =>
+        rule.selector.includes("ytm-single-column-watch-next-results-renderer"),
+      ),
+    ).toBe(true);
   });
 
   it("defines Instagram's Following feed tabs narrowly", () => {

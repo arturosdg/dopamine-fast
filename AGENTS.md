@@ -39,6 +39,7 @@ Supported networks:
 - Reddit
 - X/Twitter
 - Instagram
+- YouTube
 
 The extension operates on the authenticated web pages the user already visits.
 It does not use platform APIs, scrape in the background, read private messages,
@@ -131,6 +132,7 @@ lib/
   usage-history.ts       Pure normalization and retention for usage statistics
   preferred-feed.ts      Optional preferred-feed selection and tab restoration
   intentional-search.ts Search suggestion and discovery-surface suppression
+  surface-suppression.ts Reversible Shorts and recommendation suppression
   single-item-view.ts   Scroll lock for explicitly opened single-item surfaces
   intervention-ui.ts     Shadow-DOM overlays, timer and deliberate interactions
   runtime-messages.ts    Validated background/content message contracts
@@ -176,6 +178,8 @@ Specific responsibilities:
   browser or DOM dependencies.
 - `preferred-feed.ts` applies an adapter-defined preferred tab and restores any
   tab styles it changes during teardown.
+- `surface-suppression.ts` applies adapter-scoped navigation and recommendation
+  rules and restores every inline display style it changes during teardown.
 - `single-item-view.ts` blocks vertical feed navigation on an explicitly
   opened item and restores page styles and listeners during teardown.
 - `platforms.ts` is the only home for network-specific hosts, feed routes,

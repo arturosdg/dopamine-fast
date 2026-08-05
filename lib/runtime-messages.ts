@@ -49,7 +49,10 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
 }
 
 const isPlatform = (value: unknown): value is PlatformId =>
-  value === "reddit" || value === "x" || value === "instagram";
+  value === "reddit" ||
+  value === "x" ||
+  value === "instagram" ||
+  value === "youtube";
 
 const isFiniteNumber = (value: unknown): value is number =>
   typeof value === "number" && Number.isFinite(value);

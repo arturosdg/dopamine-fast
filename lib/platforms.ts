@@ -32,8 +32,20 @@ export interface PlatformAdapter {
     itemRootSelector: string;
     navigationSelectors: string[];
   };
+  surfaceSuppression?: {
+    always: SurfaceSuppressionRule[];
+    subscriptionsOnly: SurfaceSuppressionRule[];
+    subscriptionsPath: string;
+    canonicalUrl(url: URL): URL | undefined;
+  };
   getPostKey(element: HTMLElement): string | undefined;
   isFeedRoute(url: URL): boolean;
+}
+
+export interface SurfaceSuppressionRule {
+  selector: string;
+  exactTokens?: string[];
+  ancestorSelectors?: string[];
 }
 
 const reddit: PlatformAdapter = {
@@ -237,7 +249,99 @@ const instagram: PlatformAdapter = {
   },
 };
 
-const adapters = [reddit, x, instagram];
+const youtube: PlatformAdapter = {
+  id: "youtube",
+  label: "YouTube",
+  postSelectors: [
+    "ytd-rich-item-renderer",
+    "ytm-rich-item-renderer",
+    "ytd-grid-video-renderer",
+  ],
+  suggestedSelectors: [
+    "ytd-promoted-sparkles-web-renderer",
+    "ytm-promoted-sparkles-web-renderer",
+    "ytd-ad-slot-renderer",
+    "ytm-ad-slot-renderer",
+  ],
+  suggestedTokens: ["promoted", "sponsored", "promocionado", "patrocinado"],
+  surfaceSuppression: {
+    subscriptionsPath: "/feed/subscriptions",
+    canonicalUrl(url) {
+      const match = /^\/shorts\/([^/]+)\/?$/.exec(url.pathname);
+      if (!match?.[1]) return undefined;
+      const canonical = new URL("/watch", url.origin);
+      canonical.searchParams.set("v", match[1]);
+      return canonical;
+    },
+    always: [
+      {
+        selector: 'a[href="/shorts"], a[href="/shorts/"]',
+        ancestorSelectors: [
+          "ytd-guide-entry-renderer",
+          "ytd-mini-guide-entry-renderer",
+          "ytm-pivot-bar-item-renderer",
+        ],
+      },
+      {
+        selector: "ytm-pivot-bar-item-renderer [role=\"tab\"]",
+        exactTokens: ["shorts"],
+        ancestorSelectors: ["ytm-pivot-bar-item-renderer"],
+      },
+      {
+        selector: 'a[href^="/shorts/"]',
+        ancestorSelectors: [
+          "ytm-rich-section-renderer",
+          "ytd-rich-section-renderer",
+          "grid-shelf-view-model",
+          "ytm-item-section-renderer",
+          "ytm-reel-shelf-renderer",
+          "ytd-reel-shelf-renderer",
+          "ytm-shorts-lockup-view-model",
+          "ytd-reel-item-renderer",
+        ],
+      },
+      { selector: "ytm-reel-shelf-renderer, ytd-reel-shelf-renderer" },
+    ],
+    subscriptionsOnly: [
+      {
+        selector:
+          'ytd-guide-entry-renderer a[href="/"], ytd-mini-guide-entry-renderer a[href="/"]',
+        ancestorSelectors: [
+          "ytd-guide-entry-renderer",
+          "ytd-mini-guide-entry-renderer",
+        ],
+      },
+      {
+        selector: "ytm-pivot-bar-item-renderer [role=\"tab\"]",
+        exactTokens: ["home", "inicio"],
+        ancestorSelectors: ["ytm-pivot-bar-item-renderer"],
+      },
+      {
+        selector:
+          "#related, ytd-watch-next-secondary-results-renderer, ytm-single-column-watch-next-results-renderer > ytm-item-section-renderer",
+      },
+      {
+        selector:
+          ".ytp-autonav-endscreen-upnext-container, .ytp-endscreen-content",
+      },
+    ],
+  },
+  getPostKey(element) {
+    const href = element
+      .querySelector<HTMLAnchorElement>('a[href^="/watch"]')
+      ?.getAttribute("href");
+    if (!href) return undefined;
+    const videoId = new URL(href, "https://www.youtube.com").searchParams.get(
+      "v",
+    );
+    return videoId ? `video:${videoId}` : undefined;
+  },
+  isFeedRoute(url) {
+    return url.pathname === "/" || url.pathname === "/feed/subscriptions";
+  },
+};
+
+const adapters = [reddit, x, instagram, youtube];
 
 export function getPlatformAdapter(
   hostname: string,
@@ -246,6 +350,9 @@ export function getPlatformAdapter(
   if (normalized === "reddit.com") return reddit;
   if (normalized === "x.com" || normalized === "twitter.com") return x;
   if (normalized === "instagram.com") return instagram;
+  if (normalized === "youtube.com" || normalized === "m.youtube.com") {
+    return youtube;
+  }
   return undefined;
 }
 

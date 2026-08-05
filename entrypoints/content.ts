@@ -6,6 +6,7 @@ import { availableUsageSeconds, localDateKey } from "../lib/models";
 import { getPlatformAdapter } from "../lib/platforms";
 import { PreferredFeedController } from "../lib/preferred-feed";
 import { SingleItemViewController } from "../lib/single-item-view";
+import { SurfaceSuppressionController } from "../lib/surface-suppression";
 import {
   getDailyUsageState,
   getSettings,
@@ -25,6 +26,9 @@ export default defineContentScript({
     "*://twitter.com/*",
     "*://www.instagram.com/*",
     "*://instagram.com/*",
+    "*://www.youtube.com/*",
+    "*://m.youtube.com/*",
+    "*://youtube.com/*",
   ],
   runAt: "document_start",
   cssInjectionMode: "ui",
@@ -66,6 +70,7 @@ export default defineContentScript({
     let intentionalSearch: IntentionalSearchController | undefined;
     let preferredFeed: PreferredFeedController | undefined;
     let singleItemView: SingleItemViewController | undefined;
+    let surfaceSuppression: SurfaceSuppressionController | undefined;
     let usageSession: UsageSession | undefined;
     let currentUrl = "";
     let activationId = 0;
@@ -80,6 +85,8 @@ export default defineContentScript({
       preferredFeed = undefined;
       singleItemView?.destroy();
       singleItemView = undefined;
+      surfaceSuppression?.destroy();
+      surfaceSuppression = undefined;
       const previousUsageSession = usageSession;
       usageSession = undefined;
       await previousUsageSession?.destroy();
@@ -91,6 +98,30 @@ export default defineContentScript({
       if (thisActivation !== activationId) return;
       if (!settings.enabled || !settings.enabledSites[adapter.id]) {
         return;
+      }
+
+      const surfaceConfig = adapter.surfaceSuppression;
+      const subscriptionsOnly =
+        adapter.id === "youtube" && settings.youtubeSubscriptionsOnly;
+      const canonicalUrl = surfaceConfig?.canonicalUrl(url);
+      if (canonicalUrl && canonicalUrl.href !== url.href) {
+        location.replace(canonicalUrl.href);
+        return;
+      }
+      if (
+        subscriptionsOnly &&
+        surfaceConfig &&
+        url.pathname === "/"
+      ) {
+        location.replace(new URL(surfaceConfig.subscriptionsPath, url).href);
+        return;
+      }
+      if (surfaceConfig) {
+        surfaceSuppression = new SurfaceSuppressionController(
+          adapter,
+          subscriptionsOnly,
+        );
+        surfaceSuppression.start();
       }
 
       if (
@@ -147,6 +178,7 @@ export default defineContentScript({
           { label: "Reddit", usedSeconds: todayUsage.reddit },
           { label: "X", usedSeconds: todayUsage.x },
           { label: "Instagram", usedSeconds: todayUsage.instagram },
+          { label: "YouTube", usedSeconds: todayUsage.youtube },
         ],
       });
       if (thisActivation !== activationId) return;
@@ -247,6 +279,7 @@ export default defineContentScript({
       intentionalSearch?.destroy();
       preferredFeed?.destroy();
       singleItemView?.destroy();
+      surfaceSuppression?.destroy();
       void usageSession?.destroy();
       shadowUi.remove();
     });

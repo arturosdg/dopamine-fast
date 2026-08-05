@@ -1,4 +1,4 @@
-export type PlatformId = "reddit" | "x" | "instagram";
+export type PlatformId = "reddit" | "x" | "instagram" | "youtube";
 export type GuardMode = "gentle" | "balanced" | "strict";
 
 export interface Settings {
@@ -16,6 +16,7 @@ export interface Settings {
   disableAutoplay: boolean;
   xFollowingOnly: boolean;
   instagramFollowingOnly: boolean;
+  youtubeSubscriptionsOnly: boolean;
   enabledSites: Record<PlatformId, boolean>;
 }
 
@@ -48,10 +49,12 @@ export const DEFAULT_SETTINGS: Settings = {
   disableAutoplay: true,
   xFollowingOnly: false,
   instagramFollowingOnly: false,
+  youtubeSubscriptionsOnly: false,
   enabledSites: {
     reddit: true,
     x: true,
     instagram: true,
+    youtube: true,
   },
 };
 
@@ -116,9 +119,27 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
       typeof input.instagramFollowingOnly === "boolean"
         ? input.instagramFollowingOnly
         : DEFAULT_SETTINGS.instagramFollowingOnly,
+    youtubeSubscriptionsOnly:
+      typeof input.youtubeSubscriptionsOnly === "boolean"
+        ? input.youtubeSubscriptionsOnly
+        : DEFAULT_SETTINGS.youtubeSubscriptionsOnly,
     enabledSites: {
-      ...DEFAULT_SETTINGS.enabledSites,
-      ...input.enabledSites,
+      reddit: sanitizeBoolean(
+        input.enabledSites?.reddit,
+        DEFAULT_SETTINGS.enabledSites.reddit,
+      ),
+      x: sanitizeBoolean(
+        input.enabledSites?.x,
+        DEFAULT_SETTINGS.enabledSites.x,
+      ),
+      instagram: sanitizeBoolean(
+        input.enabledSites?.instagram,
+        DEFAULT_SETTINGS.enabledSites.instagram,
+      ),
+      youtube: sanitizeBoolean(
+        input.enabledSites?.youtube,
+        DEFAULT_SETTINGS.enabledSites.youtube,
+      ),
     },
   };
 }
@@ -138,12 +159,14 @@ export function emptyDailyState(date = new Date()): DailyState {
       reddit: 0,
       x: 0,
       instagram: 0,
+      youtube: 0,
     },
     unlocks: 0,
     unlocksByPlatform: {
       reddit: 0,
       x: 0,
       instagram: 0,
+      youtube: 0,
     },
   };
 }
@@ -176,12 +199,17 @@ export function emptyDailyUsageState(
       reddit: 0,
       x: 0,
       instagram: 0,
+      youtube: 0,
     },
   };
 }
 
 export function normalizeDailyUsageState(
-  state: DailyUsageState | null,
+  state:
+    | (Partial<Omit<DailyUsageState, "usedSecondsByPlatform">> & {
+        usedSecondsByPlatform?: Partial<Record<PlatformId, number>>;
+      })
+    | null,
   date = new Date(),
   configuredLimitMinutes = DEFAULT_SETTINGS.dailyUsageLimitMinutes,
 ): DailyUsageState {
@@ -189,10 +217,16 @@ export function normalizeDailyUsageState(
     return emptyDailyUsageState(date, configuredLimitMinutes);
   }
 
-  if (state.dailyLimitMinutes >= 5) return state;
   return {
-    ...state,
-    dailyLimitMinutes: configuredLimitMinutes,
+    date: state.date,
+    dailyLimitMinutes:
+      typeof state.dailyLimitMinutes === "number" &&
+      state.dailyLimitMinutes >= 5
+        ? state.dailyLimitMinutes
+        : configuredLimitMinutes,
+    usedSecondsByPlatform: normalizePlatformCounts(
+      state.usedSecondsByPlatform,
+    ),
   };
 }
 
@@ -230,6 +264,7 @@ function normalizePlatformCounts(
     reddit: normalizeCount(counts?.reddit),
     x: normalizeCount(counts?.x),
     instagram: normalizeCount(counts?.instagram),
+    youtube: normalizeCount(counts?.youtube),
   };
 }
 
@@ -238,5 +273,9 @@ function normalizeCount(value: number | undefined): number {
 }
 
 function sumPlatformCounts(counts: Record<PlatformId, number>): number {
-  return counts.reddit + counts.x + counts.instagram;
+  return counts.reddit + counts.x + counts.instagram + counts.youtube;
+}
+
+function sanitizeBoolean(value: unknown, fallback: boolean): boolean {
+  return typeof value === "boolean" ? value : fallback;
 }

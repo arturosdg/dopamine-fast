@@ -11,7 +11,7 @@ export interface UsageHistory {
   days: UsageHistoryDay[];
 }
 
-const PLATFORM_IDS: PlatformId[] = ["reddit", "x", "instagram"];
+const PLATFORM_IDS: PlatformId[] = ["reddit", "x", "instagram", "youtube"];
 const MAX_DAILY_SECONDS = 24 * 60 * 60;
 
 export function emptyUsageHistory(): UsageHistory {
@@ -59,6 +59,10 @@ export function recordUsageState(
           instagram: Math.max(
             previous.usedSecondsByPlatform.instagram,
             day.usedSecondsByPlatform.instagram,
+          ),
+          youtube: Math.max(
+            previous.usedSecondsByPlatform.youtube,
+            day.usedSecondsByPlatform.youtube,
           ),
         },
       }
@@ -114,7 +118,7 @@ function normalizeDay(value: unknown): UsageHistoryDay | undefined {
 }
 
 function emptyPlatformUsage(): Record<PlatformId, number> {
-  return { reddit: 0, x: 0, instagram: 0 };
+  return { reddit: 0, x: 0, instagram: 0, youtube: 0 };
 }
 
 function normalizeSeconds(value: unknown): number {
