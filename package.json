@@ -1,6 +1,6 @@
 {
   "name": "dopamine-fast",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A finite-feed guardrail for Reddit, X and Instagram.",
   "license": "MIT",
   "private": true,
