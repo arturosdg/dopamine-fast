@@ -12,6 +12,30 @@ export interface UsageSessionOptions {
   onHardLimitReached(): void;
 }
 
+export interface UsageSessionEnvironment {
+  getVisibilityState(): DocumentVisibilityState;
+  addVisibilityListener(listener: () => void): void;
+  removeVisibilityListener(listener: () => void): void;
+  addPageHideListener(listener: () => void): void;
+  removePageHideListener(listener: () => void): void;
+  setInterval(callback: () => void, delayMs: number): number;
+  clearInterval(interval: number): void;
+}
+
+const browserEnvironment: UsageSessionEnvironment = {
+  getVisibilityState: () => document.visibilityState,
+  addVisibilityListener: (listener) =>
+    document.addEventListener("visibilitychange", listener),
+  removeVisibilityListener: (listener) =>
+    document.removeEventListener("visibilitychange", listener),
+  addPageHideListener: (listener) =>
+    window.addEventListener("pagehide", listener),
+  removePageHideListener: (listener) =>
+    window.removeEventListener("pagehide", listener),
+  setInterval: (callback, delayMs) => window.setInterval(callback, delayMs),
+  clearInterval: (interval) => window.clearInterval(interval),
+};
+
 export class UsageSession {
   private plannedSeconds: number;
   private availableSeconds: number;
@@ -21,13 +45,18 @@ export class UsageSession {
   private state: "idle" | "running" | "planned-end" | "hard-end" | "destroyed" =
     "idle";
   private readonly persistWhenHidden = () => {
-    if (document.visibilityState !== "visible") void this.persistPending();
+    if (this.environment.getVisibilityState() !== "visible") {
+      void this.persistPending();
+    }
   };
   private readonly persistBeforeLeaving = () => {
     void this.persistPending();
   };
 
-  constructor(private readonly options: UsageSessionOptions) {
+  constructor(
+    private readonly options: UsageSessionOptions,
+    private readonly environment: UsageSessionEnvironment = browserEnvironment,
+  ) {
     this.availableSeconds = Math.max(0, options.availableSeconds);
     this.plannedSeconds = Math.min(
       Math.max(1, options.plannedSeconds),
@@ -43,9 +72,9 @@ export class UsageSession {
 
     this.state = "running";
     this.render();
-    document.addEventListener("visibilitychange", this.persistWhenHidden);
-    window.addEventListener("pagehide", this.persistBeforeLeaving);
-    this.interval = window.setInterval(() => this.tick(), 1000);
+    this.environment.addVisibilityListener(this.persistWhenHidden);
+    this.environment.addPageHideListener(this.persistBeforeLeaving);
+    this.interval = this.environment.setInterval(() => this.tick(), 1000);
   }
 
   extend(plannedSeconds: number): void {
@@ -56,15 +85,15 @@ export class UsageSession {
     );
     this.state = "running";
     this.render();
-    this.interval = window.setInterval(() => this.tick(), 1000);
+    this.interval = this.environment.setInterval(() => this.tick(), 1000);
   }
 
   async destroy(): Promise<void> {
     if (this.state === "destroyed") return;
     this.stopInterval();
     this.state = "destroyed";
-    document.removeEventListener("visibilitychange", this.persistWhenHidden);
-    window.removeEventListener("pagehide", this.persistBeforeLeaving);
+    this.environment.removeVisibilityListener(this.persistWhenHidden);
+    this.environment.removePageHideListener(this.persistBeforeLeaving);
     await this.persistPending();
     this.options.ui.hideUsageTimer();
   }
@@ -85,7 +114,10 @@ export class UsageSession {
   }
 
   private tick(): void {
-    if (this.state !== "running" || document.visibilityState !== "visible") {
+    if (
+      this.state !== "running" ||
+      this.environment.getVisibilityState() !== "visible"
+    ) {
       return;
     }
 
@@ -170,7 +202,7 @@ export class UsageSession {
 
   private stopInterval(): void {
     if (this.interval !== undefined) {
-      window.clearInterval(this.interval);
+      this.environment.clearInterval(this.interval);
       this.interval = undefined;
     }
   }

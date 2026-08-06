@@ -6,10 +6,14 @@ import {
 import { isRuntimeMessage } from "../lib/runtime-messages";
 import { SerialQueue } from "../lib/serial-queue";
 
-export default defineBackground(() => {
+export type RuntimeMessageSender = Parameters<
+  Parameters<typeof browser.runtime.onMessage.addListener>[0]
+>[1];
+
+export function createRuntimeMessageHandler() {
   const mutations = new SerialQueue();
 
-  browser.runtime.onMessage.addListener((message: unknown, sender) => {
+  return (message: unknown, sender: RuntimeMessageSender) => {
     if (!isRuntimeMessage(message)) return undefined;
 
     switch (message.type) {
@@ -41,5 +45,9 @@ export default defineBackground(() => {
           .update(sender.tab.id, { url: "about:blank" })
           .then(() => ({ ok: true }));
     }
-  });
+  };
+}
+
+export default defineBackground(() => {
+  browser.runtime.onMessage.addListener(createRuntimeMessageHandler());
 });
