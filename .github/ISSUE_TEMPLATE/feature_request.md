@@ -1,20 +1,23 @@
 ---
-name: Feature request
-about: Suggest an idea for this project
+name: Product proposal
+about: Propose a deliberate-access or finite-feed improvement
 title: ''
 labels: enhancement
 assignees: arturosdg
-
 ---
 
-**Is your feature request related to a problem? Please describe.**
-A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+## Habit or access problem
 
-**Describe the solution you'd like**
-A clear and concise description of what you want to happen.
+What unwanted behavior should Dopamine Fast interrupt while preserving useful,
+user-requested access?
 
-**Describe alternatives you've considered**
-A clear and concise description of any alternative solutions or features you've considered.
+## Proposed behavior
 
-**Additional context**
-Add any other context or screenshots about the feature request here.
+Describe the smallest behavior change that would address the problem.
+
+## Scope and trade-offs
+
+- Affected network or extension screen:
+- Privacy or permission impact:
+- How the behavior should fail if the platform DOM changes:
+- Alternatives considered:
