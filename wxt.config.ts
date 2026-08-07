@@ -2,7 +2,7 @@ import { defineConfig } from "wxt";
 
 export default defineConfig({
   zip: {
-    excludeSources: ["task_plan.md", "notes.md"],
+    excludeSources: ["task_plan.md", "notes.md", "tmp/**"],
   },
   manifest: {
     name: "Dopamine Fast",
