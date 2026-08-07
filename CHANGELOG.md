@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/arturosdg/dopamine-fast/compare/v0.4.0...v0.5.0) (2026-08-07)
+
+
+### Features
+
+* **brand:** add original Dopamine Fast identity ([b6a61e2](https://github.com/arturosdg/dopamine-fast/commit/b6a61e2e1440d2651c6bbbcd4fc91244e7c8a76b))
+* **brand:** add original Dopamine Fast identity ([e2ad187](https://github.com/arturosdg/dopamine-fast/commit/e2ad1877615654e37cca93457e0f94cbf571ace6))
+
 ## [0.4.0](https://github.com/arturosdg/dopamine-fast/compare/v0.3.1...v0.4.0) (2026-08-05)
 
 
