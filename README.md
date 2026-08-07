@@ -1,5 +1,9 @@
 # Dopamine Fast
 
+<p align="center">
+  <img src="assets/icon-source.png" alt="Dopamine Fast icon" width="128" />
+</p>
+
 Dopamine Fast is a local-first browser extension that makes social feeds finite
 and intentional. It adds a pause before opening a feed, asks you to choose how
 long you want to stay, and gives every scrolling session a visible ending.

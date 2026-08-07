@@ -1,15 +1,18 @@
-# dependencies
-/node_modules
+# Installed dependencies and generated WXT output
+node_modules/
+.output/
+.wxt/
+dist/
+coverage/
 
-# testing
-/coverage
-
-# build
-/dist
-/.output
-/.wxt
-
-# etc
+# Local environment and editor state
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
 .DS_Store
-.env.local
-.idea
+Thumbs.db
+
+# Task-local scratch assets
+tmp/
