@@ -49,6 +49,11 @@ of loading more posts automatically.
 
 ![Opening pause on a mobile feed](docs/screenshots/opening-pause.png)
 
+The boundary stays inside the native feed and requires a deliberate press and
+hold before the next finite batch is revealed.
+
+![Inline end-of-batch control](docs/screenshots/end-of-batch.png)
+
 ## Features
 
 - Configurable delay before entering a supported feed.
