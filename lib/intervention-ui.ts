@@ -34,9 +34,6 @@ export class InterventionUi {
   private readonly root: HTMLElement;
   private readonly overlay: HTMLElement;
   private readonly timer: HTMLElement;
-  private previousHtmlOverflow = "";
-  private previousBodyOverflow = "";
-  private pageLocked = false;
   private cancelPendingInteraction?: () => void;
 
   constructor(root: HTMLElement) {
@@ -53,7 +50,6 @@ export class InterventionUi {
     this.cancelPendingInteraction = undefined;
     cancelPendingInteraction?.();
     this.overlay.replaceChildren();
-    this.unlockPage();
   }
 
   hideAll(): void {
@@ -62,7 +58,6 @@ export class InterventionUi {
   }
 
   showOpening(options: OpeningOptions): Promise<number> {
-    this.lockPage();
     const maximumMinutes = Math.max(
       1,
       Math.min(60, Math.ceil(options.availableSeconds / 60)),
@@ -147,7 +142,6 @@ export class InterventionUi {
   }
 
   showSessionEnded(options: SessionEndedOptions): Promise<number> {
-    this.lockPage();
     this.overlay.replaceChildren(
       createSessionEndedView({
         platformLabel: options.platformLabel,
@@ -257,7 +251,6 @@ export class InterventionUi {
     const cancelPendingInteraction = this.cancelPendingInteraction;
     this.cancelPendingInteraction = undefined;
     cancelPendingInteraction?.();
-    this.lockPage();
     this.overlay.replaceChildren(createHardLimitView(platformLabel));
 
     this.requiredElement<HTMLButtonElement>('[data-action="leave"]')
@@ -391,21 +384,5 @@ export class InterventionUi {
     const minutes = Math.floor((safeSeconds % 3600) / 60);
     if (hours === 0) return `${minutes} min`;
     return minutes > 0 ? `${hours} h ${minutes} min` : `${hours} h`;
-  }
-
-  private lockPage(): void {
-    if (this.pageLocked) return;
-    this.pageLocked = true;
-    this.previousHtmlOverflow = document.documentElement.style.overflow;
-    this.previousBodyOverflow = document.body?.style.overflow ?? "";
-    document.documentElement.style.overflow = "hidden";
-    if (document.body) document.body.style.overflow = "hidden";
-  }
-
-  private unlockPage(): void {
-    if (!this.pageLocked) return;
-    this.pageLocked = false;
-    document.documentElement.style.overflow = this.previousHtmlOverflow;
-    if (document.body) document.body.style.overflow = this.previousBodyOverflow;
   }
 }

@@ -67,8 +67,16 @@ export default defineContentScript({
       onRemove(ui) {
         ui?.hideAll();
       },
+    }).catch((error: unknown) => {
+      interactionGuard.destroy();
+      throw error;
     });
-    shadowUi.mount();
+    try {
+      shadowUi.mount();
+    } catch (error) {
+      interactionGuard.destroy();
+      throw error;
+    }
 
     const intervention = shadowUi.mounted;
     if (!intervention) {
