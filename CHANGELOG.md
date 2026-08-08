@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.5.1](https://github.com/arturosdg/dopamine-fast/compare/v0.5.0...v0.5.1) (2026-08-08)
+
+
+### Bug Fixes
+
+* **intervention:** avoid retaining host scroll locks ([7bde243](https://github.com/arturosdg/dopamine-fast/commit/7bde243d7e871f02cf26fd01c6f3a560c8150e4d))
+* **intervention:** block feed interaction during startup ([2834503](https://github.com/arturosdg/dopamine-fast/commit/28345038f84e5573580e08e8e3cb65f2380f4c0e))
+* **intervention:** block feed interaction during startup ([90d16a5](https://github.com/arturosdg/dopamine-fast/commit/90d16a5e2a1d5629e3281103d0f7f2aff3130629))
+* **mobile:** preserve sessions and suppress discovery ([35b633b](https://github.com/arturosdg/dopamine-fast/commit/35b633b12a353e20458170b08304a1b3e3081f2f))
+* **mobile:** preserve sessions and suppress discovery ([5bb6f61](https://github.com/arturosdg/dopamine-fast/commit/5bb6f6103003338e3ebdfc0d6bafc2aa54ebfb10))
+
 ## [0.5.0](https://github.com/arturosdg/dopamine-fast/compare/v0.4.0...v0.5.0) (2026-08-07)
 
 
