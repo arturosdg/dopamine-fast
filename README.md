@@ -52,6 +52,8 @@ of loading more posts automatically.
 ## Features
 
 - Configurable delay before entering a supported feed.
+- Immediate interaction guard while local settings and the opening
+  intervention load, preventing clicks or scrolling through the feed first.
 - Intentional session duration, adjusted through deliberate button steps, with
   a floating countdown that remains active across same-network SPA and history
   navigation.

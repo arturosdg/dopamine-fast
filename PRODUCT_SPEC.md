@@ -15,15 +15,17 @@ Keep the useful parts of social networks while giving every feed a real end.
 ## Default experience
 
 1. The user opens a supported social-network page.
-2. A configurable opening pause interrupts automatic entry.
-3. The user chooses how many minutes the session should last.
-4. A floating countdown remains visible while the supported feed is active.
-5. Dopamine Fast removes promoted and suggested content.
-6. The first 20 top-level post elements remain visible.
-7. The native feed ends with an inline load-more control after the twentieth
+2. The feed is non-interactive while the extension loads its local policy, so
+   clicks, keyboard actions and scrolling cannot race the opening intervention.
+3. A configurable opening pause interrupts automatic entry.
+4. The user chooses how many minutes the session should last.
+5. A floating countdown remains visible while the supported feed is active.
+6. Dopamine Fast removes promoted and suggested content.
+7. The first 20 top-level post elements remain visible.
+8. The native feed ends with an inline load-more control after the twentieth
    post; no full-screen intervention is shown for a batch boundary.
-8. The user can deliberately reveal 10 additional posts from that control.
-9. Per-network daily hard limits for both time and posts stop further use.
+9. The user can deliberately reveal 10 additional posts from that control.
+10. Per-network daily hard limits for both time and posts stop further use.
 
 ## Time budgets
 
