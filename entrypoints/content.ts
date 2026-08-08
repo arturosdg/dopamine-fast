@@ -3,6 +3,7 @@ import { FeedLimiter } from "../lib/feed-limiter";
 import { InterventionUi } from "../lib/intervention-ui";
 import { IntentionalSearchController } from "../lib/intentional-search";
 import { availableUsageSeconds, localDateKey } from "../lib/models";
+import { PageInteractionGuard } from "../lib/page-interaction-guard";
 import { getPlatformAdapter } from "../lib/platforms";
 import { PreferredFeedController } from "../lib/preferred-feed";
 import { SingleItemViewController } from "../lib/single-item-view";
@@ -37,6 +38,12 @@ export default defineContentScript({
     const adapter = getPlatformAdapter(location.hostname);
     if (!adapter) return;
 
+    const interactionGuard = new PageInteractionGuard();
+    if (adapter.isFeedRoute(new URL(location.href))) {
+      interactionGuard.engage(0);
+    }
+    ctx.onInvalidated(() => interactionGuard.destroy());
+
     if (document.readyState === "loading") {
       await new Promise<void>((resolve) => {
         document.addEventListener("DOMContentLoaded", () => resolve(), {
@@ -64,7 +71,10 @@ export default defineContentScript({
     shadowUi.mount();
 
     const intervention = shadowUi.mounted;
-    if (!intervention) return;
+    if (!intervention) {
+      interactionGuard.destroy();
+      return;
+    }
 
     let limiter: FeedLimiter | undefined;
     let intentionalSearch: IntentionalSearchController | undefined;
@@ -76,8 +86,19 @@ export default defineContentScript({
     let currentUrl = "";
     let activationId = 0;
 
-    const activate = async (preserveUsageSession = false) => {
+    const activate = (preserveUsageSession = false): Promise<void> => {
       const thisActivation = ++activationId;
+      const url = new URL(location.href);
+      if (
+        adapter.isFeedRoute(url) &&
+        (!preserveUsageSession || !usageSession)
+      ) {
+        interactionGuard.engage(thisActivation);
+      } else {
+        interactionGuard.releaseAll();
+      }
+
+      return (async () => {
       if (limiter) sessionPostAllowance = limiter.getAllowance();
       limiter?.destroy();
       limiter = undefined;
@@ -98,7 +119,6 @@ export default defineContentScript({
         intervention.hideAll();
       }
 
-      const url = new URL(location.href);
       const settings = await getSettings();
       if (thisActivation !== activationId) return;
       if (!settings.enabled || !settings.enabledSites[adapter.id]) {
@@ -195,7 +215,7 @@ export default defineContentScript({
       }
       const todayUsage = usageForDate(usageHistory, localDateKey());
 
-      const plannedSeconds = await intervention.showOpening({
+      const opening = intervention.showOpening({
         platformLabel: adapter.label,
         delaySeconds: settings.openingDelaySeconds,
         defaultSessionMinutes: settings.sessionDurationMinutes,
@@ -207,6 +227,8 @@ export default defineContentScript({
           { label: "YouTube", usedSeconds: todayUsage.youtube },
         ],
       });
+      interactionGuard.release(thisActivation);
+      const plannedSeconds = await opening;
       if (thisActivation !== activationId) return;
       if (plannedSeconds <= 0) return;
 
@@ -256,6 +278,7 @@ export default defineContentScript({
       });
       usageSession = session;
       session.start();
+      })().finally(() => interactionGuard.release(thisActivation));
     };
 
     currentUrl = location.href;
