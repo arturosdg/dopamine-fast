@@ -9,9 +9,12 @@ interface OriginalPageStyles {
 }
 
 interface SingleItemViewOptions {
+  activationSelectors?: string[];
   itemSelector: string;
   itemRootSelector: string;
   navigationSelectors: string[];
+  navigationControlSelector?: string;
+  navigationControlTokens?: string[];
 }
 
 const BLOCKED_KEYS = new Set([
@@ -31,12 +34,34 @@ export class SingleItemViewController {
   private primaryItem: HTMLElement | undefined;
   private scanTimer: number | undefined;
   private started = false;
+  private active = false;
 
-  constructor(private readonly options: SingleItemViewOptions) {}
+  constructor(
+    private readonly options: SingleItemViewOptions,
+    private readonly activateImmediately = true,
+  ) {}
 
   start(): void {
     if (this.started) return;
     this.started = true;
+    this.observer = new MutationObserver(() => this.scheduleScan());
+    this.observer.observe(document.body, { childList: true, subtree: true });
+    this.updateActivation();
+  }
+
+  destroy(): void {
+    if (!this.started) return;
+    this.started = false;
+    this.observer?.disconnect();
+    this.observer = undefined;
+    if (this.scanTimer !== undefined) window.clearTimeout(this.scanTimer);
+    this.scanTimer = undefined;
+    this.deactivate();
+  }
+
+  private activate(): void {
+    if (this.active) return;
+    this.active = true;
     this.lock(document.documentElement);
     if (document.body) this.lock(document.body);
     window.addEventListener("wheel", this.blockPointerNavigation, {
@@ -48,21 +73,14 @@ export class SingleItemViewController {
       passive: false,
     });
     window.addEventListener("keydown", this.blockKeyboardNavigation, true);
-    this.enforceSingleItem();
-    this.observer = new MutationObserver(() => this.scheduleScan());
-    this.observer.observe(document.body, { childList: true, subtree: true });
   }
 
-  destroy(): void {
-    if (!this.started) return;
-    this.started = false;
+  private deactivate(): void {
+    if (!this.active) return;
+    this.active = false;
     window.removeEventListener("wheel", this.blockPointerNavigation, true);
     window.removeEventListener("touchmove", this.blockPointerNavigation, true);
     window.removeEventListener("keydown", this.blockKeyboardNavigation, true);
-    this.observer?.disconnect();
-    this.observer = undefined;
-    if (this.scanTimer !== undefined) window.clearTimeout(this.scanTimer);
-    this.scanTimer = undefined;
     this.originals.forEach((styles, element) => {
       restoreProperty(element, "overflow", styles.overflow);
       restoreProperty(
@@ -110,8 +128,20 @@ export class SingleItemViewController {
     if (this.scanTimer !== undefined) return;
     this.scanTimer = window.setTimeout(() => {
       this.scanTimer = undefined;
-      this.enforceSingleItem();
+      this.updateActivation();
     }, 50);
+  }
+
+  private updateActivation(): void {
+    const detected = (this.options.activationSelectors ?? []).some((selector) =>
+      document.querySelector(selector),
+    );
+    if (!this.activateImmediately && !detected) {
+      this.deactivate();
+      return;
+    }
+    this.activate();
+    this.enforceSingleItem();
   }
 
   private enforceSingleItem(): void {
@@ -132,6 +162,24 @@ export class SingleItemViewController {
         .querySelectorAll<HTMLElement>(selector)
         .forEach((element) => this.hide(element));
     });
+
+    if (
+      this.options.navigationControlSelector &&
+      this.options.navigationControlTokens
+    ) {
+      document
+        .querySelectorAll<HTMLElement>(this.options.navigationControlSelector)
+        .forEach((element) => {
+          if (
+            matchesSingleItemNavigationControl(
+              element.textContent,
+              this.options.navigationControlTokens ?? [],
+            )
+          ) {
+            this.hide(element);
+          }
+        });
+    }
   }
 
   private hide(element: HTMLElement): void {
@@ -144,6 +192,14 @@ export class SingleItemViewController {
 
 export function isBlockedSingleItemNavigationKey(key: string): boolean {
   return BLOCKED_KEYS.has(key);
+}
+
+export function matchesSingleItemNavigationControl(
+  label: string | null,
+  tokens: string[],
+): boolean {
+  const normalized = label?.trim().toLocaleLowerCase() ?? "";
+  return tokens.some((token) => normalized === token);
 }
 
 function isAllowedInteractionTarget(target: EventTarget | null): boolean {

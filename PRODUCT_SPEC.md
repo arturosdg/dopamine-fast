@@ -35,7 +35,9 @@ Keep the useful parts of social networks while giving every feed a real end.
 - The configured default is 10 minutes and can be adjusted from 1 to 60
   minutes at entry.
 - A compact floating counter shows the planned session time and the remaining
-  daily time for the current network.
+  daily time for the current network. Once a session starts, the counter and
+  the chosen block survive same-network SPA navigation and browser history
+  changes instead of showing the opening screen again.
 - Time advances only while the tab is visible.
 - When planned time ends, the user can leave or deliberately plan another
   block after a 10-second pause. The next duration cannot be selected until
@@ -114,13 +116,17 @@ visible area while the batch is closed.
 ### Instagram
 
 - Keep followed-account posts and direct profile visits.
-- When the optional Following-only setting is enabled, select Following and
-  hide For You while the home feed is active.
+- When the optional Following-only setting is enabled, open Instagram's
+  explicit Following feed variant and hide For You while the home feed is
+  active, including mobile layouts that expose it through a menu rather than
+  tabs.
 - Hide suggested posts, Explore recommendations, Reels surfaces and promoted
-  posts.
+  posts. Keep the mobile Explore search input while removing its default
+  recommendation grid and category tabs.
 - Hide the generic Reels navigation destination. When an individual reel or
-  the Reels route is opened directly, keep the first opened item usable while
-  blocking vertical wheel, keyboard and touch navigation to another reel.
+  the Reels route is opened directly or a reel is opened in a modal from
+  another Instagram surface, keep the first opened item usable while blocking
+  vertical wheel, keyboard and touch navigation to another reel.
 - Stop after the active batch or after Instagram's own caught-up marker,
   whichever comes first.
 

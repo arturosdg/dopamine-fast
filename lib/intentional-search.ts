@@ -63,10 +63,10 @@ export class IntentionalSearchController {
         roots,
         config.shadowInputSelectors ?? [],
       );
-      this.hideMatches([document], selectorsForRoute(config, this.url));
     }
 
     if (this.suppressSuggestions || config.alwaysHideNavigation) {
+      this.hideMatches([document], selectorsForRoute(config, this.url));
       this.hideMatches([document], config.navigationSelectors ?? []);
       this.hideMatches(
         navigationRoots.slice(1),

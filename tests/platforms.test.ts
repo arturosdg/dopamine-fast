@@ -126,11 +126,19 @@ describe("platform adapters", () => {
   it("defines Instagram's Following feed tabs narrowly", () => {
     const instagram = getPlatformAdapter("instagram.com")!;
 
-    expect(instagram.preferredFeed).toEqual({
-      tabSelector: 'main [role="tablist"] [role="tab"]',
-      preferredTokens: ["following", "siguiendo"],
-      hiddenTokens: ["for you", "para ti"],
-    });
+    expect(instagram.preferredFeed?.tabSelector).toBe(
+      'main [role="tablist"] [role="tab"]',
+    );
+    expect(
+      instagram.preferredFeed?.canonicalUrl?.(
+        new URL("https://instagram.com/"),
+      )?.href,
+    ).toBe("https://instagram.com/?variant=following");
+    expect(
+      instagram.preferredFeed?.canonicalUrl?.(
+        new URL("https://instagram.com/?variant=following"),
+      ),
+    ).toBeUndefined();
   });
 
   it("includes the current narrow Reddit post-unit fallback", () => {
@@ -153,6 +161,7 @@ describe("platform adapters", () => {
   it("defines deliberate search surfaces without broad page selectors", () => {
     const reddit = getPlatformAdapter("reddit.com")!;
     const x = getPlatformAdapter("x.com")!;
+    const instagram = getPlatformAdapter("instagram.com")!;
 
     expect(reddit.intentionalSearch?.suggestionSelectors).toContain(
       'reddit-search-large [role="listbox"]',
@@ -165,6 +174,10 @@ describe("platform adapters", () => {
     );
     expect(x.intentionalSearch?.routeRules?.[0]?.selectors).toContain(
       '[data-testid="primaryColumn"] [role="tablist"]',
+    );
+    expect(x.intentionalSearch?.alwaysHideNavigation).toBe(true);
+    expect(instagram.intentionalSearch?.routeRules?.[0]?.selectors).toContain(
+      'main a[href^="/p/"]',
     );
   });
 });
