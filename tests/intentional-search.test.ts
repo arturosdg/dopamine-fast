@@ -25,4 +25,23 @@ describe("intentional search routes", () => {
       [],
     );
   });
+
+  it("supports the trailing-slash mobile route independently", () => {
+    const mobileConfig = {
+      ...config,
+      routeRules: [
+        {
+          paths: ["/explore", "/explore/"],
+          selectors: ["main [role=tablist]"],
+        },
+      ],
+    };
+
+    expect(
+      selectorsForRoute(
+        mobileConfig,
+        new URL("https://instagram.com/explore/"),
+      ),
+    ).toEqual(["main [role=tablist]"]);
+  });
 });

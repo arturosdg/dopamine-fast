@@ -48,6 +48,10 @@ export class FeedLimiter {
     });
   }
 
+  getAllowance(): number {
+    return this.allowance;
+  }
+
   destroy(): void {
     this.destroyed = true;
     this.mutationObserver.disconnect();

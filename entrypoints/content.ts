@@ -72,11 +72,13 @@ export default defineContentScript({
     let singleItemView: SingleItemViewController | undefined;
     let surfaceSuppression: SurfaceSuppressionController | undefined;
     let usageSession: UsageSession | undefined;
+    let sessionPostAllowance = 0;
     let currentUrl = "";
     let activationId = 0;
 
-    const activate = async () => {
+    const activate = async (preserveUsageSession = false) => {
       const thisActivation = ++activationId;
+      if (limiter) sessionPostAllowance = limiter.getAllowance();
       limiter?.destroy();
       limiter = undefined;
       intentionalSearch?.destroy();
@@ -87,11 +89,14 @@ export default defineContentScript({
       singleItemView = undefined;
       surfaceSuppression?.destroy();
       surfaceSuppression = undefined;
-      const previousUsageSession = usageSession;
-      usageSession = undefined;
-      await previousUsageSession?.destroy();
-      if (thisActivation !== activationId) return;
-      intervention.hideAll();
+      if (!preserveUsageSession || !usageSession) {
+        const previousUsageSession = usageSession;
+        usageSession = undefined;
+        sessionPostAllowance = 0;
+        await previousUsageSession?.destroy();
+        if (thisActivation !== activationId) return;
+        intervention.hideAll();
+      }
 
       const url = new URL(location.href);
       const settings = await getSettings();
@@ -137,9 +142,15 @@ export default defineContentScript({
         intentionalSearch.start();
       }
 
-      if (adapter.singleItemView?.isRoute(url)) {
-        singleItemView = new SingleItemViewController(adapter.singleItemView);
+      const isSingleItemRoute = adapter.singleItemView?.isRoute(url) ?? false;
+      if (adapter.singleItemView) {
+        singleItemView = new SingleItemViewController(
+          adapter.singleItemView,
+          isSingleItemRoute,
+        );
         singleItemView.start();
+      }
+      if (isSingleItemRoute) {
         return;
       }
 
@@ -149,8 +160,23 @@ export default defineContentScript({
         (adapter.id === "x" && settings.xFollowingOnly) ||
         (adapter.id === "instagram" && settings.instagramFollowingOnly);
       if (followingOnly) {
+        const preferredUrl = adapter.preferredFeed?.canonicalUrl?.(url);
+        if (preferredUrl && preferredUrl.href !== url.href) {
+          location.replace(preferredUrl.href);
+          return;
+        }
         preferredFeed = new PreferredFeedController(adapter);
         preferredFeed.start();
+      }
+
+      if (usageSession) {
+        if (usageSession.getAvailableSeconds() <= 0) {
+          intervention.showHardLimitReached(adapter.label);
+          return;
+        }
+        limiter = new FeedLimiter(adapter, settings, sessionPostAllowance);
+        limiter.start();
+        return;
       }
 
       const [usageState, usageHistory] = await Promise.all([
@@ -189,6 +215,7 @@ export default defineContentScript({
         settings.batchSize,
       );
       if (thisActivation !== activationId) return;
+      sessionPostAllowance = initialAllowance;
 
       limiter = new FeedLimiter(
         adapter,
@@ -210,10 +237,7 @@ export default defineContentScript({
               defaultSessionMinutes: settings.sessionDurationMinutes,
               availableSeconds: remainingSeconds,
             });
-            if (
-              thisActivation !== activationId ||
-              usageSession !== session
-            ) {
+            if (usageSession !== session) {
               return;
             }
             if (extensionSeconds <= 0) return;
@@ -221,12 +245,10 @@ export default defineContentScript({
           })();
         },
         onHardLimitReached() {
-          if (
-            thisActivation !== activationId ||
-            usageSession !== session
-          ) {
+          if (usageSession !== session) {
             return;
           }
+          sessionPostAllowance = 0;
           limiter?.destroy();
           limiter = undefined;
           intervention.showHardLimitReached(adapter.label);
@@ -242,7 +264,7 @@ export default defineContentScript({
     const navigationTimer = window.setInterval(() => {
       if (location.href === currentUrl) return;
       currentUrl = location.href;
-      void activate();
+      void activate(true);
     }, 600);
 
     const unwatchSettings = settingsItem.watch(() => {

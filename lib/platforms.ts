@@ -10,6 +10,7 @@ export interface PlatformAdapter {
     tabSelector: string;
     preferredTokens: string[];
     hiddenTokens: string[];
+    canonicalUrl?(url: URL): URL | undefined;
   };
   intentionalSearch?: {
     inputSelectors: string[];
@@ -28,9 +29,12 @@ export interface PlatformAdapter {
   };
   singleItemView?: {
     isRoute(url: URL): boolean;
+    activationSelectors?: string[];
     itemSelector: string;
     itemRootSelector: string;
     navigationSelectors: string[];
+    navigationControlSelector?: string;
+    navigationControlTokens?: string[];
   };
   surfaceSuppression?: {
     always: SurfaceSuppressionRule[];
@@ -158,20 +162,23 @@ const x: PlatformAdapter = {
   intentionalSearch: {
     inputSelectors: ['input[data-testid="SearchBox_Search_Input"]'],
     suggestionSelectors: ['[data-testid="typeaheadDropdown"]'],
+    alwaysHideNavigation: true,
     routeRules: [
       {
-        paths: ["/explore"],
+        paths: ["/explore", "/explore/"],
         selectors: [
           '[data-testid="primaryColumn"] [role="tablist"]',
+          'main [data-testid="ScrollSnap-List"][role="tablist"]',
           '[data-testid="primaryColumn"] [role="region"]',
           '[data-testid="primaryColumn"] [role="status"]',
           '[data-testid="sidebarColumn"]',
         ],
       },
       {
-        paths: ["/search"],
+        paths: ["/search", "/search/"],
         selectors: [
           '[data-testid="primaryColumn"] [role="tablist"]',
+          'main [data-testid="ScrollSnap-List"][role="tablist"]',
           '[data-testid="sidebarColumn"]',
         ],
       },
@@ -210,11 +217,29 @@ const instagram: PlatformAdapter = {
     tabSelector: 'main [role="tablist"] [role="tab"]',
     preferredTokens: ["following", "siguiendo"],
     hiddenTokens: ["for you", "para ti"],
+    canonicalUrl(url) {
+      if (url.pathname !== "/" || url.searchParams.get("variant") === "following") {
+        return undefined;
+      }
+      const following = new URL(url);
+      following.searchParams.set("variant", "following");
+      return following;
+    },
   },
   intentionalSearch: {
-    inputSelectors: [],
+    inputSelectors: ['main input[type="text"]'],
     suggestionSelectors: [],
     alwaysHideNavigation: true,
+    routeRules: [
+      {
+        paths: ["/explore", "/explore/"],
+        selectors: [
+          'main [role="tablist"]',
+          'main a[href^="/p/"]',
+          'main a[href^="/reel/"]',
+        ],
+      },
+    ],
     navigationSelectors: [
       'a[href="/reels/"]',
       'nav a[href^="/reels/"]',
@@ -228,9 +253,15 @@ const instagram: PlatformAdapter = {
         /^\/reels?\/[^/]+\/?$/.test(url.pathname)
       );
     },
+    activationSelectors: [
+      '[role="dialog"] video',
+      '[role="dialog"] a[href^="/reels/audio/"]',
+    ],
     itemSelector: 'main [role="group"][aria-label="Video player"]',
     itemRootSelector: '[style*="--x-height"]',
     navigationSelectors: ['main [role="toolbar"]'],
+    navigationControlSelector: '[role="dialog"] button',
+    navigationControlTokens: ["back", "atrás", "next", "siguiente"],
   },
   getPostKey(element) {
     const href = element

@@ -49,14 +49,16 @@ of loading more posts automatically.
 
 - Configurable delay before entering a supported feed.
 - Intentional session duration, adjusted through deliberate button steps, with
-  a persistent floating countdown.
+  a floating countdown that remains active across same-network SPA and history
+  navigation.
 - Optional Following-only modes for X and Instagram that select Following and
-  hide For You.
-- Intentional search on X and Reddit: autocomplete is suppressed, and X Explore
-  stays empty until a query is submitted. X result tabs and Reddit's Popular,
-  News and Explore shortcuts are also hidden.
-- Instagram's Reels destination is hidden; a directly opened reel remains
-  usable without vertical navigation into an endless sequence.
+- Intentional search on X, Instagram and Reddit: autocomplete or default
+  recommendations are suppressed, X and Instagram Explore stay empty until a
+  deliberate query, and X result tabs plus Reddit's Popular, News and Explore
+  shortcuts are hidden.
+- Instagram's Reels destination is hidden; a directly opened reel or a reel
+  opened from a modal remains usable without vertical navigation into an
+  endless sequence.
 - YouTube Shorts surfaces are hidden, and directly opened Shorts use the
   standard video player instead of the vertical Shorts feed.
 - Optional YouTube Subscriptions-only mode redirects Home to Subscriptions and
