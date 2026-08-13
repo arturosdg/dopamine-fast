@@ -79,6 +79,12 @@ visible area while the batch is closed.
 - Every additional batch requires the inline pause and hold interaction.
 - Suggested and promoted content remains blocked when suppression is enabled.
 
+## Media behavior
+
+- When autoplay prevention is enabled, each newly discovered video or audio
+  element is stopped once and has its autoplay flag disabled.
+- Deliberate playback is not interrupted by later feed mutation scans.
+
 ## Platform scope
 
 ### Reddit

@@ -5,6 +5,7 @@ import {
 } from "./platforms";
 import { BatchGateUi } from "./batch-gate-ui";
 import { planFeedVisibility } from "./feed-boundary";
+import { MediaAutoplayGuard } from "./media-autoplay";
 import { reserveAllowance } from "./storage";
 import type { Settings } from "./models";
 
@@ -25,6 +26,7 @@ export class FeedLimiter {
   private readonly revealedPostKeys = new Set<string>();
   private readonly fallbackPostKeys = new WeakMap<HTMLElement, string>();
   private readonly gate = new BatchGateUi();
+  private readonly mediaAutoplay = new MediaAutoplayGuard();
   private readonly mutationObserver: MutationObserver;
   private processingTimer?: number;
   private nextFallbackPostKey = 1;
@@ -76,8 +78,7 @@ export class FeedLimiter {
 
     if (this.settings.disableAutoplay) {
       document.querySelectorAll<HTMLMediaElement>("video, audio").forEach((media) => {
-        media.autoplay = false;
-        media.pause();
+        this.mediaAutoplay.prevent(media);
       });
     }
 

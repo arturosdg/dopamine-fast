@@ -81,7 +81,7 @@ hold before the next finite batch is revealed.
 - Stable per-session post counting for virtualized feeds such as Reddit.
 - Optional delay and press-and-hold step before revealing another batch.
 - Best-effort suppression of suggested and promoted surfaces.
-- Media autoplay prevention.
+- Media autoplay prevention that still allows deliberate playback.
 - Per-network enable or disable controls.
 - Firefox and Chromium production builds.
 
