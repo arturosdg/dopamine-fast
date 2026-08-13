@@ -1,15 +1,12 @@
 export type PlatformId = "reddit" | "x" | "instagram" | "youtube";
-export type GuardMode = "gentle" | "balanced" | "strict";
 
 export interface Settings {
   enabled: boolean;
-  mode: GuardMode;
   openingDelaySeconds: number;
   sessionDurationMinutes: number;
   dailyUsageLimitMinutes: number;
   batchSize: number;
   unlockBatchSize: number;
-  dailyLimit: number;
   unlockDelaySeconds: number;
   holdSeconds: number;
   blockSuggested: boolean;
@@ -36,13 +33,11 @@ export interface DailyUsageState {
 
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
-  mode: "balanced",
   openingDelaySeconds: 5,
   sessionDurationMinutes: 10,
   dailyUsageLimitMinutes: 30,
   batchSize: 20,
   unlockBatchSize: 10,
-  dailyLimit: 60,
   unlockDelaySeconds: 5,
   holdSeconds: 2,
   blockSuggested: true,
@@ -63,14 +58,7 @@ const clampInteger = (value: number, minimum: number, maximum: number) =>
 
 export function sanitizeSettings(input: Partial<Settings>): Settings {
   return {
-    ...DEFAULT_SETTINGS,
-    ...input,
-    mode:
-      input.mode === "gentle" ||
-      input.mode === "balanced" ||
-      input.mode === "strict"
-        ? input.mode
-        : DEFAULT_SETTINGS.mode,
+    enabled: sanitizeBoolean(input.enabled, DEFAULT_SETTINGS.enabled),
     openingDelaySeconds: clampInteger(
       input.openingDelaySeconds ?? DEFAULT_SETTINGS.openingDelaySeconds,
       0,
@@ -96,11 +84,6 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
       5,
       50,
     ),
-    dailyLimit: clampInteger(
-      input.dailyLimit ?? DEFAULT_SETTINGS.dailyLimit,
-      10,
-      500,
-    ),
     unlockDelaySeconds: clampInteger(
       input.unlockDelaySeconds ?? DEFAULT_SETTINGS.unlockDelaySeconds,
       0,
@@ -110,6 +93,14 @@ export function sanitizeSettings(input: Partial<Settings>): Settings {
       input.holdSeconds ?? DEFAULT_SETTINGS.holdSeconds,
       1,
       10,
+    ),
+    blockSuggested: sanitizeBoolean(
+      input.blockSuggested,
+      DEFAULT_SETTINGS.blockSuggested,
+    ),
+    disableAutoplay: sanitizeBoolean(
+      input.disableAutoplay,
+      DEFAULT_SETTINGS.disableAutoplay,
     ),
     xFollowingOnly:
       typeof input.xFollowingOnly === "boolean"
@@ -243,17 +234,6 @@ export function availableUsageSeconds(
   return Math.max(
     0,
     dailyLimitSeconds - state.usedSecondsByPlatform[platform],
-  );
-}
-
-export function availableAllowance(
-  settings: Settings,
-  state: DailyState,
-  platform: PlatformId,
-): number {
-  return Math.max(
-    0,
-    settings.dailyLimit - state.revealedByPlatform[platform],
   );
 }
 

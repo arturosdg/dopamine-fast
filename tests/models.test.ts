@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   DEFAULT_SETTINGS,
-  availableAllowance,
   availableUsageSeconds,
   emptyDailyState,
   emptyDailyUsageState,
@@ -19,7 +18,6 @@ describe("settings", () => {
       dailyUsageLimitMinutes: 900,
       batchSize: 0,
       unlockBatchSize: 300,
-      dailyLimit: -10,
       holdSeconds: 0,
       xFollowingOnly: "yes" as unknown as boolean,
       instagramFollowingOnly: "yes" as unknown as boolean,
@@ -35,7 +33,6 @@ describe("settings", () => {
     expect(settings.dailyUsageLimitMinutes).toBe(240);
     expect(settings.batchSize).toBe(5);
     expect(settings.unlockBatchSize).toBe(50);
-    expect(settings.dailyLimit).toBe(10);
     expect(settings.holdSeconds).toBe(1);
     expect(settings.xFollowingOnly).toBe(false);
     expect(settings.instagramFollowingOnly).toBe(false);
@@ -65,6 +62,19 @@ describe("settings", () => {
     expect(settings.youtubeSubscriptionsOnly).toBe(true);
     expect(settings.enabledSites.youtube).toBe(false);
   });
+
+  it("drops legacy post-limit and friction-mode settings", () => {
+    const settings = sanitizeSettings({
+      mode: "strict",
+      dailyLimit: 10,
+    } as Partial<typeof DEFAULT_SETTINGS> & {
+      mode: string;
+      dailyLimit: number;
+    });
+
+    expect(settings).not.toHaveProperty("mode");
+    expect(settings).not.toHaveProperty("dailyLimit");
+  });
 });
 
 describe("daily state", () => {
@@ -81,33 +91,6 @@ describe("daily state", () => {
     };
 
     expect(normalizeDailyState(stale, today)).toEqual(emptyDailyState(today));
-  });
-
-  it("calculates the remaining allowance", () => {
-    const state = {
-      ...emptyDailyState(today),
-      revealed: 45,
-      revealedByPlatform: {
-        reddit: 35,
-        x: 10,
-        instagram: 0,
-        youtube: 0,
-      },
-    };
-    expect(
-      availableAllowance(
-        { ...DEFAULT_SETTINGS, dailyLimit: 60 },
-        state,
-        "reddit",
-      ),
-    ).toBe(25);
-    expect(
-      availableAllowance(
-        { ...DEFAULT_SETTINGS, dailyLimit: 60 },
-        state,
-        "instagram",
-      ),
-    ).toBe(60);
   });
 
   it("migrates legacy daily state to per-network unlock counters", () => {

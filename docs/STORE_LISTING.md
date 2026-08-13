@@ -4,7 +4,8 @@ The screenshots in `docs/screenshots/` are the canonical assets for both the
 README and the Firefox Add-ons listing. Upload them to AMO in this order:
 
 1. `settings.png` — **Set intentional limits locally.** Configure session
-   length, daily ceilings, feed size, and network-specific protections.
+   length, the daily time ceiling, batch sizes, and network-specific
+   protections.
 2. `opening-pause.png` — **Pause before entering a feed.** Review today's use
    and choose a defined session with deliberate time steps.
 3. `end-of-batch.png` — **Give every feed a visible ending.** Load another

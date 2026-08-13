@@ -32,8 +32,9 @@ available while adding deliberate friction around habitual scrolling:
 6. Reaching the end shows an inline control for loading the next batch.
 7. A per-network daily time ceiling cannot be extended from the page.
 
-Daily post allowances and time ceilings are tracked independently for Reddit,
-X/Twitter, Instagram, and YouTube.
+Daily post counts and time ceilings are tracked independently for Reddit,
+X/Twitter, Instagram, and YouTube. Post counts do not impose a maximum: every
+completed batch gate can reveal another configured batch.
 Preferences and aggregate counters stay in browser extension local storage.
 Elapsed seconds per network are retained for the 30 most recent days with
 activity; active session countdowns are not stored in that history.
@@ -76,10 +77,9 @@ hold before the next finite batch is revealed.
   hides Home. Next-video and recommendation surfaces around requested videos
   are always hidden.
 - Non-extendable daily time ceiling for each network.
-- Finite initial and additional post batches.
+- Finite initial and additional post batches with unlimited successive unlocks.
 - Stable per-session post counting for virtualized feeds such as Reddit.
 - Optional delay and press-and-hold step before revealing another batch.
-- Gentle, balanced, and strict friction modes.
 - Best-effort suppression of suggested and promoted surfaces.
 - Media autoplay prevention.
 - Per-network enable or disable controls.
@@ -146,7 +146,7 @@ entrypoints/content.ts
        └─ inline load-more gate
 
 entrypoints/background.ts
-  └─ serialized daily post and time mutations
+  └─ serialized daily post counters and time mutations
 
 entrypoints/options/
   └─ local settings UI
@@ -183,9 +183,9 @@ the browser's local storage permission. It has:
 - no platform API credentials;
 - no remote backend.
 
-A “hard” limit means that the extension exposes no in-page bypass. It is not
-tamper-proof: users retain control over their browser, extension storage, and
-installed software.
+A “hard” daily time limit means that the extension exposes no in-page bypass.
+It is not tamper-proof: users retain control over their browser, extension
+storage, and installed software.
 
 ## Current limitations
 
@@ -193,8 +193,6 @@ installed software.
   verification.
 - Active tabs reconcile their daily time counters whenever the background
   owner persists usage from any supported tab.
-- Gentle and strict modes do not yet differ as much as the complete product
-  specification intends.
 - There is not yet a published browser-store installation.
 
 ## Validation

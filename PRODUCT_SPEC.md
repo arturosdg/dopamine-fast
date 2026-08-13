@@ -25,7 +25,8 @@ Keep the useful parts of social networks while giving every feed a real end.
 8. The native feed ends with an inline load-more control after the twentieth
    post; no full-screen intervention is shown for a batch boundary.
 9. The user can deliberately reveal 10 additional posts from that control.
-10. Per-network daily hard limits for both time and posts stop further use.
+10. A per-network daily hard time limit stops further use, while post batches
+    can be deliberately unlocked without a daily post maximum.
 
 ## Time budgets
 
@@ -49,8 +50,9 @@ Keep the useful parts of social networks while giving every feed a real end.
 - A separate daily limit applies to each supported network. It persists across
   reloads and sessions, resets on the next local calendar day and has no
   in-page unlock.
-- Daily post and time mutations are serialized by the extension background
-  context, and active tabs reconcile against persisted usage from other tabs.
+- Daily post counters and time mutations are serialized by the extension
+  background context, and active tabs reconcile against persisted time usage
+  from other tabs.
 - Aggregate elapsed seconds are retained locally for the 30 most recent days
   with activity so usage statistics survive calendar resets. Active session
   countdowns are not stored as history.
@@ -59,35 +61,23 @@ Keep the useful parts of social networks while giving every feed a real end.
 
 ## Unlock flow
 
-The end of a batch is rendered inside the native feed. The inline control shows
-how many posts remain in that network's daily allowance, waits through the configured
-pause and requires holding the load-more button for the configured duration.
-Completing it reveals only the next configured batch.
+The end of a batch is rendered inside the native feed. The inline control waits
+through the configured pause and requires holding the load-more button for the
+configured duration. Completing it reveals only the next configured batch, and
+the flow can be repeated without a daily post maximum.
 Virtualized feeds are counted by stable post identity for the active page
 session, so recycling DOM elements cannot reset the batch.
 Blocked posts retain their layout geometry while becoming invisible and
-non-interactive. Together with a terminal control that reserves the remaining
+non-interactive. Together with a boundary control that reserves the remaining
 viewport, this keeps a platform's native infinite-loader sentinel outside the
 visible area while the batch is closed.
 
-## Modes
+## Batch behavior
 
-### Gentle
-
-- Batch limit is active.
-- Additional batches can be unlocked repeatedly.
-- Suggested and promoted content remains blocked.
-
-### Balanced
-
-- One initial batch and two additional batches per network.
-- The inline pause and hold are required.
-
-### Strict
-
-- Fixed daily maximum.
-- Limit increases take effect the following day.
-- Supported feeds fail closed if their adapter becomes uncertain.
+- The configured initial batch is revealed after the opening intervention.
+- Additional configured batches can be unlocked repeatedly without a post cap.
+- Every additional batch requires the inline pause and hold interaction.
+- Suggested and promoted content remains blocked when suppression is enabled.
 
 ## Platform scope
 

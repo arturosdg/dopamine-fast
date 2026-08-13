@@ -81,16 +81,11 @@ export async function reserveAllowanceFromStorage(
   requested: number,
   isUnlock = false,
 ): Promise<number> {
-  const settings = await getSettings();
   const stored = await dailyStateItem.getValue();
   const current = normalizeDailyState(stored);
-  const granted = Math.min(
-    Math.max(0, requested),
-    Math.max(
-      0,
-      settings.dailyLimit - current.revealedByPlatform[platform],
-    ),
-  );
+  const granted = Number.isFinite(requested)
+    ? Math.max(0, Math.round(requested))
+    : 0;
 
   if (granted === 0) {
     if (current.date !== stored.date) {
@@ -184,14 +179,4 @@ export async function addUsageSecondsFromStorage(
   );
 
   return Math.max(0, dailyLimitSeconds - usedSeconds);
-}
-
-export async function resetDailyState(): Promise<void> {
-  await browser.runtime.sendMessage<RuntimeMessage>({
-    type: "dopamine-fast:reset-daily-state",
-  });
-}
-
-export async function resetDailyStateFromStorage(): Promise<void> {
-  await dailyStateItem.setValue(emptyDailyState());
 }
