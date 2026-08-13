@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.6.0](https://github.com/arturosdg/dopamine-fast/compare/v0.5.1...v0.6.0) (2026-08-13)
+
+
+### Features
+
+* **feed:** allow unlimited post batches ([43923c7](https://github.com/arturosdg/dopamine-fast/commit/43923c7a2a630c754b99ec4276165fec909e3e8a))
+* **feed:** allow unlimited post batches ([c822960](https://github.com/arturosdg/dopamine-fast/commit/c8229605e124192ee56d9cac576d3c0a73369bbd))
+
+
+### Bug Fixes
+
+* **media:** allow manual playback after autoplay block ([90804d6](https://github.com/arturosdg/dopamine-fast/commit/90804d610a205952f687b359616f16dbc8d9f61b))
+* **media:** allow manual playback after autoplay block ([49d4025](https://github.com/arturosdg/dopamine-fast/commit/49d402566988942961cdac36385eb366d25d2ede))
+
 ## [0.5.1](https://github.com/arturosdg/dopamine-fast/compare/v0.5.0...v0.5.1) (2026-08-08)
 
 
