@@ -13,6 +13,7 @@ import {
 import {
   dailyStateItem,
   dailyUsageStateItem,
+  addUsageSeconds,
   getDailyUsageState,
   reserveAllowance,
   settingsItem,
@@ -85,7 +86,8 @@ const createUi = () =>
 
 const createSession = (
   lifecycle: FakeTabLifecycle,
-  availableSeconds = DEFAULT_SETTINGS.dailyUsageLimitMinutes * 60,
+  availableSeconds =
+    DEFAULT_SETTINGS.dailyUsageLimitMinutesByPlatform.reddit * 60,
 ) =>
   new UsageSession(
     {
@@ -113,7 +115,12 @@ describe("extension lifecycle integration", () => {
     );
     await settingsItem.setValue({
       ...DEFAULT_SETTINGS,
-      dailyUsageLimitMinutes: 5,
+      dailyUsageLimitMinutesByPlatform: {
+        reddit: 5,
+        x: 5,
+        instagram: 5,
+        youtube: 5,
+      },
     });
   });
 
@@ -163,6 +170,31 @@ describe("extension lifecycle integration", () => {
     ]);
     expect(postState.revealedByPlatform.reddit).toBe(80);
     expect(usageState.usedSecondsByPlatform.reddit).toBe(14);
+  });
+
+  it("enforces a different daily maximum for each network", async () => {
+    await settingsItem.setValue({
+      ...DEFAULT_SETTINGS,
+      dailyUsageLimitMinutesByPlatform: {
+        reddit: 5,
+        x: 10,
+        instagram: 15,
+        youtube: 20,
+      },
+    });
+
+    expect(await addUsageSeconds("reddit", 300)).toBe(0);
+    expect(await addUsageSeconds("x", 300)).toBe(300);
+
+    const usage = await getDailyUsageState();
+    expect(usage.dailyLimitMinutesByPlatform).toEqual({
+      reddit: 5,
+      x: 10,
+      instagram: 15,
+      youtube: 20,
+    });
+    expect(usage.usedSecondsByPlatform.reddit).toBe(300);
+    expect(usage.usedSecondsByPlatform.x).toBe(300);
   });
 
   it("flushes pending time on teardown and restores it after a reload", async () => {

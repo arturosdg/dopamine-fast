@@ -226,7 +226,8 @@ export default defineContentScript({
       const opening = intervention.showOpening({
         platformLabel: adapter.label,
         delaySeconds: settings.openingDelaySeconds,
-        defaultSessionMinutes: settings.sessionDurationMinutes,
+        defaultSessionMinutes:
+          settings.sessionDurationMinutesByPlatform[adapter.id],
         availableSeconds,
         usageMetrics: [
           { label: "Reddit", usedSeconds: todayUsage.reddit },
@@ -264,7 +265,8 @@ export default defineContentScript({
           void (async () => {
             const extensionSeconds = await intervention.showSessionEnded({
               platformLabel: adapter.label,
-              defaultSessionMinutes: settings.sessionDurationMinutes,
+              defaultSessionMinutes:
+                settings.sessionDurationMinutesByPlatform[adapter.id],
               availableSeconds: remainingSeconds,
             });
             if (usageSession !== session) {

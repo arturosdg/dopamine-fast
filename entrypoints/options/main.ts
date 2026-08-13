@@ -2,6 +2,7 @@ import "./style.css";
 import {
   DEFAULT_SETTINGS,
   sanitizeSettings,
+  type PlatformId,
   type Settings,
 } from "../../lib/models";
 import {
@@ -18,8 +19,6 @@ const controls = {
   openingDelayOutput: requiredElement<HTMLOutputElement>(
     "#opening-delay-output",
   ),
-  sessionDuration: requiredElement<HTMLInputElement>("#session-duration"),
-  dailyUsageLimit: requiredElement<HTMLInputElement>("#daily-usage-limit"),
   unlockDelay: requiredElement<HTMLInputElement>("#unlock-delay"),
   unlockDelayOutput:
     requiredElement<HTMLOutputElement>("#unlock-delay-output"),
@@ -43,6 +42,28 @@ const controls = {
   disableAutoplay: requiredElement<HTMLInputElement>("#disable-autoplay"),
 };
 
+const timeControls: Record<
+  PlatformId,
+  { sessionDuration: HTMLInputElement; dailyUsageLimit: HTMLInputElement }
+> = {
+  reddit: {
+    sessionDuration: requiredElement("#reddit-session-duration"),
+    dailyUsageLimit: requiredElement("#reddit-daily-usage-limit"),
+  },
+  x: {
+    sessionDuration: requiredElement("#x-session-duration"),
+    dailyUsageLimit: requiredElement("#x-daily-usage-limit"),
+  },
+  instagram: {
+    sessionDuration: requiredElement("#instagram-session-duration"),
+    dailyUsageLimit: requiredElement("#instagram-daily-usage-limit"),
+  },
+  youtube: {
+    sessionDuration: requiredElement("#youtube-session-duration"),
+    dailyUsageLimit: requiredElement("#youtube-daily-usage-limit"),
+  },
+};
+
 function requiredElement<T extends Element>(selector: string): T {
   const element = document.querySelector<T>(selector);
   if (!element) throw new Error(`Missing options element: ${selector}`);
@@ -58,8 +79,14 @@ function updateOutputs(): void {
 function render(settings: Settings): void {
   controls.enabled.checked = settings.enabled;
   controls.openingDelay.value = String(settings.openingDelaySeconds);
-  controls.sessionDuration.value = String(settings.sessionDurationMinutes);
-  controls.dailyUsageLimit.value = String(settings.dailyUsageLimitMinutes);
+  for (const platform of Object.keys(timeControls) as PlatformId[]) {
+    timeControls[platform].sessionDuration.value = String(
+      settings.sessionDurationMinutesByPlatform[platform],
+    );
+    timeControls[platform].dailyUsageLimit.value = String(
+      settings.dailyUsageLimitMinutesByPlatform[platform],
+    );
+  }
   controls.unlockDelay.value = String(settings.unlockDelaySeconds);
   controls.batchSize.value = String(settings.batchSize);
   controls.unlockBatchSize.value = String(settings.unlockBatchSize);
@@ -80,8 +107,18 @@ function readSettings(): Settings {
   return sanitizeSettings({
     enabled: controls.enabled.checked,
     openingDelaySeconds: Number(controls.openingDelay.value),
-    sessionDurationMinutes: Number(controls.sessionDuration.value),
-    dailyUsageLimitMinutes: Number(controls.dailyUsageLimit.value),
+    sessionDurationMinutesByPlatform: {
+      reddit: Number(timeControls.reddit.sessionDuration.value),
+      x: Number(timeControls.x.sessionDuration.value),
+      instagram: Number(timeControls.instagram.sessionDuration.value),
+      youtube: Number(timeControls.youtube.sessionDuration.value),
+    },
+    dailyUsageLimitMinutesByPlatform: {
+      reddit: Number(timeControls.reddit.dailyUsageLimit.value),
+      x: Number(timeControls.x.dailyUsageLimit.value),
+      instagram: Number(timeControls.instagram.dailyUsageLimit.value),
+      youtube: Number(timeControls.youtube.dailyUsageLimit.value),
+    },
     unlockDelaySeconds: Number(controls.unlockDelay.value),
     batchSize: Number(controls.batchSize.value),
     unlockBatchSize: Number(controls.unlockBatchSize.value),

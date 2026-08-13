@@ -118,6 +118,7 @@ input {
 
 .field,
 .number-grid,
+.network-time-grid,
 .toggle-list {
   grid-column: 2;
 }
@@ -144,6 +145,35 @@ input {
 .number-grid {
   display: grid;
   gap: 10px;
+}
+
+.network-time-grid {
+  display: grid;
+  gap: 14px;
+}
+
+.network-time-card {
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+}
+
+.network-time-card legend {
+  padding: 0 8px;
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 24px;
+}
+
+.network-time-fields {
+  display: grid;
+  gap: 10px;
+}
+
+.network-time-card .number-field {
+  padding: 12px 0;
+  border: 0;
+  border-top: 1px solid var(--line);
 }
 
 .number-field {
@@ -279,6 +309,10 @@ input {
 
   .number-grid--two {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .network-time-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .number-field {
