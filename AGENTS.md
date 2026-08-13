@@ -126,6 +126,7 @@ lib/
   batch-gate-ui.ts       Inline end-of-batch control rendered inside the native feed
   feed-boundary.ts       Pure contiguous visibility planning for finite batches
   feed-limiter.ts        DOM observation, post visibility and batch boundaries
+  media-autoplay.ts      One-time autoplay prevention per media element
   usage-session.ts       Visible-tab session timer and persistence lifecycle
   usage-history.ts       Pure normalization and retention for usage statistics
   preferred-feed.ts      Optional preferred-feed selection and tab restoration
