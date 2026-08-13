@@ -1,7 +1,6 @@
 import {
   addUsageSecondsFromStorage,
   reserveAllowanceFromStorage,
-  resetDailyStateFromStorage,
 } from "../lib/storage";
 import { isRuntimeMessage } from "../lib/runtime-messages";
 import { SerialQueue } from "../lib/serial-queue";
@@ -32,11 +31,6 @@ export function createRuntimeMessageHandler() {
             message.elapsedSeconds,
           ),
         }));
-      case "dopamine-fast:reset-daily-state":
-        return mutations.run(async () => {
-          await resetDailyStateFromStorage();
-          return { ok: true };
-        });
       case "dopamine-fast:open-options":
         return browser.runtime.openOptionsPage().then(() => ({ ok: true }));
       case "dopamine-fast:leave-feed":

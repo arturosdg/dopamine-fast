@@ -50,7 +50,7 @@ The product principles are:
 1. Preserve useful, user-requested access to social networks.
 2. Add friction before and during habitual feed consumption.
 3. Give feeds a visible end through finite post batches.
-4. Keep hard daily limits outside the in-page unlock flow.
+4. Keep the hard daily time limit outside the in-page unlock flow.
 5. Store only preferences and aggregate counters, locally.
 6. Request the minimum browser and host permissions required.
 7. Fail safely when a platform changes its DOM.
@@ -68,17 +68,17 @@ On a supported feed route, the content script:
    feed.
 3. Blocks entry when the per-network daily time ceiling is exhausted.
 4. Shows a configurable opening delay and asks for an intended session length.
-5. Reserves the initial post allowance and starts the finite-feed limiter.
+5. Starts the finite-feed limiter with the configured initial batch.
 6. Counts time only while the document is visible and shows a floating timer.
 7. Stops at the selected session duration and asks the user to leave or choose
    another block.
 8. Enforces the daily time ceiling without an in-page extension or reset.
 9. Shows an end-of-batch intervention before revealing more posts.
 
-Post and time budgets use independent per-network enforcement:
+Post counters and time budgets are independent per network:
 
-- `DailyState.revealedByPlatform` and `DailyState.unlocksByPlatform` enforce
-  post and unlock limits independently for each supported network.
+- `DailyState.revealedByPlatform` and `DailyState.unlocksByPlatform` record
+  post and unlock totals for each supported network without imposing a cap.
 - `DailyState.revealed` and `DailyState.unlocks` remain aggregate reporting
   totals derived from their per-platform records.
 - `DailyUsageState.usedSecondsByPlatform` enforces an independent time ceiling
@@ -86,10 +86,8 @@ Post and time budgets use independent per-network enforcement:
 - The effective time ceiling is captured when the day's state is created.
   Changing the setting applies on the next local calendar day.
 
-Mode behavior currently differs mainly in unlock policy: balanced mode permits
-two extra batches per network per day, while gentle and strict are still
-primarily bounded by the per-network daily post maximum. The stricter fail-closed behavior described
-in `PRODUCT_SPEC.md` is not fully implemented; do not claim otherwise.
+Post batches can be unlocked repeatedly. Each unlock still requires the
+configured inline delay and press-and-hold interaction.
 
 ## Technology and extension constraints
 
@@ -167,9 +165,10 @@ Specific responsibilities:
 - `entrypoints/content.ts` composes services, reacts to SPA navigation/settings
   changes and owns activation cancellation. Keep policy and DOM algorithms out
   of it.
-- `entrypoints/background.ts` is the single owner for daily post/time mutations
-  and privileged options/leave navigation. Keep its message surface validated
-  and route new daily-state writes through its serialized queue.
+- `entrypoints/background.ts` is the single owner for daily post counters and
+  time mutations and privileged options/leave navigation. Keep its message
+  surface validated and route new daily-state writes through its serialized
+  queue.
 - `models.ts` must remain deterministic and easy to unit test. Put defaults,
   clamps, date normalization and pure budget calculations here.
 - `storage.ts` owns storage key names and all persistent reads/writes. Other
@@ -214,8 +213,8 @@ Preserve these invariants:
 - Repeated activation must cancel stale asynchronous UI results.
 - Teardown must clear timers, observers and listeners and restore page state.
 
-Daily post reservations, elapsed-time increments and post-counter resets are
-serialized through the background owner. Content scripts watch persisted time
+Daily post counter increments and elapsed-time increments are serialized
+through the background owner. Content scripts watch persisted time
 usage and lower their local remaining-time view when another tab advances it.
 Preserve this ownership model and add browser-level multi-tab coverage when an
 end-to-end harness is introduced.
@@ -259,9 +258,9 @@ Treat the host page as untrusted input:
 - Virtualized feeds must count stable post identities in memory so removing old
   DOM nodes cannot reopen the current batch. Do not persist those identities.
 
-A “hard” limit means no bypass exposed by the extension UI. Users still control
-their browser, storage and installed extensions; documentation must not imply
-tamper-proof enforcement.
+A “hard” daily time limit means no bypass exposed by the extension UI. Users
+still control their browser, storage and installed extensions; documentation
+must not imply tamper-proof enforcement.
 
 ## Code Review Rules
 
@@ -272,7 +271,7 @@ enforce. Flag a change when it:
   documented need and privacy analysis;
 - sends local state or page-derived data off-device;
 - inserts host-page content through `innerHTML` or introduces remote code;
-- weakens a hard limit, exposes a time-counter reset or lets current-day
+- weakens the hard daily time limit, exposes a time-counter reset or lets current-day
   settings increases take effect immediately;
 - mutates daily state outside `storage.ts` or adds another non-serialized
   read-modify-write path;
@@ -299,8 +298,7 @@ For every new setting:
 5. Add model tests for invalid, missing and boundary values.
 6. Update `PRODUCT_SPEC.md` and `README.md` when behavior is user-visible.
 
-Do not provide an options-page reset for elapsed time. The existing reset
-button resets the post counter only.
+Do not provide an options-page reset for elapsed time.
 
 ## Testing strategy
 

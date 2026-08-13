@@ -5,8 +5,8 @@ import {
 } from "./platforms";
 import { BatchGateUi } from "./batch-gate-ui";
 import { planFeedVisibility } from "./feed-boundary";
-import { dailyStateItem, reserveAllowance } from "./storage";
-import { availableAllowance, normalizeDailyState, type Settings } from "./models";
+import { reserveAllowance } from "./storage";
+import type { Settings } from "./models";
 
 interface OriginalProperty {
   value: string;
@@ -27,7 +27,6 @@ export class FeedLimiter {
   private readonly gate = new BatchGateUi();
   private readonly mutationObserver: MutationObserver;
   private processingTimer?: number;
-  private gateRequestId = 0;
   private nextFallbackPostKey = 1;
   private destroyed = false;
 
@@ -145,7 +144,6 @@ export class FeedLimiter {
     placement: "before" | "after",
   ): void {
     if (!boundary) {
-      this.gateRequestId += 1;
       this.gate.hide();
       return;
     }
@@ -153,34 +151,18 @@ export class FeedLimiter {
       this.gate.ensurePlacement(boundary, placement);
       return;
     }
-    const requestId = ++this.gateRequestId;
-    void this.loadGate(boundary, placement, requestId);
+    this.showGate(boundary, placement);
   }
 
-  private async loadGate(
+  private showGate(
     boundary: HTMLElement,
     placement: "before" | "after",
-    requestId: number,
-  ): Promise<void> {
-    const state = normalizeDailyState(await dailyStateItem.getValue());
-    if (this.destroyed || requestId !== this.gateRequestId) return;
-    const remainingToday = availableAllowance(
-      this.settings,
-      state,
-      this.adapter.id,
-    );
-    const balancedUnlockAvailable =
-      this.settings.mode !== "balanced" ||
-      state.unlocksByPlatform[this.adapter.id] < 2;
-    const canUnlock = remainingToday > 0 && balancedUnlockAvailable;
-
+  ): void {
     const showGate = placement === "after"
       ? this.gate.showAfter.bind(this.gate)
       : this.gate.showBefore.bind(this.gate);
     showGate(boundary, {
-      unlockSize: Math.min(this.settings.unlockBatchSize, remainingToday),
-      remainingToday,
-      canUnlock,
+      unlockSize: this.settings.unlockBatchSize,
       unlockDelaySeconds: this.settings.unlockDelaySeconds,
       holdSeconds: this.settings.holdSeconds,
       onUnlock: async () => {

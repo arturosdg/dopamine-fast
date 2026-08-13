@@ -12,7 +12,6 @@ export type RuntimeMessage =
       platform: PlatformId;
       elapsedSeconds: number;
     }
-  | { type: "dopamine-fast:reset-daily-state" }
   | { type: "dopamine-fast:open-options" }
   | { type: "dopamine-fast:leave-feed" };
 
@@ -39,7 +38,6 @@ export function isRuntimeMessage(value: unknown): value is RuntimeMessage {
         isPlatform(candidate.platform) &&
         isFiniteNumber(candidate.elapsedSeconds)
       );
-    case "dopamine-fast:reset-daily-state":
     case "dopamine-fast:open-options":
     case "dopamine-fast:leave-feed":
       return true;

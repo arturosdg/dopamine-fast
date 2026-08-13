@@ -114,7 +114,6 @@ describe("extension lifecycle integration", () => {
     await settingsItem.setValue({
       ...DEFAULT_SETTINGS,
       dailyUsageLimitMinutes: 5,
-      dailyLimit: 60,
     });
   });
 
@@ -122,12 +121,12 @@ describe("extension lifecycle integration", () => {
     vi.useRealTimers();
   });
 
-  it("serializes simultaneous post and time usage from two tabs", async () => {
+  it("tracks unlimited post batches and serializes time usage from two tabs", async () => {
     const [firstGrant, secondGrant] = await Promise.all([
       reserveAllowance("reddit", 40),
       reserveAllowance("reddit", 40),
     ]);
-    expect(firstGrant + secondGrant).toBe(60);
+    expect(firstGrant + secondGrant).toBe(80);
 
     const firstTab = new FakeTabLifecycle();
     const secondTab = new FakeTabLifecycle();
@@ -162,7 +161,7 @@ describe("extension lifecycle integration", () => {
       dailyStateItem.getValue(),
       dailyUsageStateItem.getValue(),
     ]);
-    expect(postState.revealedByPlatform.reddit).toBe(60);
+    expect(postState.revealedByPlatform.reddit).toBe(80);
     expect(usageState.usedSecondsByPlatform.reddit).toBe(14);
   });
 

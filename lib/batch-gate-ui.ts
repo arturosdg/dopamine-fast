@@ -1,7 +1,5 @@
 export interface BatchGateOptions {
   unlockSize: number;
-  remainingToday: number;
-  canUnlock: boolean;
   unlockDelaySeconds: number;
   holdSeconds: number;
   onUnlock(): Promise<number>;
@@ -50,8 +48,6 @@ export class BatchGateUi {
   ): void {
     const renderKey = [
       options.unlockSize,
-      options.remainingToday,
-      options.canUnlock,
       options.unlockDelaySeconds,
       options.holdSeconds,
     ].join(":");
@@ -138,13 +134,7 @@ export class BatchGateUi {
 
     gate.append(label, copy);
 
-    if (!options.canUnlock) {
-      copy.textContent = "You have reached today's post limit.";
-      this.shadow.append(style, gate);
-      return;
-    }
-
-    copy.textContent = `${options.remainingToday} posts remain in today's limit.`;
+    copy.textContent = "Load another finite batch when you're ready.";
     const button = document.createElement("button");
     button.type = "button";
     button.disabled = options.unlockDelaySeconds > 0;
@@ -202,7 +192,7 @@ export class BatchGateUi {
         .onUnlock()
         .then((granted) => {
           if (granted <= 0) {
-            this.render({ ...options, canUnlock: false, remainingToday: 0 });
+            throw new Error("No posts were granted");
           }
         })
         .catch(() => {

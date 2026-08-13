@@ -118,7 +118,6 @@ input {
 
 .field,
 .number-grid,
-.mode-grid,
 .toggle-list {
   grid-column: 2;
 }
@@ -142,8 +141,7 @@ input {
   accent-color: var(--ink);
 }
 
-.number-grid,
-.mode-grid {
+.number-grid {
   display: grid;
   gap: 10px;
 }
@@ -176,35 +174,8 @@ input {
 }
 
 .number-field small,
-.mode-card small,
 .master-toggle small {
   color: var(--muted);
-}
-
-.mode-card {
-  display: block;
-  cursor: pointer;
-}
-
-.mode-card input {
-  position: absolute;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.mode-card > span {
-  display: grid;
-  gap: 3px;
-  min-height: 74px;
-  padding: 16px;
-  border: 1px solid var(--line);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.mode-card input:checked + span {
-  border-color: var(--ink);
-  background: var(--acid);
-  box-shadow: inset 7px 0 0 var(--ink);
 }
 
 .toggle-list {
@@ -292,11 +263,6 @@ input {
   background: var(--ink);
 }
 
-.button--quiet {
-  color: var(--ink);
-  background: var(--paper);
-}
-
 @media (min-width: 720px) {
   .settings-shell {
     padding-inline: 32px;
@@ -326,9 +292,6 @@ input {
     text-align: left;
   }
 
-  .mode-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
 }
 
 @media (prefers-reduced-motion: no-preference) {
