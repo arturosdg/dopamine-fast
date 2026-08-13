@@ -116,7 +116,7 @@ export async function getDailyUsageState(): Promise<DailyUsageState> {
   return normalizeDailyUsageState(
     await dailyUsageStateItem.getValue(),
     new Date(),
-    settings.dailyUsageLimitMinutes,
+    settings.dailyUsageLimitMinutesByPlatform,
   );
 }
 
@@ -156,9 +156,10 @@ export async function addUsageSecondsFromStorage(
   const current = normalizeDailyUsageState(
     stored,
     new Date(),
-    settings.dailyUsageLimitMinutes,
+    settings.dailyUsageLimitMinutesByPlatform,
   );
-  const dailyLimitSeconds = current.dailyLimitMinutes * 60;
+  const dailyLimitSeconds =
+    current.dailyLimitMinutesByPlatform[platform] * 60;
   const increment = Math.max(0, Math.round(elapsedSeconds));
   const usedSeconds = Math.min(
     dailyLimitSeconds,

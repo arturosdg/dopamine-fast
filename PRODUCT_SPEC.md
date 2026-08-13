@@ -35,8 +35,8 @@ Keep the useful parts of social networks while giving every feed a real end.
   before another session is planned.
 - Session duration changes use discrete buttons instead of a slider, so adding
   more time requires a separate deliberate press for each step.
-- The configured default is 10 minutes and can be adjusted from 1 to 60
-  minutes at entry.
+- Each network has its own configured session suggestion. The default is 10
+  minutes per network and can be adjusted from 1 to 60 minutes at entry.
 - A compact floating counter shows the planned session time and the remaining
   daily time for the current network. Once a session starts, the counter and
   the chosen block survive same-network SPA navigation and browser history
@@ -47,9 +47,10 @@ Keep the useful parts of social networks while giving every feed a real end.
   that pause has completed.
 - Leaving an intervention replaces the current social-feed tab with a blank
   tab instead of relying on browser history.
-- A separate daily limit applies to each supported network. It persists across
-  reloads and sessions, resets on the next local calendar day and has no
-  in-page unlock.
+- A separately configurable daily limit applies to each supported network. It
+  persists across reloads and sessions, resets on the next local calendar day
+  and has no in-page unlock. Changes to a network's daily limit take effect on
+  the next local day.
 - Daily post counters and time mutations are serialized by the extension
   background context, and active tabs reconcile against persisted time usage
   from other tabs.

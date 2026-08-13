@@ -60,9 +60,9 @@ hold before the next finite batch is revealed.
 - Configurable delay before entering a supported feed.
 - Immediate interaction guard while local settings and the opening
   intervention load, preventing clicks or scrolling through the feed first.
-- Intentional session duration, adjusted through deliberate button steps, with
-  a floating countdown that remains active across same-network SPA and history
-  navigation.
+- Per-network intentional session duration, adjusted through deliberate button
+  steps, with a floating countdown that remains active across same-network SPA
+  and history navigation.
 - Optional Following-only modes for X and Instagram that select Following and
 - Intentional search on X, Instagram and Reddit: autocomplete or default
   recommendations are suppressed, X and Instagram Explore stay empty until a
@@ -76,7 +76,7 @@ hold before the next finite batch is revealed.
 - Optional YouTube Subscriptions-only mode redirects Home to Subscriptions and
   hides Home. Next-video and recommendation surfaces around requested videos
   are always hidden.
-- Non-extendable daily time ceiling for each network.
+- Separately configurable, non-extendable daily time ceiling for each network.
 - Finite initial and additional post batches with unlimited successive unlocks.
 - Stable per-session post counting for virtualized feeds such as Reddit.
 - Optional delay and press-and-hold step before revealing another batch.

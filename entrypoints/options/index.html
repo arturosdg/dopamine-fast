@@ -35,37 +35,75 @@
           <div class="section-heading">
             <h2>Intentional time</h2>
             <p>
-              Choose an intention for each session and a daily ceiling that
-              cannot be unlocked.
+              Tune the session intention and hard daily ceiling separately for
+              each network.
             </p>
           </div>
 
-          <div class="number-grid number-grid--two">
-            <label class="number-field">
-              <span>Suggested session</span>
-              <input
-                id="session-duration"
-                name="sessionDurationMinutes"
-                type="number"
-                min="1"
-                max="60"
-                step="1"
-              />
-              <small>minutes, adjustable when entering</small>
-            </label>
+          <div class="network-time-grid">
+            <fieldset class="network-time-card">
+              <legend>Reddit</legend>
+              <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="reddit-session-duration" name="redditSessionDurationMinutes" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="reddit-daily-usage-limit" name="redditDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+            </fieldset>
 
-            <label class="number-field">
-              <span>Daily maximum per network</span>
-              <input
-                id="daily-usage-limit"
-                name="dailyUsageLimitMinutes"
-                type="number"
-                min="5"
-                max="240"
-                step="5"
-              />
-              <small>minutes, fixed until tomorrow</small>
-            </label>
+            <fieldset class="network-time-card">
+              <legend>X / Twitter</legend>
+              <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="x-session-duration" name="xSessionDurationMinutes" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="x-daily-usage-limit" name="xDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="network-time-card">
+              <legend>Instagram</legend>
+              <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="instagram-session-duration" name="instagramSessionDurationMinutes" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="instagram-daily-usage-limit" name="instagramDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+            </fieldset>
+
+            <fieldset class="network-time-card">
+              <legend>YouTube</legend>
+              <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="youtube-session-duration" name="youtubeSessionDurationMinutes" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="youtube-daily-usage-limit" name="youtubeDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+            </fieldset>
           </div>
         </section>
 

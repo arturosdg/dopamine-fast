@@ -1,10 +1,12 @@
 export type PlatformId = "reddit" | "x" | "instagram" | "youtube";
 
+export type PlatformMinutes = Record<PlatformId, number>;
+
 export interface Settings {
   enabled: boolean;
   openingDelaySeconds: number;
-  sessionDurationMinutes: number;
-  dailyUsageLimitMinutes: number;
+  sessionDurationMinutesByPlatform: PlatformMinutes;
+  dailyUsageLimitMinutesByPlatform: PlatformMinutes;
   batchSize: number;
   unlockBatchSize: number;
   unlockDelaySeconds: number;
@@ -27,15 +29,25 @@ export interface DailyState {
 
 export interface DailyUsageState {
   date: string;
-  dailyLimitMinutes: number;
+  dailyLimitMinutesByPlatform: PlatformMinutes;
   usedSecondsByPlatform: Record<PlatformId, number>;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
   openingDelaySeconds: 5,
-  sessionDurationMinutes: 10,
-  dailyUsageLimitMinutes: 30,
+  sessionDurationMinutesByPlatform: {
+    reddit: 10,
+    x: 10,
+    instagram: 10,
+    youtube: 10,
+  },
+  dailyUsageLimitMinutesByPlatform: {
+    reddit: 30,
+    x: 30,
+    instagram: 30,
+    youtube: 30,
+  },
   batchSize: 20,
   unlockBatchSize: 10,
   unlockDelaySeconds: 5,
@@ -53,44 +65,83 @@ export const DEFAULT_SETTINGS: Settings = {
   },
 };
 
-const clampInteger = (value: number, minimum: number, maximum: number) =>
-  Math.min(maximum, Math.max(minimum, Math.round(value)));
+type SettingsInput = Partial<
+  Omit<
+    Settings,
+    "sessionDurationMinutesByPlatform" | "dailyUsageLimitMinutesByPlatform"
+  >
+> & {
+  sessionDurationMinutesByPlatform?: Partial<PlatformMinutes>;
+  dailyUsageLimitMinutesByPlatform?: Partial<PlatformMinutes>;
+  sessionDurationMinutes?: number;
+  dailyUsageLimitMinutes?: number;
+};
 
-export function sanitizeSettings(input: Partial<Settings>): Settings {
+function clampInteger(
+  value: number | undefined,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+): number {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(maximum, Math.max(minimum, Math.round(value ?? fallback)));
+}
+
+export function sanitizeSettings(input: SettingsInput): Settings {
+  const legacySessionDuration = clampInteger(
+    input.sessionDurationMinutes,
+    DEFAULT_SETTINGS.sessionDurationMinutesByPlatform.reddit,
+    1,
+    60,
+  );
+  const legacyDailyLimit = clampInteger(
+    input.dailyUsageLimitMinutes,
+    DEFAULT_SETTINGS.dailyUsageLimitMinutesByPlatform.reddit,
+    5,
+    240,
+  );
+
   return {
     enabled: sanitizeBoolean(input.enabled, DEFAULT_SETTINGS.enabled),
     openingDelaySeconds: clampInteger(
-      input.openingDelaySeconds ?? DEFAULT_SETTINGS.openingDelaySeconds,
+      input.openingDelaySeconds,
+      DEFAULT_SETTINGS.openingDelaySeconds,
       0,
       60,
     ),
-    sessionDurationMinutes: clampInteger(
-      input.sessionDurationMinutes ?? DEFAULT_SETTINGS.sessionDurationMinutes,
+    sessionDurationMinutesByPlatform: sanitizePlatformMinutes(
+      input.sessionDurationMinutesByPlatform,
+      legacySessionDuration,
       1,
       60,
     ),
-    dailyUsageLimitMinutes: clampInteger(
-      input.dailyUsageLimitMinutes ?? DEFAULT_SETTINGS.dailyUsageLimitMinutes,
+    dailyUsageLimitMinutesByPlatform: sanitizePlatformMinutes(
+      input.dailyUsageLimitMinutesByPlatform,
+      legacyDailyLimit,
       5,
       240,
     ),
     batchSize: clampInteger(
-      input.batchSize ?? DEFAULT_SETTINGS.batchSize,
+      input.batchSize,
+      DEFAULT_SETTINGS.batchSize,
       5,
       100,
     ),
     unlockBatchSize: clampInteger(
-      input.unlockBatchSize ?? DEFAULT_SETTINGS.unlockBatchSize,
+      input.unlockBatchSize,
+      DEFAULT_SETTINGS.unlockBatchSize,
       5,
       50,
     ),
     unlockDelaySeconds: clampInteger(
-      input.unlockDelaySeconds ?? DEFAULT_SETTINGS.unlockDelaySeconds,
+      input.unlockDelaySeconds,
+      DEFAULT_SETTINGS.unlockDelaySeconds,
       0,
       60,
     ),
     holdSeconds: clampInteger(
-      input.holdSeconds ?? DEFAULT_SETTINGS.holdSeconds,
+      input.holdSeconds,
+      DEFAULT_SETTINGS.holdSeconds,
       1,
       10,
     ),
@@ -181,11 +232,16 @@ export function normalizeDailyState(
 
 export function emptyDailyUsageState(
   date = new Date(),
-  dailyLimitMinutes = 0,
+  dailyLimitMinutesByPlatform: PlatformMinutes = {
+    reddit: 0,
+    x: 0,
+    instagram: 0,
+    youtube: 0,
+  },
 ): DailyUsageState {
   return {
     date: localDateKey(date),
-    dailyLimitMinutes,
+    dailyLimitMinutesByPlatform: { ...dailyLimitMinutesByPlatform },
     usedSecondsByPlatform: {
       reddit: 0,
       x: 0,
@@ -197,24 +253,51 @@ export function emptyDailyUsageState(
 
 export function normalizeDailyUsageState(
   state:
-    | (Partial<Omit<DailyUsageState, "usedSecondsByPlatform">> & {
+    | (Partial<
+        Omit<
+          DailyUsageState,
+          "dailyLimitMinutesByPlatform" | "usedSecondsByPlatform"
+        >
+      > & {
+        dailyLimitMinutesByPlatform?: Partial<PlatformMinutes>;
+        dailyLimitMinutes?: number;
         usedSecondsByPlatform?: Partial<Record<PlatformId, number>>;
       })
     | null,
   date = new Date(),
-  configuredLimitMinutes = DEFAULT_SETTINGS.dailyUsageLimitMinutes,
+  configuredLimitMinutesByPlatform =
+    DEFAULT_SETTINGS.dailyUsageLimitMinutesByPlatform,
 ): DailyUsageState {
   if (state?.date !== localDateKey(date)) {
-    return emptyDailyUsageState(date, configuredLimitMinutes);
+    return emptyDailyUsageState(date, configuredLimitMinutesByPlatform);
   }
+
+  const legacyLimitMinutes = normalizeDailyLimit(state.dailyLimitMinutes);
 
   return {
     date: state.date,
-    dailyLimitMinutes:
-      typeof state.dailyLimitMinutes === "number" &&
-      state.dailyLimitMinutes >= 5
-        ? state.dailyLimitMinutes
-        : configuredLimitMinutes,
+    dailyLimitMinutesByPlatform: {
+      reddit: resolveDailyLimit(
+        state.dailyLimitMinutesByPlatform?.reddit,
+        legacyLimitMinutes,
+        configuredLimitMinutesByPlatform.reddit,
+      ),
+      x: resolveDailyLimit(
+        state.dailyLimitMinutesByPlatform?.x,
+        legacyLimitMinutes,
+        configuredLimitMinutesByPlatform.x,
+      ),
+      instagram: resolveDailyLimit(
+        state.dailyLimitMinutesByPlatform?.instagram,
+        legacyLimitMinutes,
+        configuredLimitMinutesByPlatform.instagram,
+      ),
+      youtube: resolveDailyLimit(
+        state.dailyLimitMinutesByPlatform?.youtube,
+        legacyLimitMinutes,
+        configuredLimitMinutesByPlatform.youtube,
+      ),
+    },
     usedSecondsByPlatform: normalizePlatformCounts(
       state.usedSecondsByPlatform,
     ),
@@ -227,13 +310,44 @@ export function availableUsageSeconds(
   platform: PlatformId,
 ): number {
   const effectiveLimitMinutes =
-    state.dailyLimitMinutes >= 5
-      ? state.dailyLimitMinutes
-      : settings.dailyUsageLimitMinutes;
+    normalizeDailyLimit(state.dailyLimitMinutesByPlatform[platform]) ??
+    settings.dailyUsageLimitMinutesByPlatform[platform];
   const dailyLimitSeconds = effectiveLimitMinutes * 60;
   return Math.max(
     0,
     dailyLimitSeconds - state.usedSecondsByPlatform[platform],
+  );
+}
+
+function sanitizePlatformMinutes(
+  values: Partial<PlatformMinutes> | undefined,
+  fallback: number,
+  minimum: number,
+  maximum: number,
+): PlatformMinutes {
+  return {
+    reddit: clampInteger(values?.reddit, fallback, minimum, maximum),
+    x: clampInteger(values?.x, fallback, minimum, maximum),
+    instagram: clampInteger(values?.instagram, fallback, minimum, maximum),
+    youtube: clampInteger(values?.youtube, fallback, minimum, maximum),
+  };
+}
+
+function normalizeDailyLimit(value: number | undefined): number | undefined {
+  if (!Number.isFinite(value) || (value ?? 0) < 5) return undefined;
+  return Math.min(240, Math.round(value ?? 0));
+}
+
+function resolveDailyLimit(
+  stored: number | undefined,
+  legacy: number | undefined,
+  configured: number,
+): number {
+  return (
+    normalizeDailyLimit(stored) ??
+    legacy ??
+    normalizeDailyLimit(configured) ??
+    DEFAULT_SETTINGS.dailyUsageLimitMinutesByPlatform.reddit
   );
 }
 

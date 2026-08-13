@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { emptyDailyUsageState } from "../lib/models";
+import { DEFAULT_SETTINGS, emptyDailyUsageState } from "../lib/models";
 import {
   USAGE_HISTORY_RETENTION_DAYS,
   normalizeUsageHistory,
@@ -67,9 +67,15 @@ describe("usage history", () => {
   });
 
   it("records a current snapshot without discarding previous days", () => {
-    const previous = emptyDailyUsageState(new Date(2026, 7, 2), 30);
+    const previous = emptyDailyUsageState(
+      new Date(2026, 7, 2),
+      DEFAULT_SETTINGS.dailyUsageLimitMinutesByPlatform,
+    );
     previous.usedSecondsByPlatform.reddit = 300;
-    const current = emptyDailyUsageState(new Date(2026, 7, 3), 30);
+    const current = emptyDailyUsageState(
+      new Date(2026, 7, 3),
+      DEFAULT_SETTINGS.dailyUsageLimitMinutesByPlatform,
+    );
     current.usedSecondsByPlatform.instagram = 125;
 
     const history = recordUsageState(
@@ -88,7 +94,10 @@ describe("usage history", () => {
   });
 
   it("never lowers an already persisted cumulative counter", () => {
-    const state = emptyDailyUsageState(new Date(2026, 7, 3), 30);
+    const state = emptyDailyUsageState(
+      new Date(2026, 7, 3),
+      DEFAULT_SETTINGS.dailyUsageLimitMinutesByPlatform,
+    );
     state.usedSecondsByPlatform.reddit = 60;
     const history = recordUsageState(
       {

@@ -83,8 +83,12 @@ Post counters and time budgets are independent per network:
   totals derived from their per-platform records.
 - `DailyUsageState.usedSecondsByPlatform` enforces an independent time ceiling
   for each network.
-- The effective time ceiling is captured when the day's state is created.
-  Changing the setting applies on the next local calendar day.
+- `Settings.sessionDurationMinutesByPlatform` and
+  `Settings.dailyUsageLimitMinutesByPlatform` configure the two time values
+  independently for each network.
+- `DailyUsageState.dailyLimitMinutesByPlatform` captures each effective time
+  ceiling when the day's state is created. Changing a setting applies on the
+  next local calendar day.
 
 Post batches can be unlocked repeatedly. Each unlock still requires the
 configured inline delay and press-and-hold interaction.
