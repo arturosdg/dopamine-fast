@@ -2,7 +2,12 @@ import "../assets/content.css";
 import { FeedLimiter } from "../lib/feed-limiter";
 import { InterventionUi } from "../lib/intervention-ui";
 import { IntentionalSearchController } from "../lib/intentional-search";
-import { availableUsageSeconds, localDateKey } from "../lib/models";
+import { areLimitsActive } from "../lib/limit-schedule";
+import {
+  availableUsageSeconds,
+  localDateKey,
+  type Settings,
+} from "../lib/models";
 import { PageInteractionGuard } from "../lib/page-interaction-guard";
 import { getPlatformAdapter } from "../lib/platforms";
 import { PreferredFeedController } from "../lib/preferred-feed";
@@ -93,9 +98,13 @@ export default defineContentScript({
     let sessionPostAllowance = 0;
     let currentUrl = "";
     let activationId = 0;
+    let currentSettings: Settings | undefined;
+    let limitsAreActive: boolean | undefined;
 
     const activate = (preserveUsageSession = false): Promise<void> => {
       const thisActivation = ++activationId;
+      currentSettings = undefined;
+      limitsAreActive = undefined;
       const url = new URL(location.href);
       if (
         adapter.isFeedRoute(url) &&
@@ -129,6 +138,7 @@ export default defineContentScript({
 
       const settings = await getSettings();
       if (thisActivation !== activationId) return;
+      currentSettings = settings;
       if (!settings.enabled || !settings.enabledSites[adapter.id]) {
         return;
       }
@@ -195,6 +205,17 @@ export default defineContentScript({
         }
         preferredFeed = new PreferredFeedController(adapter);
         preferredFeed.start();
+      }
+
+      limitsAreActive = areLimitsActive(settings, adapter.id);
+      if (!limitsAreActive) {
+        const previousUsageSession = usageSession;
+        usageSession = undefined;
+        sessionPostAllowance = 0;
+        await previousUsageSession?.destroy();
+        if (thisActivation !== activationId) return;
+        intervention.hideAll();
+        return;
       }
 
       if (usageSession) {
@@ -295,9 +316,17 @@ export default defineContentScript({
     void activate();
 
     const navigationTimer = window.setInterval(() => {
-      if (location.href === currentUrl) return;
-      currentUrl = location.href;
-      void activate(true);
+      if (location.href !== currentUrl) {
+        currentUrl = location.href;
+        void activate(true);
+        return;
+      }
+      if (!currentSettings || limitsAreActive === undefined) return;
+      const nextLimitsAreActive = areLimitsActive(
+        currentSettings,
+        adapter.id,
+      );
+      if (nextLimitsAreActive !== limitsAreActive) void activate();
     }, 600);
 
     const unwatchSettings = settingsItem.watch(() => {

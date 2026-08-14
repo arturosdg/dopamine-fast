@@ -2,6 +2,33 @@ export type PlatformId = "reddit" | "x" | "instagram" | "youtube";
 
 export type PlatformMinutes = Record<PlatformId, number>;
 
+export const WEEKDAY_IDS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
+
+export type WeekdayId = (typeof WEEKDAY_IDS)[number];
+
+export type LimitScheduleMode = "global" | "custom" | "always";
+
+export interface WeeklyLimitSchedule {
+  startTime: string;
+  endTime: string;
+  days: Record<WeekdayId, boolean>;
+}
+
+export interface LimitScheduleSettings {
+  globalEnabled: boolean;
+  global: WeeklyLimitSchedule;
+  modeByPlatform: Record<PlatformId, LimitScheduleMode>;
+  byPlatform: Record<PlatformId, WeeklyLimitSchedule>;
+}
+
 export interface Settings {
   enabled: boolean;
   openingDelaySeconds: number;
@@ -17,6 +44,7 @@ export interface Settings {
   instagramFollowingOnly: boolean;
   youtubeSubscriptionsOnly: boolean;
   enabledSites: Record<PlatformId, boolean>;
+  limitSchedule: LimitScheduleSettings;
 }
 
 export interface DailyState {
@@ -63,16 +91,48 @@ export const DEFAULT_SETTINGS: Settings = {
     instagram: true,
     youtube: true,
   },
+  limitSchedule: {
+    globalEnabled: false,
+    global: createDefaultWeeklySchedule(),
+    modeByPlatform: {
+      reddit: "global",
+      x: "global",
+      instagram: "global",
+      youtube: "global",
+    },
+    byPlatform: {
+      reddit: createDefaultWeeklySchedule(),
+      x: createDefaultWeeklySchedule(),
+      instagram: createDefaultWeeklySchedule(),
+      youtube: createDefaultWeeklySchedule(),
+    },
+  },
+};
+
+type WeeklyLimitScheduleInput = {
+  startTime?: unknown;
+  endTime?: unknown;
+  days?: Partial<Record<WeekdayId, unknown>>;
+};
+
+type LimitScheduleSettingsInput = {
+  globalEnabled?: unknown;
+  global?: WeeklyLimitScheduleInput;
+  modeByPlatform?: Partial<Record<PlatformId, unknown>>;
+  byPlatform?: Partial<Record<PlatformId, WeeklyLimitScheduleInput>>;
 };
 
 type SettingsInput = Partial<
   Omit<
     Settings,
-    "sessionDurationMinutesByPlatform" | "dailyUsageLimitMinutesByPlatform"
+    | "sessionDurationMinutesByPlatform"
+    | "dailyUsageLimitMinutesByPlatform"
+    | "limitSchedule"
   >
 > & {
   sessionDurationMinutesByPlatform?: Partial<PlatformMinutes>;
   dailyUsageLimitMinutesByPlatform?: Partial<PlatformMinutes>;
+  limitSchedule?: LimitScheduleSettingsInput;
   sessionDurationMinutes?: number;
   dailyUsageLimitMinutes?: number;
 };
@@ -183,6 +243,7 @@ export function sanitizeSettings(input: SettingsInput): Settings {
         DEFAULT_SETTINGS.enabledSites.youtube,
       ),
     },
+    limitSchedule: sanitizeLimitSchedule(input.limitSchedule),
   };
 }
 
@@ -331,6 +392,113 @@ function sanitizePlatformMinutes(
     instagram: clampInteger(values?.instagram, fallback, minimum, maximum),
     youtube: clampInteger(values?.youtube, fallback, minimum, maximum),
   };
+}
+
+function createDefaultWeeklySchedule(): WeeklyLimitSchedule {
+  return {
+    startTime: "09:00",
+    endTime: "22:00",
+    days: {
+      monday: true,
+      tuesday: true,
+      wednesday: true,
+      thursday: true,
+      friday: true,
+      saturday: true,
+      sunday: true,
+    },
+  };
+}
+
+function sanitizeLimitSchedule(
+  input: LimitScheduleSettingsInput | undefined,
+): LimitScheduleSettings {
+  const fallback = DEFAULT_SETTINGS.limitSchedule;
+  return {
+    globalEnabled: sanitizeBoolean(
+      input?.globalEnabled,
+      fallback.globalEnabled,
+    ),
+    global: sanitizeWeeklySchedule(input?.global, fallback.global),
+    modeByPlatform: {
+      reddit: sanitizeScheduleMode(
+        input?.modeByPlatform?.reddit,
+        fallback.modeByPlatform.reddit,
+      ),
+      x: sanitizeScheduleMode(
+        input?.modeByPlatform?.x,
+        fallback.modeByPlatform.x,
+      ),
+      instagram: sanitizeScheduleMode(
+        input?.modeByPlatform?.instagram,
+        fallback.modeByPlatform.instagram,
+      ),
+      youtube: sanitizeScheduleMode(
+        input?.modeByPlatform?.youtube,
+        fallback.modeByPlatform.youtube,
+      ),
+    },
+    byPlatform: {
+      reddit: sanitizeWeeklySchedule(
+        input?.byPlatform?.reddit,
+        fallback.byPlatform.reddit,
+      ),
+      x: sanitizeWeeklySchedule(
+        input?.byPlatform?.x,
+        fallback.byPlatform.x,
+      ),
+      instagram: sanitizeWeeklySchedule(
+        input?.byPlatform?.instagram,
+        fallback.byPlatform.instagram,
+      ),
+      youtube: sanitizeWeeklySchedule(
+        input?.byPlatform?.youtube,
+        fallback.byPlatform.youtube,
+      ),
+    },
+  };
+}
+
+function sanitizeWeeklySchedule(
+  input: WeeklyLimitScheduleInput | undefined,
+  fallback: WeeklyLimitSchedule,
+): WeeklyLimitSchedule {
+  return {
+    startTime: sanitizeClockTime(input?.startTime, fallback.startTime),
+    endTime: sanitizeClockTime(input?.endTime, fallback.endTime),
+    days: {
+      monday: sanitizeBoolean(input?.days?.monday, fallback.days.monday),
+      tuesday: sanitizeBoolean(input?.days?.tuesday, fallback.days.tuesday),
+      wednesday: sanitizeBoolean(
+        input?.days?.wednesday,
+        fallback.days.wednesday,
+      ),
+      thursday: sanitizeBoolean(
+        input?.days?.thursday,
+        fallback.days.thursday,
+      ),
+      friday: sanitizeBoolean(input?.days?.friday, fallback.days.friday),
+      saturday: sanitizeBoolean(
+        input?.days?.saturday,
+        fallback.days.saturday,
+      ),
+      sunday: sanitizeBoolean(input?.days?.sunday, fallback.days.sunday),
+    },
+  };
+}
+
+function sanitizeScheduleMode(
+  value: unknown,
+  fallback: LimitScheduleMode,
+): LimitScheduleMode {
+  return value === "global" || value === "custom" || value === "always"
+    ? value
+    : fallback;
+}
+
+function sanitizeClockTime(value: unknown, fallback: string): string {
+  if (typeof value !== "string") return fallback;
+  return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value) ? value : fallback;
 }
 
 function normalizeDailyLimit(value: number | undefined): number | undefined {

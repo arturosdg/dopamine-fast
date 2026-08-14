@@ -33,82 +33,174 @@
         <section class="panel">
           <div class="section-number">01</div>
           <div class="section-heading">
-            <h2>Intentional time</h2>
+            <h2>Global schedule</h2>
             <p>
-              Tune the session intention and hard daily ceiling separately for
-              each network.
+              Choose when limits are active by default. Networks can inherit
+              this schedule or override it below.
             </p>
           </div>
 
-          <div class="network-time-grid">
-            <fieldset class="network-time-card">
-              <legend>Reddit</legend>
-              <div class="network-time-fields">
-                <label class="number-field">
-                  <span>Suggested session</span>
-                  <input id="reddit-session-duration" name="redditSessionDurationMinutes" type="number" min="1" max="60" step="1" />
-                  <small>minutes</small>
+          <div class="schedule-card">
+            <label class="schedule-toggle">
+              <span>
+                <strong>Use a global schedule</strong>
+                <small>When off, inherited limits stay active all day.</small>
+              </span>
+              <input id="global-schedule-enabled" type="checkbox" />
+            </label>
+            <div id="global-schedule-fields" class="schedule-fields">
+              <div class="time-range">
+                <label>
+                  <span>From</span>
+                  <input id="global-schedule-start" type="time" />
                 </label>
-                <label class="number-field">
-                  <span>Daily maximum</span>
-                  <input id="reddit-daily-usage-limit" name="redditDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
-                  <small>minutes, fixed until tomorrow</small>
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="network-time-card">
-              <legend>X / Twitter</legend>
-              <div class="network-time-fields">
-                <label class="number-field">
-                  <span>Suggested session</span>
-                  <input id="x-session-duration" name="xSessionDurationMinutes" type="number" min="1" max="60" step="1" />
-                  <small>minutes</small>
-                </label>
-                <label class="number-field">
-                  <span>Daily maximum</span>
-                  <input id="x-daily-usage-limit" name="xDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
-                  <small>minutes, fixed until tomorrow</small>
+                <label>
+                  <span>To</span>
+                  <input id="global-schedule-end" type="time" />
                 </label>
               </div>
-            </fieldset>
-
-            <fieldset class="network-time-card">
-              <legend>Instagram</legend>
-              <div class="network-time-fields">
-                <label class="number-field">
-                  <span>Suggested session</span>
-                  <input id="instagram-session-duration" name="instagramSessionDurationMinutes" type="number" min="1" max="60" step="1" />
-                  <small>minutes</small>
-                </label>
-                <label class="number-field">
-                  <span>Daily maximum</span>
-                  <input id="instagram-daily-usage-limit" name="instagramDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
-                  <small>minutes, fixed until tomorrow</small>
-                </label>
-              </div>
-            </fieldset>
-
-            <fieldset class="network-time-card">
-              <legend>YouTube</legend>
-              <div class="network-time-fields">
-                <label class="number-field">
-                  <span>Suggested session</span>
-                  <input id="youtube-session-duration" name="youtubeSessionDurationMinutes" type="number" min="1" max="60" step="1" />
-                  <small>minutes</small>
-                </label>
-                <label class="number-field">
-                  <span>Daily maximum</span>
-                  <input id="youtube-daily-usage-limit" name="youtubeDailyUsageLimitMinutes" type="number" min="5" max="240" step="5" />
-                  <small>minutes, fixed until tomorrow</small>
-                </label>
-              </div>
-            </fieldset>
+              <fieldset class="day-picker">
+                <legend>Active days</legend>
+                <label><input type="checkbox" data-schedule-day="global" value="monday" /><span>Mon</span></label>
+                <label><input type="checkbox" data-schedule-day="global" value="tuesday" /><span>Tue</span></label>
+                <label><input type="checkbox" data-schedule-day="global" value="wednesday" /><span>Wed</span></label>
+                <label><input type="checkbox" data-schedule-day="global" value="thursday" /><span>Thu</span></label>
+                <label><input type="checkbox" data-schedule-day="global" value="friday" /><span>Fri</span></label>
+                <label><input type="checkbox" data-schedule-day="global" value="saturday" /><span>Sat</span></label>
+                <label><input type="checkbox" data-schedule-day="global" value="sunday" /><span>Sun</span></label>
+              </fieldset>
+              <p class="schedule-hint">If the end is earlier than the start, the window continues overnight. Matching times cover the full selected day.</p>
+            </div>
           </div>
         </section>
 
         <section class="panel">
           <div class="section-number">02</div>
+          <div class="section-heading">
+            <h2>Networks</h2>
+            <p>Each network keeps its activation, time budget and schedule together.</p>
+          </div>
+
+          <div class="network-grid">
+            <article class="network-card">
+              <header class="network-card__header">
+                <div><span class="network-kicker">Network 01</span><h3>Reddit</h3></div>
+                <label class="compact-toggle"><span>Enabled</span><input id="site-reddit" type="checkbox" /></label>
+              </header>
+              <div class="network-card__body">
+                <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="reddit-session-duration" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="reddit-daily-usage-limit" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+                <label class="select-field"><span>Limits schedule</span><select id="reddit-schedule-mode"><option value="global">Use global schedule</option><option value="custom">Custom schedule</option><option value="always">Always active</option></select></label>
+                <div id="reddit-schedule-fields" class="schedule-fields schedule-fields--network">
+                  <div class="time-range"><label><span>From</span><input id="reddit-schedule-start" type="time" /></label><label><span>To</span><input id="reddit-schedule-end" type="time" /></label></div>
+                  <fieldset class="day-picker"><legend>Active days</legend>
+                    <label><input type="checkbox" data-schedule-day="reddit" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="reddit" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="reddit" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="reddit" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="reddit" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="reddit" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="reddit" value="sunday" /><span>Sun</span></label>
+                  </fieldset>
+                </div>
+              </div>
+            </article>
+
+            <article class="network-card">
+              <header class="network-card__header">
+                <div><span class="network-kicker">Network 02</span><h3>X / Twitter</h3></div>
+                <label class="compact-toggle"><span>Enabled</span><input id="site-x" type="checkbox" /></label>
+              </header>
+              <div class="network-card__body">
+              <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="x-session-duration" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="x-daily-usage-limit" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+                <label class="select-field"><span>Limits schedule</span><select id="x-schedule-mode"><option value="global">Use global schedule</option><option value="custom">Custom schedule</option><option value="always">Always active</option></select></label>
+                <div id="x-schedule-fields" class="schedule-fields schedule-fields--network">
+                  <div class="time-range"><label><span>From</span><input id="x-schedule-start" type="time" /></label><label><span>To</span><input id="x-schedule-end" type="time" /></label></div>
+                  <fieldset class="day-picker"><legend>Active days</legend>
+                    <label><input type="checkbox" data-schedule-day="x" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="x" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="x" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="x" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="x" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="x" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="x" value="sunday" /><span>Sun</span></label>
+                  </fieldset>
+                </div>
+                <label class="card-option"><span><strong>Following only</strong><small>Prefer Following and hide For You.</small></span><input id="x-following-only" type="checkbox" /></label>
+              </div>
+            </article>
+
+            <article class="network-card">
+              <header class="network-card__header">
+                <div><span class="network-kicker">Network 03</span><h3>Instagram</h3></div>
+                <label class="compact-toggle"><span>Enabled</span><input id="site-instagram" type="checkbox" /></label>
+              </header>
+              <div class="network-card__body">
+              <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="instagram-session-duration" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="instagram-daily-usage-limit" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+                <label class="select-field"><span>Limits schedule</span><select id="instagram-schedule-mode"><option value="global">Use global schedule</option><option value="custom">Custom schedule</option><option value="always">Always active</option></select></label>
+                <div id="instagram-schedule-fields" class="schedule-fields schedule-fields--network">
+                  <div class="time-range"><label><span>From</span><input id="instagram-schedule-start" type="time" /></label><label><span>To</span><input id="instagram-schedule-end" type="time" /></label></div>
+                  <fieldset class="day-picker"><legend>Active days</legend>
+                    <label><input type="checkbox" data-schedule-day="instagram" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="instagram" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="instagram" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="instagram" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="instagram" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="instagram" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="instagram" value="sunday" /><span>Sun</span></label>
+                  </fieldset>
+                </div>
+                <label class="card-option"><span><strong>Following only</strong><small>Open Following and hide For You.</small></span><input id="instagram-following-only" type="checkbox" /></label>
+              </div>
+            </article>
+
+            <article class="network-card">
+              <header class="network-card__header">
+                <div><span class="network-kicker">Network 04</span><h3>YouTube</h3></div>
+                <label class="compact-toggle"><span>Enabled</span><input id="site-youtube" type="checkbox" /></label>
+              </header>
+              <div class="network-card__body">
+              <div class="network-time-fields">
+                <label class="number-field">
+                  <span>Suggested session</span>
+                  <input id="youtube-session-duration" type="number" min="1" max="60" step="1" />
+                  <small>minutes</small>
+                </label>
+                <label class="number-field">
+                  <span>Daily maximum</span>
+                  <input id="youtube-daily-usage-limit" type="number" min="5" max="240" step="5" />
+                  <small>minutes, fixed until tomorrow</small>
+                </label>
+              </div>
+                <label class="select-field"><span>Limits schedule</span><select id="youtube-schedule-mode"><option value="global">Use global schedule</option><option value="custom">Custom schedule</option><option value="always">Always active</option></select></label>
+                <div id="youtube-schedule-fields" class="schedule-fields schedule-fields--network">
+                  <div class="time-range"><label><span>From</span><input id="youtube-schedule-start" type="time" /></label><label><span>To</span><input id="youtube-schedule-end" type="time" /></label></div>
+                  <fieldset class="day-picker"><legend>Active days</legend>
+                    <label><input type="checkbox" data-schedule-day="youtube" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="youtube" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="youtube" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="youtube" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="youtube" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="youtube" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="youtube" value="sunday" /><span>Sun</span></label>
+                  </fieldset>
+                </div>
+                <label class="card-option"><span><strong>Subscriptions only</strong><small>Redirect Home to Subscriptions.</small></span><input id="youtube-subscriptions-only" type="checkbox" /></label>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="section-number">04</div>
           <div class="section-heading">
             <h2>Entry pace</h2>
             <p>Add a pause before opening a feed.</p>
@@ -179,7 +271,7 @@
         </section>
 
         <section class="panel">
-          <div class="section-number">04</div>
+          <div class="section-number">05</div>
           <div class="section-heading">
             <h2>Friction</h2>
             <p>How much effort it takes to intentionally choose another batch.</p>
@@ -200,20 +292,13 @@
         </section>
 
         <section class="panel">
-          <div class="section-number">05</div>
+          <div class="section-number">06</div>
           <div class="section-heading">
-            <h2>Networks and noise</h2>
-            <p>Detection is an early version; selectors will evolve with testing.</p>
+            <h2>Noise</h2>
+            <p>Keep optional content and media behavior consistent across enabled networks.</p>
           </div>
 
           <div class="toggle-list">
-            <label><span>Reddit</span><input id="site-reddit" type="checkbox" /></label>
-            <label><span>X / Twitter</span><input id="site-x" type="checkbox" /></label>
-            <label><span>X: Following only</span><input id="x-following-only" type="checkbox" /></label>
-            <label><span>Instagram</span><input id="site-instagram" type="checkbox" /></label>
-            <label><span>Instagram: Following only</span><input id="instagram-following-only" type="checkbox" /></label>
-            <label><span>YouTube</span><input id="site-youtube" type="checkbox" /></label>
-            <label><span>YouTube: Subscriptions only</span><input id="youtube-subscriptions-only" type="checkbox" /></label>
             <label><span>Hide suggestions</span><input id="block-suggested" type="checkbox" /></label>
             <label><span>Stop autoplay</span><input id="disable-autoplay" type="checkbox" /></label>
           </div>

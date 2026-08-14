@@ -60,6 +60,25 @@ Keep the useful parts of social networks while giving every feed a real end.
 - The effective ceiling is fixed for the day. Configuration changes apply on
   the next local calendar day, and the settings page cannot reset elapsed time.
 
+## Limit schedules
+
+- Scheduling is optional. With the global schedule disabled, inherited limits
+  remain active all day as in earlier versions.
+- The global schedule defines active weekdays plus a local start and end time.
+- Each network can inherit the global schedule, use its own weekdays and time
+  window, or keep limits always active.
+- Start times are inclusive and end times are exclusive. A window whose end is
+  earlier than its start continues overnight into the following day; equal
+  times mean the full selected day.
+- Crossing a schedule boundary starts or stops feed limits without requiring a
+  reload. Ending a window flushes any pending usage time before removing the
+  active session and batch limiter.
+- Outside an active window, opening/session interventions, time accounting and
+  finite feed batches are inactive for that network. Suggestion suppression and
+  preferred-feed settings remain enabled.
+- Schedules use the browser's local clock and are stored only in extension
+  local storage.
+
 ## Unlock flow
 
 The end of a batch is rendered inside the native feed. The inline control waits
