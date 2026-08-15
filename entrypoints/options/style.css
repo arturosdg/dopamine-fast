@@ -24,7 +24,8 @@ body {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -118,7 +119,8 @@ input {
 
 .field,
 .number-grid,
-.network-time-grid,
+.schedule-card,
+.network-grid,
 .toggle-list {
   grid-column: 2;
 }
@@ -147,22 +149,170 @@ input {
   gap: 10px;
 }
 
-.network-time-grid {
+.schedule-card {
   display: grid;
-  gap: 14px;
-}
-
-.network-time-card {
-  min-width: 0;
-  margin: 0;
-  padding: 16px;
+  gap: 18px;
+  padding: 18px;
   border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.network-time-card legend {
-  padding: 0 8px;
+.schedule-toggle,
+.compact-toggle,
+.card-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.schedule-toggle > span,
+.card-option > span {
+  display: grid;
+  gap: 2px;
+}
+
+.schedule-toggle small,
+.card-option small,
+.schedule-hint {
+  color: var(--muted);
+}
+
+.schedule-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.schedule-fields[hidden] {
+  display: none;
+}
+
+.time-range {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.time-range label,
+.select-field {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.time-range input,
+.select-field select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 0;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.day-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.day-picker legend {
+  width: 100%;
+  margin-bottom: 2px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.day-picker label {
+  cursor: pointer;
+}
+
+.day-picker input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.day-picker span {
+  display: grid;
+  min-width: 42px;
+  min-height: 38px;
+  place-items: center;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.day-picker input:checked + span {
+  border-color: var(--ink);
+  color: var(--paper);
+  background: var(--ink);
+}
+
+.day-picker input:focus-visible + span {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.schedule-hint {
+  margin: 0;
+  font-size: 12px;
+}
+
+.network-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.network-card {
+  min-width: 0;
+  border: 1px solid var(--ink);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.network-card__header {
+  display: flex;
+  min-height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border-bottom: 1px solid var(--ink);
+  background: var(--paper-strong);
+}
+
+.network-card__header h3 {
+  margin: 2px 0 0;
   font-family: "Iowan Old Style", "Palatino Linotype", serif;
-  font-size: 24px;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.network-kicker {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.network-card__body {
+  display: grid;
+  gap: 18px;
+  padding: 16px;
 }
 
 .network-time-fields {
@@ -170,10 +320,26 @@ input {
   gap: 10px;
 }
 
-.network-time-card .number-field {
-  padding: 12px 0;
-  border: 0;
+.network-card .number-field {
+  padding: 12px;
+}
+
+.schedule-fields--network {
+  padding: 14px;
+  border-left: 3px solid var(--acid);
+  background: rgba(24, 32, 24, 0.045);
+}
+
+.card-option {
+  min-height: 58px;
+  padding-top: 14px;
   border-top: 1px solid var(--line);
+}
+
+.compact-toggle {
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
 }
 
 .number-field {
@@ -223,7 +389,10 @@ input {
 }
 
 .toggle-list input,
-.master-toggle input {
+.master-toggle input,
+.schedule-toggle input,
+.compact-toggle input,
+.card-option input {
   width: 22px;
   height: 22px;
   accent-color: var(--ink);
@@ -311,7 +480,11 @@ input {
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .network-time-grid {
+  .network-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .network-time-fields {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

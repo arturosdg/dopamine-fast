@@ -66,14 +66,16 @@ On a supported feed route, the content script:
 1. Loads sanitized settings and the current local-day usage state.
 2. Stops immediately when the extension/site is disabled or the route is not a
    feed.
-3. Blocks entry when the per-network daily time ceiling is exhausted.
-4. Shows a configurable opening delay and asks for an intended session length.
-5. Starts the finite-feed limiter with the configured initial batch.
-6. Counts time only while the document is visible and shows a floating timer.
-7. Stops at the selected session duration and asks the user to leave or choose
+3. Resolves the network's global, custom or always-active weekly schedule and
+   bypasses feed/time limits outside its active window.
+4. Blocks entry when the per-network daily time ceiling is exhausted.
+5. Shows a configurable opening delay and asks for an intended session length.
+6. Starts the finite-feed limiter with the configured initial batch.
+7. Counts time only while the document is visible and shows a floating timer.
+8. Stops at the selected session duration and asks the user to leave or choose
    another block.
-8. Enforces the daily time ceiling without an in-page extension or reset.
-9. Shows an end-of-batch intervention before revealing more posts.
+9. Enforces the daily time ceiling without an in-page extension or reset.
+10. Shows an end-of-batch intervention before revealing more posts.
 
 Post counters and time budgets are independent per network:
 
@@ -89,6 +91,9 @@ Post counters and time budgets are independent per network:
 - `DailyUsageState.dailyLimitMinutesByPlatform` captures each effective time
   ceiling when the day's state is created. Changing a setting applies on the
   next local calendar day.
+- `Settings.limitSchedule` stores the optional global weekly window plus each
+  platform's global, custom or always-active mode. Schedule changes apply on
+  reactivation, and clock boundaries are detected by the content lifecycle.
 
 Post batches can be unlocked repeatedly. Each unlock still requires the
 configured inline delay and press-and-hold interaction.
@@ -211,6 +216,8 @@ Preserve these invariants:
 
 - Calendar resets use the user's local date, not UTC.
 - Numeric settings are finite integers constrained to product-safe ranges.
+- Schedule times use validated local `HH:MM` values; overnight windows inherit
+  the selected start day and continue into the following morning.
 - Usage is counted only while the supported feed document is visible.
 - Pending seconds are persisted on visibility loss, page hide and teardown.
 - A time-limit change cannot increase the effective ceiling for the current

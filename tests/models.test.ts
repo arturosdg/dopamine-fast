@@ -93,6 +93,44 @@ describe("settings", () => {
     expect(settings).not.toHaveProperty("dailyUsageLimitMinutes");
   });
 
+  it("sanitizes weekly schedules with backward-compatible defaults", () => {
+    const settings = sanitizeSettings({
+      limitSchedule: {
+        globalEnabled: true,
+        global: {
+          startTime: "25:00",
+          endTime: "08:30",
+          days: { monday: false },
+        },
+        modeByPlatform: {
+          reddit: "invalid",
+          instagram: "custom",
+        },
+        byPlatform: {
+          instagram: {
+            startTime: "20:15",
+            endTime: "06:45",
+            days: { saturday: false },
+          },
+        },
+      },
+    });
+
+    expect(settings.limitSchedule.globalEnabled).toBe(true);
+    expect(settings.limitSchedule.global.startTime).toBe("09:00");
+    expect(settings.limitSchedule.global.endTime).toBe("08:30");
+    expect(settings.limitSchedule.global.days.monday).toBe(false);
+    expect(settings.limitSchedule.global.days.tuesday).toBe(true);
+    expect(settings.limitSchedule.modeByPlatform.reddit).toBe("global");
+    expect(settings.limitSchedule.modeByPlatform.instagram).toBe("custom");
+    expect(settings.limitSchedule.byPlatform.instagram.startTime).toBe(
+      "20:15",
+    );
+    expect(settings.limitSchedule.byPlatform.instagram.days.saturday).toBe(
+      false,
+    );
+  });
+
   it("drops legacy post-limit and friction-mode settings", () => {
     const settings = sanitizeSettings({
       mode: "strict",
