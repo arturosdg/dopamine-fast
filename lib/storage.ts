@@ -12,7 +12,9 @@ import {
   type Settings,
 } from "./models";
 import type {
+  ActiveSessionSnapshot,
   AddUsageSecondsResponse,
+  GetActiveSessionResponse,
   ReserveAllowanceResponse,
   RuntimeMessage,
 } from "./runtime-messages";
@@ -133,6 +135,40 @@ export async function addUsageSeconds(
     elapsedSeconds,
   });
   return response.remainingSeconds;
+}
+
+export async function saveActiveSession(
+  session: ActiveSessionSnapshot,
+): Promise<void> {
+  await browser.runtime.sendMessage<RuntimeMessage, { ok: boolean }>({
+    type: "dopamine-fast:set-active-session",
+    session: {
+      ...session,
+      plannedSeconds: Math.max(1, Math.round(session.plannedSeconds)),
+    },
+  });
+}
+
+export async function getActiveSession(
+  platform: PlatformId,
+): Promise<ActiveSessionSnapshot | null> {
+  const response = await browser.runtime.sendMessage<
+    RuntimeMessage,
+    GetActiveSessionResponse
+  >({
+    type: "dopamine-fast:get-active-session",
+    platform,
+  });
+  return response.session;
+}
+
+export async function clearActiveSession(
+  platform: PlatformId,
+): Promise<void> {
+  await browser.runtime.sendMessage<RuntimeMessage, { ok: boolean }>({
+    type: "dopamine-fast:clear-active-session",
+    platform,
+  });
 }
 
 export async function getUsageHistory(): Promise<UsageHistory> {

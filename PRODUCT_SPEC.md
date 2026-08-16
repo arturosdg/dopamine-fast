@@ -39,8 +39,9 @@ Keep the useful parts of social networks while giving every feed a real end.
   minutes per network and can be adjusted from 1 to 60 minutes at entry.
 - A compact floating counter shows the planned session time and the remaining
   daily time for the current network. Once a session starts, the counter and
-  the chosen block survive same-network SPA navigation and browser history
-  changes instead of showing the opening screen again.
+  the chosen block survive same-network SPA navigation, browser history changes
+  and full document reloads in the same tab instead of showing the opening
+  screen again.
 - Time advances only while the tab is visible.
 - When planned time ends, the user can leave or deliberately plan another
   block after a 10-second pause. The next duration cannot be selected until
@@ -55,8 +56,9 @@ Keep the useful parts of social networks while giving every feed a real end.
   background context, and active tabs reconcile against persisted time usage
   from other tabs.
 - Aggregate elapsed seconds are retained locally for the 30 most recent days
-  with activity so usage statistics survive calendar resets. Active session
-  countdowns are not stored as history.
+  with activity so usage statistics survive calendar resets. The active
+  countdown is checkpointed separately per tab and network in extension session
+  storage, cleared when it ends or the tab closes, and never stored as history.
 - The effective ceiling is fixed for the day. Configuration changes apply on
   the next local calendar day, and the settings page cannot reset elapsed time.
 

@@ -8,6 +8,8 @@ export interface UsageSessionOptions {
   plannedSeconds: number;
   availableSeconds: number;
   ui: InterventionUi;
+  onCheckpoint?(plannedSeconds: number): void;
+  onFinished?(): void;
   onPlannedTimeElapsed(availableSeconds: number): void;
   onHardLimitReached(): void;
 }
@@ -72,6 +74,7 @@ export class UsageSession {
 
     this.state = "running";
     this.render();
+    this.checkpoint();
     this.environment.addVisibilityListener(this.persistWhenHidden);
     this.environment.addPageHideListener(this.persistBeforeLeaving);
     this.interval = this.environment.setInterval(() => this.tick(), 1000);
@@ -85,12 +88,14 @@ export class UsageSession {
     );
     this.state = "running";
     this.render();
+    this.checkpoint();
     this.interval = this.environment.setInterval(() => this.tick(), 1000);
   }
 
   async destroy(): Promise<void> {
     if (this.state === "destroyed") return;
     this.stopInterval();
+    this.checkpoint();
     this.state = "destroyed";
     this.environment.removeVisibilityListener(this.persistWhenHidden);
     this.environment.removePageHideListener(this.persistBeforeLeaving);
@@ -110,7 +115,11 @@ export class UsageSession {
     );
     this.plannedSeconds = Math.min(this.plannedSeconds, this.availableSeconds);
     this.render();
-    if (this.availableSeconds <= 0) this.finishHardLimit();
+    if (this.availableSeconds <= 0) {
+      this.finishHardLimit();
+      return;
+    }
+    this.checkpoint();
   }
 
   private tick(): void {
@@ -136,6 +145,8 @@ export class UsageSession {
       return;
     }
 
+    this.checkpoint();
+
     if (this.pendingSeconds >= 5) {
       void this.persistPending();
     }
@@ -153,6 +164,7 @@ export class UsageSession {
     if (this.state !== "running") return;
     this.stopInterval();
     this.state = "planned-end";
+    this.options.onFinished?.();
     void this.persistPending().then(() => {
       if (this.state !== "planned-end") return;
       if (this.availableSeconds <= 0) {
@@ -170,6 +182,7 @@ export class UsageSession {
     this.plannedSeconds = 0;
     this.availableSeconds = 0;
     this.render();
+    this.options.onFinished?.();
     void this.persistPending().then(() => {
       if (this.state === "hard-end") this.options.onHardLimitReached();
     });
@@ -205,5 +218,10 @@ export class UsageSession {
       this.environment.clearInterval(this.interval);
       this.interval = undefined;
     }
+  }
+
+  private checkpoint(): void {
+    if (this.state !== "running" || this.plannedSeconds <= 0) return;
+    this.options.onCheckpoint?.(this.plannedSeconds);
   }
 }

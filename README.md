@@ -39,7 +39,8 @@ X/Twitter, Instagram, and YouTube. Post counts do not impose a maximum: every
 completed batch gate can reveal another configured batch.
 Preferences and aggregate counters stay in browser extension local storage.
 Elapsed seconds per network are retained for the 30 most recent days with
-activity; active session countdowns are not stored in that history.
+activity. The remaining active countdown is kept separately in extension
+session storage for the current tab and is not stored in usage history.
 At a closed batch boundary, blocked posts retain their layout geometry while
 becoming invisible and non-interactive. The inline control also occupies the
 remaining viewport, keeping native infinite-scroll loaders out of view.
@@ -63,8 +64,8 @@ hold before the next finite batch is revealed.
 - Immediate interaction guard while local settings and the opening
   intervention load, preventing clicks or scrolling through the feed first.
 - Per-network intentional session duration, adjusted through deliberate button
-  steps, with a floating countdown that remains active across same-network SPA
-  and history navigation.
+  steps, with a floating countdown that remains active across same-network SPA,
+  history navigation and full document reloads in the same tab.
 - Optional Following-only modes for X and Instagram that select followed
   content while keeping direct profiles available.
 - Intentional search on X, Instagram and Reddit: autocomplete or default

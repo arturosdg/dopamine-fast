@@ -14,10 +14,13 @@ import { PreferredFeedController } from "../lib/preferred-feed";
 import { SingleItemViewController } from "../lib/single-item-view";
 import { SurfaceSuppressionController } from "../lib/surface-suppression";
 import {
+  clearActiveSession,
+  getActiveSession,
   getDailyUsageState,
   getSettings,
   getUsageHistory,
   reserveAllowance,
+  saveActiveSession,
   dailyUsageStateItem,
   settingsItem,
 } from "../lib/storage";
@@ -95,6 +98,7 @@ export default defineContentScript({
     let singleItemView: SingleItemViewController | undefined;
     let surfaceSuppression: SurfaceSuppressionController | undefined;
     let usageSession: UsageSession | undefined;
+    let usageSessionNeedsAllowance = false;
     let sessionPostAllowance = 0;
     let currentUrl = "";
     let activationId = 0;
@@ -130,8 +134,12 @@ export default defineContentScript({
       if (!preserveUsageSession || !usageSession) {
         const previousUsageSession = usageSession;
         usageSession = undefined;
+        usageSessionNeedsAllowance = false;
         sessionPostAllowance = 0;
         await previousUsageSession?.destroy();
+        if (previousUsageSession) {
+          await clearActiveSession(adapter.id);
+        }
         if (thisActivation !== activationId) return;
         intervention.hideAll();
       }
@@ -140,8 +148,64 @@ export default defineContentScript({
       if (thisActivation !== activationId) return;
       currentSettings = settings;
       if (!settings.enabled || !settings.enabledSites[adapter.id]) {
+        const previousUsageSession = usageSession;
+        usageSession = undefined;
+        usageSessionNeedsAllowance = false;
+        sessionPostAllowance = 0;
+        await previousUsageSession?.destroy();
+        await clearActiveSession(adapter.id);
+        intervention.hideAll();
         return;
       }
+
+      const startUsageSession = (
+        plannedSeconds: number,
+        availableSeconds: number,
+      ) => {
+        const session = new UsageSession({
+          platform: adapter.id,
+          platformLabel: adapter.label,
+          plannedSeconds,
+          availableSeconds,
+          ui: intervention,
+          onCheckpoint(remainingPlannedSeconds) {
+            void saveActiveSession({
+              platform: adapter.id,
+              date: localDateKey(),
+              plannedSeconds: remainingPlannedSeconds,
+            });
+          },
+          onFinished() {
+            void clearActiveSession(adapter.id);
+          },
+          onPlannedTimeElapsed(remainingSeconds) {
+            void (async () => {
+              const extensionSeconds = await intervention.showSessionEnded({
+                platformLabel: adapter.label,
+                defaultSessionMinutes:
+                  settings.sessionDurationMinutesByPlatform[adapter.id],
+                availableSeconds: remainingSeconds,
+              });
+              if (usageSession !== session) {
+                return;
+              }
+              if (extensionSeconds <= 0) return;
+              session.extend(extensionSeconds);
+            })();
+          },
+          onHardLimitReached() {
+            if (usageSession !== session) {
+              return;
+            }
+            sessionPostAllowance = 0;
+            limiter?.destroy();
+            limiter = undefined;
+            intervention.showHardLimitReached(adapter.label);
+          },
+        });
+        usageSession = session;
+        session.start();
+      };
 
       const surfaceConfig = adapter.surfaceSuppression;
       const subscriptionsOnly =
@@ -188,6 +252,31 @@ export default defineContentScript({
         );
         singleItemView.start();
       }
+
+      if (!usageSession) {
+        const storedSession = await getActiveSession(adapter.id);
+        if (thisActivation !== activationId) return;
+        if (storedSession?.date !== localDateKey()) {
+          if (storedSession) await clearActiveSession(adapter.id);
+        } else {
+          const usageState = await getDailyUsageState();
+          if (thisActivation !== activationId) return;
+          const availableSeconds = availableUsageSeconds(
+            settings,
+            usageState,
+            adapter.id,
+          );
+          if (availableSeconds <= 0) {
+            await clearActiveSession(adapter.id);
+          } else {
+            usageSessionNeedsAllowance = true;
+            startUsageSession(
+              storedSession.plannedSeconds,
+              availableSeconds,
+            );
+          }
+        }
+      }
       if (isSingleItemRoute) {
         return;
       }
@@ -211,8 +300,10 @@ export default defineContentScript({
       if (!limitsAreActive) {
         const previousUsageSession = usageSession;
         usageSession = undefined;
+        usageSessionNeedsAllowance = false;
         sessionPostAllowance = 0;
         await previousUsageSession?.destroy();
+        await clearActiveSession(adapter.id);
         if (thisActivation !== activationId) return;
         intervention.hideAll();
         return;
@@ -222,6 +313,14 @@ export default defineContentScript({
         if (usageSession.getAvailableSeconds() <= 0) {
           intervention.showHardLimitReached(adapter.label);
           return;
+        }
+        if (usageSessionNeedsAllowance) {
+          sessionPostAllowance = await reserveAllowance(
+            adapter.id,
+            settings.batchSize,
+          );
+          if (thisActivation !== activationId) return;
+          usageSessionNeedsAllowance = false;
         }
         limiter = new FeedLimiter(adapter, settings, sessionPostAllowance);
         limiter.start();
@@ -276,39 +375,7 @@ export default defineContentScript({
       );
       limiter.start();
 
-      const session = new UsageSession({
-        platform: adapter.id,
-        platformLabel: adapter.label,
-        plannedSeconds,
-        availableSeconds,
-        ui: intervention,
-        onPlannedTimeElapsed(remainingSeconds) {
-          void (async () => {
-            const extensionSeconds = await intervention.showSessionEnded({
-              platformLabel: adapter.label,
-              defaultSessionMinutes:
-                settings.sessionDurationMinutesByPlatform[adapter.id],
-              availableSeconds: remainingSeconds,
-            });
-            if (usageSession !== session) {
-              return;
-            }
-            if (extensionSeconds <= 0) return;
-            session.extend(extensionSeconds);
-          })();
-        },
-        onHardLimitReached() {
-          if (usageSession !== session) {
-            return;
-          }
-          sessionPostAllowance = 0;
-          limiter?.destroy();
-          limiter = undefined;
-          intervention.showHardLimitReached(adapter.label);
-        },
-      });
-      usageSession = session;
-      session.start();
+      startUsageSession(plannedSeconds, availableSeconds);
       })().finally(() => interactionGuard.release(thisActivation));
     };
 
@@ -330,7 +397,7 @@ export default defineContentScript({
     }, 600);
 
     const unwatchSettings = settingsItem.watch(() => {
-      void activate();
+      void activate(true);
     });
 
     const unwatchUsage = dailyUsageStateItem.watch(() => {
