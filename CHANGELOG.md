@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.7.0](https://github.com/arturosdg/dopamine-fast/compare/v0.6.0...v0.7.0) (2026-08-16)
+
+
+### Features
+
+* configure time limits per network ([775682e](https://github.com/arturosdg/dopamine-fast/commit/775682e27162c87abf61554247d9a8a89eda465f))
+* configure time limits per network ([5bd1da1](https://github.com/arturosdg/dopamine-fast/commit/5bd1da1c18053fe8bcfb41f356d8f7c929e8cc55))
+* schedule limits by network ([569de07](https://github.com/arturosdg/dopamine-fast/commit/569de07b870a76b3dcc9a2df4cb3b1008841a013))
+* schedule limits by network ([bd05a96](https://github.com/arturosdg/dopamine-fast/commit/bd05a96bead90da7d30bb0d7022ec96eeeb58d7d))
+
+
+### Bug Fixes
+
+* **session:** preserve countdown across reloads ([8ab2257](https://github.com/arturosdg/dopamine-fast/commit/8ab2257e8f4e4eed18f3f1b61f5a2d7a68ba92bf))
+* **session:** preserve countdown across reloads ([d656f2e](https://github.com/arturosdg/dopamine-fast/commit/d656f2e0dc7acbfda692b9039c3d199318be0db5))
+
 ## [0.6.0](https://github.com/arturosdg/dopamine-fast/compare/v0.5.1...v0.6.0) (2026-08-13)
 
 
