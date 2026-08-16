@@ -94,6 +94,10 @@ Post counters and time budgets are independent per network:
 - `Settings.limitSchedule` stores the optional global weekly window plus each
   platform's global, custom or always-active mode. Schedule changes apply on
   reactivation, and clock boundaries are detected by the content lifecycle.
+- Active planned countdowns are checkpointed in extension session storage by
+  tab and platform so full same-tab navigations do not reopen the initial time
+  picker. They are cleared when the countdown ends, protection is disabled or
+  the tab closes.
 
 Post batches can be unlocked repeatedly. Each unlock still requires the
 configured inline delay and press-and-hold interaction.
@@ -220,6 +224,8 @@ Preserve these invariants:
   the selected start day and continue into the following morning.
 - Usage is counted only while the supported feed document is visible.
 - Pending seconds are persisted on visibility loss, page hide and teardown.
+- A document reload may restore the active planned countdown, but must still
+  reconcile the daily remaining time from serialized storage before resuming.
 - A time-limit change cannot increase the effective ceiling for the current
   day.
 - Repeated activation must cancel stale asynchronous UI results.

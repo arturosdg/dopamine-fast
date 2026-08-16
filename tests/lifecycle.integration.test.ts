@@ -11,11 +11,14 @@ import {
   localDateKey,
 } from "../lib/models";
 import {
+  clearActiveSession,
   dailyStateItem,
   dailyUsageStateItem,
   addUsageSeconds,
+  getActiveSession,
   getDailyUsageState,
   reserveAllowance,
+  saveActiveSession,
   settingsItem,
   usageHistoryItem,
 } from "../lib/storage";
@@ -110,7 +113,9 @@ describe("extension lifecycle integration", () => {
     vi.spyOn(fakeBrowser.runtime, "sendMessage").mockImplementation(
       ((message: unknown) =>
         Promise.resolve(
-          handleMessage(message, {} as RuntimeMessageSender),
+          handleMessage(message, {
+            tab: { id: 73 },
+          } as RuntimeMessageSender),
         )) as typeof fakeBrowser.runtime.sendMessage,
     );
     await settingsItem.setValue({
@@ -221,6 +226,81 @@ describe("extension lifecycle integration", () => {
     expect(
       (await dailyUsageStateItem.getValue()).usedSecondsByPlatform.reddit,
     ).toBe(5);
+  });
+
+  it("restores the active countdown after a document reload", async () => {
+    const date = localDateKey();
+    const firstTab = new FakeTabLifecycle();
+    const firstSession = new UsageSession(
+      {
+        platform: "reddit",
+        platformLabel: "Reddit",
+        plannedSeconds: 60,
+        availableSeconds: 300,
+        ui: createUi(),
+        onCheckpoint(plannedSeconds) {
+          void saveActiveSession({
+            platform: "reddit",
+            date,
+            plannedSeconds,
+          });
+        },
+        onFinished() {
+          void clearActiveSession("reddit");
+        },
+        onPlannedTimeElapsed: vi.fn(),
+        onHardLimitReached: vi.fn(),
+      },
+      firstTab,
+    );
+    firstSession.start();
+    firstTab.advance(3);
+    await firstSession.destroy();
+
+    await vi.waitFor(async () => {
+      expect(await getActiveSession("reddit")).toEqual({
+        platform: "reddit",
+        date,
+        plannedSeconds: 57,
+      });
+    });
+
+    const storedSession = await getActiveSession("reddit");
+    expect(storedSession).not.toBeNull();
+    const plannedTimeElapsed = vi.fn();
+    const reloadedTab = new FakeTabLifecycle();
+    const reloadedSession = new UsageSession(
+      {
+        platform: "reddit",
+        platformLabel: "Reddit",
+        plannedSeconds: storedSession?.plannedSeconds ?? 1,
+        availableSeconds: 297,
+        ui: createUi(),
+        onCheckpoint(plannedSeconds) {
+          void saveActiveSession({
+            platform: "reddit",
+            date,
+            plannedSeconds,
+          });
+        },
+        onFinished() {
+          void clearActiveSession("reddit");
+        },
+        onPlannedTimeElapsed: plannedTimeElapsed,
+        onHardLimitReached: vi.fn(),
+      },
+      reloadedTab,
+    );
+    reloadedSession.start();
+    reloadedTab.advance(56);
+    expect(plannedTimeElapsed).not.toHaveBeenCalled();
+    reloadedTab.advance(1);
+
+    await vi.waitFor(async () => {
+      expect(await getActiveSession("reddit")).toBeNull();
+      expect(plannedTimeElapsed).toHaveBeenCalledOnce();
+    });
+    await reloadedSession.destroy();
   });
 
   it("pauses while hidden and persists on visibility loss and page hide", async () => {
