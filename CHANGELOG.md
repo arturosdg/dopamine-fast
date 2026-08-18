@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.7.1](https://github.com/arturosdg/dopamine-fast/compare/v0.7.0...v0.7.1) (2026-08-18)
+
+
+### Bug Fixes
+
+* prevent hold button text selection ([ddb6737](https://github.com/arturosdg/dopamine-fast/commit/ddb6737444e784c44c82afa813b4f9927cff24b8))
+* Prevent hold button text selection ([ddb6737](https://github.com/arturosdg/dopamine-fast/commit/ddb6737444e784c44c82afa813b4f9927cff24b8))
+
 ## [0.7.0](https://github.com/arturosdg/dopamine-fast/compare/v0.6.0...v0.7.0) (2026-08-16)
 
 
