@@ -117,7 +117,7 @@ export class BatchGateUi {
       .gate { box-sizing: border-box; width: min(100%, 680px); margin: 20px auto; padding: 24px; border: 1px solid rgba(128, 128, 128, .35); border-radius: 12px; background: #151716; color: #f0f1ed; font: 14px/1.45 system-ui, sans-serif; text-align: center; }
       .label { margin: 0 0 6px; color: #a5aaa6; font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
       .copy { margin: 0 0 16px; font-size: 15px; }
-      button { position: relative; overflow: hidden; width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid #929a94; border-radius: 8px; background: transparent; color: #f0f1ed; font: inherit; font-weight: 800; cursor: pointer; touch-action: none; }
+      button { position: relative; overflow: hidden; width: 100%; min-height: 48px; padding: 12px 16px; border: 1px solid #929a94; border-radius: 8px; background: transparent; color: #f0f1ed; font: inherit; font-weight: 800; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; }
       button::before { position: absolute; inset: 0; width: var(--progress, 0%); background: rgba(146, 154, 148, .25); content: ""; pointer-events: none; }
       button span { position: relative; }
       button:disabled { cursor: default; opacity: .55; }
