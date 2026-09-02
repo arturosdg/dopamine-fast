@@ -295,9 +295,6 @@ export class InterventionUi {
   showUsageTimer(options: UsageTimerOptions): void {
     if (this.timer.childElementCount === 0) {
       this.timer.replaceChildren(createUsageTimerView());
-      this.timer
-        .querySelector<HTMLButtonElement>(".df-usage-timer")
-        ?.addEventListener("click", () => this.openOptions());
     }
 
     const timer = this.timer.querySelector<HTMLElement>(".df-usage-timer");

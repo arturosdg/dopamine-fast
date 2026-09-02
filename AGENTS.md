@@ -212,6 +212,9 @@ Specific responsibilities:
   markup.
 - `intervention-ui.ts` owns rendering and direct UI interaction, not storage or
   platform detection.
+- The floating usage timer is informational, translucent and pointer-transparent.
+  Full-screen interventions remain interactive and inaccessible host-page
+  content must stay behind them.
 
 `intervention-ui.ts` is already the largest module. When adding another
 substantial screen or interaction state, split it by intervention or introduce

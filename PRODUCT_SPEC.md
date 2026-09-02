@@ -41,7 +41,8 @@ Keep the useful parts of social networks while giving every feed a real end.
   daily time for the current network. Once a session starts, the counter and
   the chosen block survive same-network SPA navigation, browser history changes
   and full document reloads in the same tab instead of showing the opening
-  screen again.
+  screen again. The counter is translucent and pointer-transparent so it never
+  covers or captures interaction with the network underneath it.
 - Time advances only while the tab is visible.
 - When planned time ends, the user can leave or deliberately plan another
   block after a 10-second pause. The next duration cannot be selected until

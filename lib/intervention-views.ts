@@ -298,12 +298,12 @@ export function createAccessBlockedView(platformLabel: string): HTMLElement {
   );
 }
 
-export function createUsageTimerView(): HTMLButtonElement {
-  return element("button", {
+export function createUsageTimerView(): HTMLDivElement {
+  return element("div", {
     className: "df-usage-timer",
     attributes: {
-      type: "button",
-      title: "Open Dopamine Fast settings",
+      role: "status",
+      "aria-live": "polite",
     },
     children: [
       element("span", {

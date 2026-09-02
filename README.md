@@ -66,7 +66,8 @@ hold before the next finite batch is revealed.
   intervention load, preventing clicks or scrolling through the feed first.
 - Per-network intentional session duration, adjusted through deliberate button
   steps, with a floating countdown that remains active across same-network SPA,
-  history navigation and full document reloads in the same tab.
+  history navigation and full document reloads in the same tab. The countdown
+  is translucent and click-through, so content underneath remains usable.
 - Optional Following-only modes for X and Instagram that select followed
   content while keeping direct profiles available.
 - Intentional search on X, Instagram and Reddit: autocomplete or default

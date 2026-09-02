@@ -24,6 +24,7 @@
   z-index: 2147483646;
   right: max(12px, env(safe-area-inset-right));
   bottom: max(72px, calc(env(safe-area-inset-bottom) + 64px));
+  pointer-events: none;
 }
 
 .df-backdrop {
@@ -335,15 +336,14 @@
   min-width: 142px;
   align-items: center;
   padding: 9px 12px;
-  border: 1px solid rgba(240, 241, 237, 0.28);
+  border: 1px solid rgba(240, 241, 237, 0.2);
   border-radius: 2px;
   color: #f0f1ed;
-  background: rgba(21, 23, 22, 0.96);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.28);
+  background: rgba(21, 23, 22, 0.58);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.16);
   font: inherit;
   text-align: left;
-  backdrop-filter: blur(12px);
-  cursor: pointer;
+  backdrop-filter: blur(5px);
 }
 
 .df-usage-timer__pulse {
@@ -379,7 +379,7 @@
 .df-usage-timer[data-urgent="true"] {
   border-color: #929a94;
   color: #f0f1ed;
-  background: #252927;
+  background: rgba(37, 41, 39, 0.68);
 }
 
 .df-usage-timer[data-urgent="true"] small {
