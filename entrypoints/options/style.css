@@ -5,6 +5,8 @@
   --ink: #182018;
   --muted: #687067;
   --acid: #cfff00;
+  --blocked: #983b35;
+  --blocked-soft: rgba(152, 59, 53, 0.08);
   --line: rgba(24, 32, 24, 0.2);
   font-family: "Avenir Next", "Gill Sans", "Trebuchet MS", sans-serif;
   color: var(--ink);
@@ -155,6 +157,32 @@ select {
   padding: 18px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.3);
+}
+
+.schedule-card__heading {
+  display: grid;
+  gap: 2px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.schedule-card__heading strong {
+  font-family: "Iowan Old Style", "Palatino Linotype", serif;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.schedule-card__heading small {
+  color: var(--muted);
+}
+
+.schedule-card--blocked {
+  border-color: rgba(152, 59, 53, 0.48);
+  box-shadow: inset 4px 0 0 var(--blocked);
+}
+
+.schedule-card--blocked .schedule-card__heading strong {
+  color: var(--blocked);
 }
 
 .schedule-toggle,
@@ -328,6 +356,18 @@ select {
   padding: 14px;
   border-left: 3px solid var(--acid);
   background: rgba(24, 32, 24, 0.045);
+}
+
+.network-block-schedule {
+  display: grid;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.schedule-fields--blocked {
+  border-left-color: var(--blocked);
+  background: var(--blocked-soft);
 }
 
 .card-option {

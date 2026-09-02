@@ -33,6 +33,7 @@ available while adding deliberate friction around habitual scrolling:
 7. A per-network daily time ceiling cannot be extended from the page.
 8. Weekly schedules decide when those limits are active, globally or per
    network.
+9. Separate blocked-hours schedules can make an entire network unavailable.
 
 Daily post counts and time ceilings are tracked independently for Reddit,
 X/Twitter, Instagram, and YouTube. Post counts do not impose a maximum: every
@@ -65,7 +66,8 @@ hold before the next finite batch is revealed.
   intervention load, preventing clicks or scrolling through the feed first.
 - Per-network intentional session duration, adjusted through deliberate button
   steps, with a floating countdown that remains active across same-network SPA,
-  history navigation and full document reloads in the same tab.
+  history navigation and full document reloads in the same tab. The countdown
+  is translucent and click-through, so content underneath remains usable.
 - Optional Following-only modes for X and Instagram that select followed
   content while keeping direct profiles available.
 - Intentional search on X, Instagram and Reddit: autocomplete or default
@@ -83,6 +85,8 @@ hold before the next finite batch is revealed.
 - Separately configurable, non-extendable daily time ceiling for each network.
 - Optional weekly limit schedule with a global default and per-network custom
   hours, days or always-active override.
+- Optional blocked-hours schedule with a global default and per-network custom
+  hours, days or never-block override. It blocks every route on the network.
 - Finite initial and additional post batches with unlimited successive unlocks.
 - Stable per-session post counting for virtualized feeds such as Reddit.
 - Optional delay and press-and-hold step before revealing another batch.
@@ -93,17 +97,18 @@ hold before the next finite batch is revealed.
 
 ## Supported networks
 
-| Network | Feed limiting | Suggested-content suppression | Daily time ceiling | Schedule |
-| --- | --- | --- | --- | --- |
-| Reddit | Yes | Best effort | Independent | Global or custom |
-| X / Twitter | Yes | Best effort | Independent | Global or custom |
-| Instagram | Yes | Best effort | Independent | Global or custom |
-| YouTube | Yes | Best effort | Independent | Global or custom |
+| Network | Feed limiting | Suggested-content suppression | Daily ceiling | Limit hours | Blocked hours |
+| --- | --- | --- | --- | --- | --- |
+| Reddit | Yes | Best effort | Independent | Global or custom | Global, custom or never |
+| X / Twitter | Yes | Best effort | Independent | Global or custom | Global, custom or never |
+| Instagram | Yes | Best effort | Independent | Global or custom | Global, custom or never |
+| YouTube | Yes | Best effort | Independent | Global or custom | Global, custom or never |
 
 The limiter applies only to recognized feed routes. Direct profiles, messages,
-settings, and individual post pages are intended to remain available. Platform
-DOM changes may temporarily reduce detection accuracy; when confidence is low,
-the extension is designed to avoid hiding broad page containers.
+settings, and individual post pages remain available outside configured blocked
+hours. During blocked hours, the whole supported network is unavailable.
+Platform DOM changes may temporarily reduce detection accuracy; when confidence
+is low, the extension is designed to avoid hiding broad page containers.
 
 ## Install for development
 

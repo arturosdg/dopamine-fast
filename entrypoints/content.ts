@@ -2,7 +2,10 @@ import "../assets/content.css";
 import { FeedLimiter } from "../lib/feed-limiter";
 import { InterventionUi } from "../lib/intervention-ui";
 import { IntentionalSearchController } from "../lib/intentional-search";
-import { areLimitsActive } from "../lib/limit-schedule";
+import {
+  areLimitsActive,
+  isAccessBlocked,
+} from "../lib/limit-schedule";
 import {
   availableUsageSeconds,
   localDateKey,
@@ -27,6 +30,8 @@ import {
 import { usageForDate } from "../lib/usage-history";
 import { UsageSession } from "../lib/usage-session";
 
+const ACCESS_BLOCK_GUARD_OWNER = -1;
+
 export default defineContentScript({
   matches: [
     "*://reddit.com/*",
@@ -46,10 +51,13 @@ export default defineContentScript({
     const adapter = getPlatformAdapter(location.hostname);
     if (!adapter) return;
 
-    const interactionGuard = new PageInteractionGuard();
-    if (adapter.isFeedRoute(new URL(location.href))) {
-      interactionGuard.engage(0);
-    }
+    let interventionRoot: HTMLElement | undefined;
+    const interactionGuard = new PageInteractionGuard(window, (event) =>
+      interventionRoot
+        ? event.composedPath().includes(interventionRoot)
+        : false,
+    );
+    interactionGuard.engage(0);
     ctx.onInvalidated(() => interactionGuard.destroy());
 
     if (document.readyState === "loading") {
@@ -70,6 +78,7 @@ export default defineContentScript({
         const root = document.createElement("div");
         root.className = "df-root";
         container.append(root);
+        interventionRoot = root;
         return new InterventionUi(root);
       },
       onRemove(ui) {
@@ -103,21 +112,16 @@ export default defineContentScript({
     let currentUrl = "";
     let activationId = 0;
     let currentSettings: Settings | undefined;
+    let accessIsBlocked: boolean | undefined;
     let limitsAreActive: boolean | undefined;
 
     const activate = (preserveUsageSession = false): Promise<void> => {
       const thisActivation = ++activationId;
       currentSettings = undefined;
+      accessIsBlocked = undefined;
       limitsAreActive = undefined;
       const url = new URL(location.href);
-      if (
-        adapter.isFeedRoute(url) &&
-        (!preserveUsageSession || !usageSession)
-      ) {
-        interactionGuard.engage(thisActivation);
-      } else {
-        interactionGuard.releaseAll();
-      }
+      interactionGuard.engage(thisActivation);
 
       return (async () => {
       if (limiter) sessionPostAllowance = limiter.getAllowance();
@@ -155,6 +159,20 @@ export default defineContentScript({
         await previousUsageSession?.destroy();
         await clearActiveSession(adapter.id);
         intervention.hideAll();
+        return;
+      }
+
+      accessIsBlocked = isAccessBlocked(settings, adapter.id);
+      if (accessIsBlocked) {
+        const previousUsageSession = usageSession;
+        usageSession = undefined;
+        usageSessionNeedsAllowance = false;
+        sessionPostAllowance = 0;
+        await previousUsageSession?.destroy();
+        await clearActiveSession(adapter.id);
+        if (thisActivation !== activationId) return;
+        intervention.showAccessBlocked(adapter.label);
+        interactionGuard.engage(ACCESS_BLOCK_GUARD_OWNER);
         return;
       }
 
@@ -388,7 +406,16 @@ export default defineContentScript({
         void activate(true);
         return;
       }
-      if (!currentSettings || limitsAreActive === undefined) return;
+      if (!currentSettings || accessIsBlocked === undefined) return;
+      const nextAccessIsBlocked = isAccessBlocked(
+        currentSettings,
+        adapter.id,
+      );
+      if (nextAccessIsBlocked !== accessIsBlocked) {
+        void activate();
+        return;
+      }
+      if (accessIsBlocked || limitsAreActive === undefined) return;
       const nextLimitsAreActive = areLimitsActive(
         currentSettings,
         adapter.id,

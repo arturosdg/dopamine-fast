@@ -16,6 +16,8 @@ export type WeekdayId = (typeof WEEKDAY_IDS)[number];
 
 export type LimitScheduleMode = "global" | "custom" | "always";
 
+export type AccessBlockScheduleMode = "global" | "custom" | "never";
+
 export interface WeeklyLimitSchedule {
   startTime: string;
   endTime: string;
@@ -26,6 +28,13 @@ export interface LimitScheduleSettings {
   globalEnabled: boolean;
   global: WeeklyLimitSchedule;
   modeByPlatform: Record<PlatformId, LimitScheduleMode>;
+  byPlatform: Record<PlatformId, WeeklyLimitSchedule>;
+}
+
+export interface AccessBlockScheduleSettings {
+  globalEnabled: boolean;
+  global: WeeklyLimitSchedule;
+  modeByPlatform: Record<PlatformId, AccessBlockScheduleMode>;
   byPlatform: Record<PlatformId, WeeklyLimitSchedule>;
 }
 
@@ -45,6 +54,7 @@ export interface Settings {
   youtubeSubscriptionsOnly: boolean;
   enabledSites: Record<PlatformId, boolean>;
   limitSchedule: LimitScheduleSettings;
+  accessBlockSchedule: AccessBlockScheduleSettings;
 }
 
 export interface DailyState {
@@ -107,6 +117,22 @@ export const DEFAULT_SETTINGS: Settings = {
       youtube: createDefaultWeeklySchedule(),
     },
   },
+  accessBlockSchedule: {
+    globalEnabled: false,
+    global: createDefaultAccessBlockSchedule(),
+    modeByPlatform: {
+      reddit: "global",
+      x: "global",
+      instagram: "global",
+      youtube: "global",
+    },
+    byPlatform: {
+      reddit: createDefaultAccessBlockSchedule(),
+      x: createDefaultAccessBlockSchedule(),
+      instagram: createDefaultAccessBlockSchedule(),
+      youtube: createDefaultAccessBlockSchedule(),
+    },
+  },
 };
 
 type WeeklyLimitScheduleInput = {
@@ -122,17 +148,26 @@ type LimitScheduleSettingsInput = {
   byPlatform?: Partial<Record<PlatformId, WeeklyLimitScheduleInput>>;
 };
 
+type AccessBlockScheduleSettingsInput = {
+  globalEnabled?: unknown;
+  global?: WeeklyLimitScheduleInput;
+  modeByPlatform?: Partial<Record<PlatformId, unknown>>;
+  byPlatform?: Partial<Record<PlatformId, WeeklyLimitScheduleInput>>;
+};
+
 type SettingsInput = Partial<
   Omit<
     Settings,
     | "sessionDurationMinutesByPlatform"
     | "dailyUsageLimitMinutesByPlatform"
     | "limitSchedule"
+    | "accessBlockSchedule"
   >
 > & {
   sessionDurationMinutesByPlatform?: Partial<PlatformMinutes>;
   dailyUsageLimitMinutesByPlatform?: Partial<PlatformMinutes>;
   limitSchedule?: LimitScheduleSettingsInput;
+  accessBlockSchedule?: AccessBlockScheduleSettingsInput;
   sessionDurationMinutes?: number;
   dailyUsageLimitMinutes?: number;
 };
@@ -244,6 +279,9 @@ export function sanitizeSettings(input: SettingsInput): Settings {
       ),
     },
     limitSchedule: sanitizeLimitSchedule(input.limitSchedule),
+    accessBlockSchedule: sanitizeAccessBlockSchedule(
+      input.accessBlockSchedule,
+    ),
   };
 }
 
@@ -410,6 +448,14 @@ function createDefaultWeeklySchedule(): WeeklyLimitSchedule {
   };
 }
 
+function createDefaultAccessBlockSchedule(): WeeklyLimitSchedule {
+  return {
+    ...createDefaultWeeklySchedule(),
+    startTime: "22:00",
+    endTime: "07:00",
+  };
+}
+
 function sanitizeLimitSchedule(
   input: LimitScheduleSettingsInput | undefined,
 ): LimitScheduleSettings {
@@ -434,6 +480,55 @@ function sanitizeLimitSchedule(
         fallback.modeByPlatform.instagram,
       ),
       youtube: sanitizeScheduleMode(
+        input?.modeByPlatform?.youtube,
+        fallback.modeByPlatform.youtube,
+      ),
+    },
+    byPlatform: {
+      reddit: sanitizeWeeklySchedule(
+        input?.byPlatform?.reddit,
+        fallback.byPlatform.reddit,
+      ),
+      x: sanitizeWeeklySchedule(
+        input?.byPlatform?.x,
+        fallback.byPlatform.x,
+      ),
+      instagram: sanitizeWeeklySchedule(
+        input?.byPlatform?.instagram,
+        fallback.byPlatform.instagram,
+      ),
+      youtube: sanitizeWeeklySchedule(
+        input?.byPlatform?.youtube,
+        fallback.byPlatform.youtube,
+      ),
+    },
+  };
+}
+
+function sanitizeAccessBlockSchedule(
+  input: AccessBlockScheduleSettingsInput | undefined,
+): AccessBlockScheduleSettings {
+  const fallback = DEFAULT_SETTINGS.accessBlockSchedule;
+  return {
+    globalEnabled: sanitizeBoolean(
+      input?.globalEnabled,
+      fallback.globalEnabled,
+    ),
+    global: sanitizeWeeklySchedule(input?.global, fallback.global),
+    modeByPlatform: {
+      reddit: sanitizeAccessBlockScheduleMode(
+        input?.modeByPlatform?.reddit,
+        fallback.modeByPlatform.reddit,
+      ),
+      x: sanitizeAccessBlockScheduleMode(
+        input?.modeByPlatform?.x,
+        fallback.modeByPlatform.x,
+      ),
+      instagram: sanitizeAccessBlockScheduleMode(
+        input?.modeByPlatform?.instagram,
+        fallback.modeByPlatform.instagram,
+      ),
+      youtube: sanitizeAccessBlockScheduleMode(
         input?.modeByPlatform?.youtube,
         fallback.modeByPlatform.youtube,
       ),
@@ -492,6 +587,15 @@ function sanitizeScheduleMode(
   fallback: LimitScheduleMode,
 ): LimitScheduleMode {
   return value === "global" || value === "custom" || value === "always"
+    ? value
+    : fallback;
+}
+
+function sanitizeAccessBlockScheduleMode(
+  value: unknown,
+  fallback: AccessBlockScheduleMode,
+): AccessBlockScheduleMode {
+  return value === "global" || value === "custom" || value === "never"
     ? value
     : fallback;
 }

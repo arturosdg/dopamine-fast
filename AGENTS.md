@@ -61,7 +61,11 @@ behavior, call out the discrepancy rather than silently choosing one.
 
 ## Current feature model
 
-On a supported feed route, the content script:
+On every supported route, the content script first resolves the network's
+optional access-block schedule. An active blocked window supersedes all other
+behavior and makes every route on that network unavailable.
+
+On a supported feed route outside blocked hours, the content script:
 
 1. Loads sanitized settings and the current local-day usage state.
 2. Stops immediately when the extension/site is disabled or the route is not a
@@ -94,6 +98,9 @@ Post counters and time budgets are independent per network:
 - `Settings.limitSchedule` stores the optional global weekly window plus each
   platform's global, custom or always-active mode. Schedule changes apply on
   reactivation, and clock boundaries are detected by the content lifecycle.
+- `Settings.accessBlockSchedule` stores independent global or per-platform
+  blocked hours. Each platform may inherit the global schedule, use a custom
+  schedule or opt out of complete blocking.
 - Active planned countdowns are checkpointed in extension session storage by
   tab and platform so full same-tab navigations do not reopen the initial time
   picker. They are cleared when the countdown ends, protection is disabled or
@@ -205,6 +212,9 @@ Specific responsibilities:
   markup.
 - `intervention-ui.ts` owns rendering and direct UI interaction, not storage or
   platform detection.
+- The floating usage timer is informational, translucent and pointer-transparent.
+  Full-screen interventions remain interactive and inaccessible host-page
+  content must stay behind them.
 
 `intervention-ui.ts` is already the largest module. When adding another
 substantial screen or interaction state, split it by intervention or introduce
@@ -253,9 +263,9 @@ When adding or changing a platform:
 6. Manually test signed-in mobile and desktop layouts where available.
 7. Document the tested browser, viewport and network in the PR.
 
-Direct profiles, messages, settings and post-detail routes should remain
-usable and outside the limiter unless the product specification explicitly
-changes.
+Direct profiles, messages, settings and post-detail routes should remain usable
+and outside the limiter except while their network's explicit access-block
+schedule is active.
 
 ## DOM, privacy and security rules
 
