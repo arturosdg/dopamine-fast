@@ -1,5 +1,20 @@
 # Changelog
 
+## [0.8.0](https://github.com/arturosdg/dopamine-fast/compare/v0.7.0...v0.8.0) (2026-09-02)
+
+
+### Features
+
+* **schedule:** add blocked hours and passive floating timer ([34cc50d](https://github.com/arturosdg/dopamine-fast/commit/34cc50d535eebdde3f328bea573834b4e24f750a))
+* **schedule:** add full-access blocked hours ([df71247](https://github.com/arturosdg/dopamine-fast/commit/df712478e648cd65efa00481a9a00e342e1cddfb))
+* **timer:** make floating counter click-through ([2965b08](https://github.com/arturosdg/dopamine-fast/commit/2965b0831dd8df01df13f259ac16be058000925b))
+
+
+### Bug Fixes
+
+* prevent hold button text selection ([ddb6737](https://github.com/arturosdg/dopamine-fast/commit/ddb6737444e784c44c82afa813b4f9927cff24b8))
+* Prevent hold button text selection ([ddb6737](https://github.com/arturosdg/dopamine-fast/commit/ddb6737444e784c44c82afa813b4f9927cff24b8))
+
 ## [0.7.0](https://github.com/arturosdg/dopamine-fast/compare/v0.6.0...v0.7.0) (2026-08-16)
 
 
