@@ -16,7 +16,10 @@ export class PageInteractionGuard {
   private active = false;
   private owner: number | undefined;
 
-  constructor(private readonly target: EventTarget = window) {}
+  constructor(
+    private readonly target: EventTarget = window,
+    private readonly allowInteraction?: (event: Event) => boolean,
+  ) {}
 
   engage(owner: number): void {
     this.owner = owner;
@@ -50,6 +53,7 @@ export class PageInteractionGuard {
   }
 
   private readonly blockInteraction = (event: Event): void => {
+    if (this.allowInteraction?.(event)) return;
     event.preventDefault();
     event.stopImmediatePropagation();
   };

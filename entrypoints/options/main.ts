@@ -1,6 +1,7 @@
 import "./style.css";
 import {
   sanitizeSettings,
+  type AccessBlockScheduleMode,
   type LimitScheduleMode,
   type PlatformId,
   type Settings,
@@ -26,6 +27,12 @@ const controls = {
   ),
   globalScheduleFields: requiredElement<HTMLElement>(
     "#global-schedule-fields",
+  ),
+  globalBlockScheduleEnabled: requiredElement<HTMLInputElement>(
+    "#global-block-schedule-enabled",
+  ),
+  globalBlockScheduleFields: requiredElement<HTMLElement>(
+    "#global-block-schedule-fields",
   ),
   unlockDelay: requiredElement<HTMLInputElement>("#unlock-delay"),
   unlockDelayOutput:
@@ -62,11 +69,18 @@ interface NetworkControls {
   dailyUsageLimit: HTMLInputElement;
   scheduleMode: HTMLSelectElement;
   schedule: ScheduleControls;
+  blockScheduleMode: HTMLSelectElement;
+  blockSchedule: ScheduleControls;
 }
 
 const globalScheduleControls: ScheduleControls = createScheduleControls(
   "global",
   controls.globalScheduleFields,
+);
+
+const globalBlockScheduleControls: ScheduleControls = createScheduleControls(
+  "global-block",
+  controls.globalBlockScheduleFields,
 );
 
 const networkControls: Record<
@@ -78,24 +92,32 @@ const networkControls: Record<
     dailyUsageLimit: requiredElement("#reddit-daily-usage-limit"),
     scheduleMode: requiredElement("#reddit-schedule-mode"),
     schedule: createScheduleControls("reddit"),
+    blockScheduleMode: requiredElement("#reddit-block-schedule-mode"),
+    blockSchedule: createScheduleControls("reddit-block"),
   },
   x: {
     sessionDuration: requiredElement("#x-session-duration"),
     dailyUsageLimit: requiredElement("#x-daily-usage-limit"),
     scheduleMode: requiredElement("#x-schedule-mode"),
     schedule: createScheduleControls("x"),
+    blockScheduleMode: requiredElement("#x-block-schedule-mode"),
+    blockSchedule: createScheduleControls("x-block"),
   },
   instagram: {
     sessionDuration: requiredElement("#instagram-session-duration"),
     dailyUsageLimit: requiredElement("#instagram-daily-usage-limit"),
     scheduleMode: requiredElement("#instagram-schedule-mode"),
     schedule: createScheduleControls("instagram"),
+    blockScheduleMode: requiredElement("#instagram-block-schedule-mode"),
+    blockSchedule: createScheduleControls("instagram-block"),
   },
   youtube: {
     sessionDuration: requiredElement("#youtube-session-duration"),
     dailyUsageLimit: requiredElement("#youtube-daily-usage-limit"),
     scheduleMode: requiredElement("#youtube-schedule-mode"),
     schedule: createScheduleControls("youtube"),
+    blockScheduleMode: requiredElement("#youtube-block-schedule-mode"),
+    blockSchedule: createScheduleControls("youtube-block"),
   },
 };
 
@@ -106,7 +128,7 @@ function requiredElement<T extends Element>(selector: string): T {
 }
 
 function createScheduleControls(
-  scope: "global" | PlatformId,
+  scope: "global" | "global-block" | PlatformId | `${PlatformId}-block`,
   fields = requiredElement<HTMLElement>(`#${scope}-schedule-fields`),
 ): ScheduleControls {
   const day = (weekday: WeekdayId) =>
@@ -141,6 +163,12 @@ function render(settings: Settings): void {
   controls.globalScheduleEnabled.checked =
     settings.limitSchedule.globalEnabled;
   renderSchedule(globalScheduleControls, settings.limitSchedule.global);
+  controls.globalBlockScheduleEnabled.checked =
+    settings.accessBlockSchedule.globalEnabled;
+  renderSchedule(
+    globalBlockScheduleControls,
+    settings.accessBlockSchedule.global,
+  );
   for (const platform of Object.keys(networkControls) as PlatformId[]) {
     networkControls[platform].sessionDuration.value = String(
       settings.sessionDurationMinutesByPlatform[platform],
@@ -153,6 +181,12 @@ function render(settings: Settings): void {
     renderSchedule(
       networkControls[platform].schedule,
       settings.limitSchedule.byPlatform[platform],
+    );
+    networkControls[platform].blockScheduleMode.value =
+      settings.accessBlockSchedule.modeByPlatform[platform];
+    renderSchedule(
+      networkControls[platform].blockSchedule,
+      settings.accessBlockSchedule.byPlatform[platform],
     );
   }
   controls.unlockDelay.value = String(settings.unlockDelaySeconds);
@@ -202,9 +236,13 @@ function readSchedule(scheduleControls: ScheduleControls): WeeklyLimitSchedule {
 function updateScheduleVisibility(): void {
   controls.globalScheduleFields.hidden =
     !controls.globalScheduleEnabled.checked;
+  controls.globalBlockScheduleFields.hidden =
+    !controls.globalBlockScheduleEnabled.checked;
   for (const platform of Object.keys(networkControls) as PlatformId[]) {
     networkControls[platform].schedule.fields.hidden =
       networkControls[platform].scheduleMode.value !== "custom";
+    networkControls[platform].blockSchedule.fields.hidden =
+      networkControls[platform].blockScheduleMode.value !== "custom";
   }
 }
 
@@ -257,6 +295,26 @@ function readSettings(): Settings {
         youtube: readSchedule(networkControls.youtube.schedule),
       },
     },
+    accessBlockSchedule: {
+      globalEnabled: controls.globalBlockScheduleEnabled.checked,
+      global: readSchedule(globalBlockScheduleControls),
+      modeByPlatform: {
+        reddit: networkControls.reddit.blockScheduleMode
+          .value as AccessBlockScheduleMode,
+        x: networkControls.x.blockScheduleMode
+          .value as AccessBlockScheduleMode,
+        instagram: networkControls.instagram.blockScheduleMode
+          .value as AccessBlockScheduleMode,
+        youtube: networkControls.youtube.blockScheduleMode
+          .value as AccessBlockScheduleMode,
+      },
+      byPlatform: {
+        reddit: readSchedule(networkControls.reddit.blockSchedule),
+        x: readSchedule(networkControls.x.blockSchedule),
+        instagram: readSchedule(networkControls.instagram.blockSchedule),
+        youtube: readSchedule(networkControls.youtube.blockSchedule),
+      },
+    },
   });
 }
 
@@ -268,8 +326,16 @@ controls.globalScheduleEnabled.addEventListener(
   "change",
   updateScheduleVisibility,
 );
+controls.globalBlockScheduleEnabled.addEventListener(
+  "change",
+  updateScheduleVisibility,
+);
 for (const platform of Object.keys(networkControls) as PlatformId[]) {
   networkControls[platform].scheduleMode.addEventListener(
+    "change",
+    updateScheduleVisibility,
+  );
+  networkControls[platform].blockScheduleMode.addEventListener(
     "change",
     updateScheduleVisibility,
   );

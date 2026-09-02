@@ -1,6 +1,7 @@
 import type { RuntimeMessage } from "./runtime-messages";
 import { sessionMinuteChoices } from "./session-time";
 import {
+  createAccessBlockedView,
   createHardLimitView,
   createOpeningView,
   createSessionEndedView,
@@ -257,6 +258,38 @@ export class InterventionUi {
       .addEventListener("click", () => this.leaveFeed());
     this.requiredElement<HTMLButtonElement>('[data-action="settings"]')
       .addEventListener("click", () => this.openOptions());
+  }
+
+  showAccessBlocked(platformLabel: string): void {
+    const cancelPendingInteraction = this.cancelPendingInteraction;
+    this.cancelPendingInteraction = undefined;
+    cancelPendingInteraction?.();
+    this.hideUsageTimer();
+    this.overlay.replaceChildren(createAccessBlockedView(platformLabel));
+
+    const leaveButton =
+      this.requiredElement<HTMLButtonElement>('[data-action="leave"]');
+    const settingsButton =
+      this.requiredElement<HTMLButtonElement>('[data-action="settings"]');
+    leaveButton.addEventListener("click", () => this.leaveFeed());
+    settingsButton.addEventListener("click", () => this.openOptions());
+
+    const backdrop = this.requiredElement<HTMLElement>(".df-backdrop");
+    const focusable = [leaveButton, settingsButton];
+    backdrop.addEventListener("keydown", (event) => {
+      if (event.key !== "Tab") return;
+      const currentIndex = focusable.indexOf(event.target as HTMLButtonElement);
+      const nextIndex =
+        currentIndex === -1
+          ? event.shiftKey
+            ? focusable.length - 1
+            : 0
+          : (currentIndex + (event.shiftKey ? -1 : 1) + focusable.length) %
+            focusable.length;
+      event.preventDefault();
+      focusable[nextIndex]?.focus();
+    });
+    leaveButton.focus();
   }
 
   showUsageTimer(options: UsageTimerOptions): void {

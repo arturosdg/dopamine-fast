@@ -81,6 +81,22 @@ Keep the useful parts of social networks while giving every feed a real end.
 - Schedules use the browser's local clock and are stored only in extension
   local storage.
 
+## Access-block schedules
+
+- Access blocking is independent from limit scheduling and is disabled by
+  default for backward compatibility.
+- A global blocked-hours schedule can be inherited by each network. A network
+  may instead use custom blocked days and hours or opt out of complete blocking.
+- During blocked hours, every route on that network is unavailable, including
+  feeds, individual posts or videos, profiles, messages and site settings.
+- A full-screen intervention offers only leaving the network or opening
+  Dopamine Fast settings; it exposes no temporary unlock or snooze action.
+- Access blocking takes priority over session, daily-time, feed and
+  suggestion-suppression behavior. Entering a blocked window ends and clears
+  any active planned session for that network.
+- Start, end, overnight and local-clock semantics match limit schedules.
+  Crossing either boundary applies without a page reload.
+
 ## Unlock flow
 
 The end of a batch is rendered inside the native feed. The inline control waits
@@ -118,6 +134,7 @@ visible area while the batch is closed.
 - Hide Reddit's Popular, News and Explore navigation shortcuts while suggested
   content blocking is enabled.
 - Limit listing pages to the active batch.
+- Block every Reddit route when its access-block schedule is active.
 
 ### X
 
@@ -132,6 +149,7 @@ visible area while the batch is closed.
 - Hide the result-category tabs and discovery sidebar after a submitted X
   search, leaving only the query and its results.
 - Limit the timeline to the active batch.
+- Block every X route when its access-block schedule is active.
 
 ### Instagram
 
@@ -149,6 +167,7 @@ visible area while the batch is closed.
   vertical wheel, keyboard and touch navigation to another reel.
 - Stop after the active batch or after Instagram's own caught-up marker,
   whichever comes first.
+- Block every Instagram route when its access-block schedule is active.
 
 ### YouTube
 
@@ -162,6 +181,7 @@ visible area while the batch is closed.
 - Always hide next-video, related-video, Shorts and end-screen recommendation
   surfaces on requested video pages.
 - Treat YouTube post and time budgets independently from every other network.
+- Block every YouTube route when its access-block schedule is active.
 
 ## Privacy and permissions
 

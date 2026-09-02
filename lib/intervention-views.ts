@@ -259,6 +259,45 @@ export function createHardLimitView(platformLabel: string): HTMLElement {
   );
 }
 
+export function createAccessBlockedView(platformLabel: string): HTMLElement {
+  return dialog(
+    "df-access-block-title",
+    element("article", {
+      className: "df-card df-card--access-blocked",
+      children: [
+        element("div", {
+          className: "df-lock-mark",
+          attributes: { "aria-hidden": "true" },
+        }),
+        element("p", {
+          className: "df-kicker",
+          text: "Blocked hours",
+        }),
+        element("h1", {
+          text: `${platformLabel} is blocked right now.`,
+          attributes: { id: "df-access-block-title" },
+        }),
+        element("p", {
+          className: "df-copy",
+          text: "This schedule blocks every page on this network. Access returns when the blocked window ends.",
+        }),
+        element("div", {
+          className: "df-actions df-actions--stack",
+          children: [
+            actionButton(
+              `Leave ${platformLabel}`,
+              "leave",
+              "df-button df-button--primary",
+            ),
+          ],
+        }),
+        actionButton("View blocking schedule", "settings", "df-settings-link"),
+      ],
+    }),
+    "df-backdrop df-backdrop--access-blocked",
+  );
+}
+
 export function createUsageTimerView(): HTMLButtonElement {
   return element("button", {
     className: "df-usage-timer",
@@ -320,9 +359,13 @@ function timeStepper(
   });
 }
 
-function dialog(labelledBy: string, card: HTMLElement): HTMLElement {
+function dialog(
+  labelledBy: string,
+  card: HTMLElement,
+  className = "df-backdrop",
+): HTMLElement {
   return element("section", {
-    className: "df-backdrop",
+    className,
     attributes: {
       role: "dialog",
       "aria-modal": "true",

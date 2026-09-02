@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   areLimitsActive,
+  isAccessBlocked,
   isWithinWeeklySchedule,
 } from "../lib/limit-schedule";
 import {
@@ -110,5 +111,64 @@ describe("weekly limit schedules", () => {
         new Date(2026, 7, 11, 3, 0),
       ),
     ).toBe(true);
+  });
+
+  it("blocks every route during inherited global blocked hours", () => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      accessBlockSchedule: {
+        ...DEFAULT_SETTINGS.accessBlockSchedule,
+        globalEnabled: true,
+        global: mondayOnly("22:00", "07:00"),
+      },
+    };
+
+    expect(
+      isAccessBlocked(settings, "reddit", new Date(2026, 7, 10, 23, 0)),
+    ).toBe(true);
+    expect(
+      isAccessBlocked(settings, "reddit", new Date(2026, 7, 11, 6, 59)),
+    ).toBe(true);
+    expect(
+      isAccessBlocked(settings, "reddit", new Date(2026, 7, 11, 7, 0)),
+    ).toBe(false);
+  });
+
+  it("supports custom and never-block modes per network", () => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      accessBlockSchedule: {
+        ...DEFAULT_SETTINGS.accessBlockSchedule,
+        globalEnabled: true,
+        global: mondayOnly("09:00", "17:00"),
+        modeByPlatform: {
+          reddit: "global" as const,
+          x: "custom" as const,
+          instagram: "never" as const,
+          youtube: "global" as const,
+        },
+        byPlatform: {
+          ...DEFAULT_SETTINGS.accessBlockSchedule.byPlatform,
+          x: mondayOnly("18:00", "21:00"),
+        },
+      },
+    };
+
+    const mondayAtTen = new Date(2026, 7, 10, 10, 0);
+    const mondayAtNineteen = new Date(2026, 7, 10, 19, 0);
+    expect(isAccessBlocked(settings, "reddit", mondayAtTen)).toBe(true);
+    expect(isAccessBlocked(settings, "x", mondayAtTen)).toBe(false);
+    expect(isAccessBlocked(settings, "x", mondayAtNineteen)).toBe(true);
+    expect(isAccessBlocked(settings, "instagram", mondayAtTen)).toBe(false);
+  });
+
+  it("does not block inherited networks when global blocking is off", () => {
+    expect(
+      isAccessBlocked(
+        DEFAULT_SETTINGS,
+        "youtube",
+        new Date(2026, 7, 10, 23, 0),
+      ),
+    ).toBe(false);
   });
 });

@@ -131,6 +131,49 @@ describe("settings", () => {
     );
   });
 
+  it("sanitizes access-block schedules with blocking disabled by default", () => {
+    const settings = sanitizeSettings({
+      accessBlockSchedule: {
+        globalEnabled: true,
+        global: {
+          startTime: "24:00",
+          endTime: "06:30",
+          days: { sunday: false },
+        },
+        modeByPlatform: {
+          reddit: "custom",
+          x: "invalid",
+          instagram: "never",
+        },
+        byPlatform: {
+          reddit: {
+            startTime: "21:15",
+            endTime: "07:45",
+            days: { friday: false },
+          },
+        },
+      },
+    });
+
+    expect(settings.accessBlockSchedule.globalEnabled).toBe(true);
+    expect(settings.accessBlockSchedule.global.startTime).toBe("22:00");
+    expect(settings.accessBlockSchedule.global.endTime).toBe("06:30");
+    expect(settings.accessBlockSchedule.global.days.sunday).toBe(false);
+    expect(settings.accessBlockSchedule.global.days.monday).toBe(true);
+    expect(settings.accessBlockSchedule.modeByPlatform.reddit).toBe("custom");
+    expect(settings.accessBlockSchedule.modeByPlatform.x).toBe("global");
+    expect(settings.accessBlockSchedule.modeByPlatform.instagram).toBe(
+      "never",
+    );
+    expect(settings.accessBlockSchedule.byPlatform.reddit.startTime).toBe(
+      "21:15",
+    );
+    expect(settings.accessBlockSchedule.byPlatform.reddit.days.friday).toBe(
+      false,
+    );
+    expect(sanitizeSettings({}).accessBlockSchedule.globalEnabled).toBe(false);
+  });
+
   it("drops legacy post-limit and friction-mode settings", () => {
     const settings = sanitizeSettings({
       mode: "strict",

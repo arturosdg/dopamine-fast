@@ -40,6 +40,10 @@
   animation: df-backdrop-in 180ms ease-out both;
 }
 
+.df-backdrop--access-blocked {
+  touch-action: none;
+}
+
 .df-card {
   position: relative;
   display: flex;

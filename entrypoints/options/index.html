@@ -23,7 +23,7 @@
           <label class="master-toggle">
             <span>
               <strong>Protection enabled</strong>
-              <small>Pause and limit supported feeds.</small>
+              <small>Limit feeds and enforce blocked hours.</small>
             </span>
             <input id="enabled" name="enabled" type="checkbox" />
             <span class="switch" aria-hidden="true"></span>
@@ -35,12 +35,16 @@
           <div class="section-heading">
             <h2>Global schedule</h2>
             <p>
-              Choose when limits are active by default. Networks can inherit
-              this schedule or override it below.
+              Set default hours for normal limits and complete access blocks.
+              Networks can inherit or override both schedules below.
             </p>
           </div>
 
           <div class="schedule-card">
+            <div class="schedule-card__heading">
+              <strong>Limit hours</strong>
+              <small>Sessions, daily time and finite batches apply in this window.</small>
+            </div>
             <label class="schedule-toggle">
               <span>
                 <strong>Use a global schedule</strong>
@@ -72,13 +76,44 @@
               <p class="schedule-hint">If the end is earlier than the start, the window continues overnight. Matching times cover the full selected day.</p>
             </div>
           </div>
+
+          <div class="schedule-card schedule-card--blocked">
+            <div class="schedule-card__heading">
+              <strong>Blocked hours</strong>
+              <small>Every page on inherited networks is completely unavailable.</small>
+            </div>
+            <label class="schedule-toggle">
+              <span>
+                <strong>Use global blocked hours</strong>
+                <small>When off, inherited networks are never fully blocked.</small>
+              </span>
+              <input id="global-block-schedule-enabled" type="checkbox" />
+            </label>
+            <div id="global-block-schedule-fields" class="schedule-fields">
+              <div class="time-range">
+                <label><span>From</span><input id="global-block-schedule-start" type="time" /></label>
+                <label><span>To</span><input id="global-block-schedule-end" type="time" /></label>
+              </div>
+              <fieldset class="day-picker">
+                <legend>Blocked days</legend>
+                <label><input type="checkbox" data-schedule-day="global-block" value="monday" /><span>Mon</span></label>
+                <label><input type="checkbox" data-schedule-day="global-block" value="tuesday" /><span>Tue</span></label>
+                <label><input type="checkbox" data-schedule-day="global-block" value="wednesday" /><span>Wed</span></label>
+                <label><input type="checkbox" data-schedule-day="global-block" value="thursday" /><span>Thu</span></label>
+                <label><input type="checkbox" data-schedule-day="global-block" value="friday" /><span>Fri</span></label>
+                <label><input type="checkbox" data-schedule-day="global-block" value="saturday" /><span>Sat</span></label>
+                <label><input type="checkbox" data-schedule-day="global-block" value="sunday" /><span>Sun</span></label>
+              </fieldset>
+              <p class="schedule-hint">Blocked hours override limit hours and include feeds, posts, profiles, messages and settings on the network.</p>
+            </div>
+          </div>
         </section>
 
         <section class="panel">
           <div class="section-number">02</div>
           <div class="section-heading">
             <h2>Networks</h2>
-            <p>Each network keeps its activation, time budget and schedule together.</p>
+            <p>Each network keeps its activation, time budget, limit hours and blocked hours together.</p>
           </div>
 
           <div class="network-grid">
@@ -107,6 +142,15 @@
                     <label><input type="checkbox" data-schedule-day="reddit" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="reddit" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="reddit" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="reddit" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="reddit" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="reddit" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="reddit" value="sunday" /><span>Sun</span></label>
                   </fieldset>
                 </div>
+                <div class="network-block-schedule">
+                  <label class="select-field"><span>Blocked hours</span><select id="reddit-block-schedule-mode"><option value="global">Use global blocked hours</option><option value="custom">Custom blocked hours</option><option value="never">Never fully block</option></select></label>
+                  <div id="reddit-block-schedule-fields" class="schedule-fields schedule-fields--network schedule-fields--blocked">
+                    <div class="time-range"><label><span>From</span><input id="reddit-block-schedule-start" type="time" /></label><label><span>To</span><input id="reddit-block-schedule-end" type="time" /></label></div>
+                    <fieldset class="day-picker"><legend>Blocked days</legend>
+                      <label><input type="checkbox" data-schedule-day="reddit-block" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="reddit-block" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="reddit-block" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="reddit-block" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="reddit-block" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="reddit-block" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="reddit-block" value="sunday" /><span>Sun</span></label>
+                    </fieldset>
+                  </div>
+                </div>
               </div>
             </article>
 
@@ -134,6 +178,15 @@
                   <fieldset class="day-picker"><legend>Active days</legend>
                     <label><input type="checkbox" data-schedule-day="x" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="x" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="x" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="x" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="x" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="x" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="x" value="sunday" /><span>Sun</span></label>
                   </fieldset>
+                </div>
+                <div class="network-block-schedule">
+                  <label class="select-field"><span>Blocked hours</span><select id="x-block-schedule-mode"><option value="global">Use global blocked hours</option><option value="custom">Custom blocked hours</option><option value="never">Never fully block</option></select></label>
+                  <div id="x-block-schedule-fields" class="schedule-fields schedule-fields--network schedule-fields--blocked">
+                    <div class="time-range"><label><span>From</span><input id="x-block-schedule-start" type="time" /></label><label><span>To</span><input id="x-block-schedule-end" type="time" /></label></div>
+                    <fieldset class="day-picker"><legend>Blocked days</legend>
+                      <label><input type="checkbox" data-schedule-day="x-block" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="x-block" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="x-block" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="x-block" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="x-block" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="x-block" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="x-block" value="sunday" /><span>Sun</span></label>
+                    </fieldset>
+                  </div>
                 </div>
                 <label class="card-option"><span><strong>Following only</strong><small>Prefer Following and hide For You.</small></span><input id="x-following-only" type="checkbox" /></label>
               </div>
@@ -164,6 +217,15 @@
                     <label><input type="checkbox" data-schedule-day="instagram" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="instagram" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="instagram" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="instagram" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="instagram" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="instagram" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="instagram" value="sunday" /><span>Sun</span></label>
                   </fieldset>
                 </div>
+                <div class="network-block-schedule">
+                  <label class="select-field"><span>Blocked hours</span><select id="instagram-block-schedule-mode"><option value="global">Use global blocked hours</option><option value="custom">Custom blocked hours</option><option value="never">Never fully block</option></select></label>
+                  <div id="instagram-block-schedule-fields" class="schedule-fields schedule-fields--network schedule-fields--blocked">
+                    <div class="time-range"><label><span>From</span><input id="instagram-block-schedule-start" type="time" /></label><label><span>To</span><input id="instagram-block-schedule-end" type="time" /></label></div>
+                    <fieldset class="day-picker"><legend>Blocked days</legend>
+                      <label><input type="checkbox" data-schedule-day="instagram-block" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="instagram-block" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="instagram-block" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="instagram-block" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="instagram-block" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="instagram-block" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="instagram-block" value="sunday" /><span>Sun</span></label>
+                    </fieldset>
+                  </div>
+                </div>
                 <label class="card-option"><span><strong>Following only</strong><small>Open Following and hide For You.</small></span><input id="instagram-following-only" type="checkbox" /></label>
               </div>
             </article>
@@ -193,6 +255,15 @@
                     <label><input type="checkbox" data-schedule-day="youtube" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="youtube" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="youtube" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="youtube" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="youtube" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="youtube" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="youtube" value="sunday" /><span>Sun</span></label>
                   </fieldset>
                 </div>
+                <div class="network-block-schedule">
+                  <label class="select-field"><span>Blocked hours</span><select id="youtube-block-schedule-mode"><option value="global">Use global blocked hours</option><option value="custom">Custom blocked hours</option><option value="never">Never fully block</option></select></label>
+                  <div id="youtube-block-schedule-fields" class="schedule-fields schedule-fields--network schedule-fields--blocked">
+                    <div class="time-range"><label><span>From</span><input id="youtube-block-schedule-start" type="time" /></label><label><span>To</span><input id="youtube-block-schedule-end" type="time" /></label></div>
+                    <fieldset class="day-picker"><legend>Blocked days</legend>
+                      <label><input type="checkbox" data-schedule-day="youtube-block" value="monday" /><span>Mon</span></label><label><input type="checkbox" data-schedule-day="youtube-block" value="tuesday" /><span>Tue</span></label><label><input type="checkbox" data-schedule-day="youtube-block" value="wednesday" /><span>Wed</span></label><label><input type="checkbox" data-schedule-day="youtube-block" value="thursday" /><span>Thu</span></label><label><input type="checkbox" data-schedule-day="youtube-block" value="friday" /><span>Fri</span></label><label><input type="checkbox" data-schedule-day="youtube-block" value="saturday" /><span>Sat</span></label><label><input type="checkbox" data-schedule-day="youtube-block" value="sunday" /><span>Sun</span></label>
+                    </fieldset>
+                  </div>
+                </div>
                 <label class="card-option"><span><strong>Subscriptions only</strong><small>Redirect Home to Subscriptions.</small></span><input id="youtube-subscriptions-only" type="checkbox" /></label>
               </div>
             </article>
@@ -200,7 +271,7 @@
         </section>
 
         <section class="panel">
-          <div class="section-number">04</div>
+          <div class="section-number">03</div>
           <div class="section-heading">
             <h2>Entry pace</h2>
             <p>Add a pause before opening a feed.</p>
@@ -234,7 +305,7 @@
         </section>
 
         <section class="panel">
-          <div class="section-number">03</div>
+          <div class="section-number">04</div>
           <div class="section-heading">
             <h2>Feed size</h2>
             <p>Every batch truly ends. You decide whether to open another.</p>

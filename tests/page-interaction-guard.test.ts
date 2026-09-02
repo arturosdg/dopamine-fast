@@ -32,4 +32,21 @@ describe("page interaction guard", () => {
 
     expect(event.defaultPrevented).toBe(false);
   });
+
+  it("allows explicitly trusted extension interactions while active", () => {
+    const target = new EventTarget();
+    const guard = new PageInteractionGuard(
+      target,
+      (event) => event.type === "click",
+    );
+    guard.engage(1);
+
+    const allowedClick = new Event("click", { cancelable: true });
+    const blockedWheel = new Event("wheel", { cancelable: true });
+    target.dispatchEvent(allowedClick);
+    target.dispatchEvent(blockedWheel);
+
+    expect(allowedClick.defaultPrevented).toBe(false);
+    expect(blockedWheel.defaultPrevented).toBe(true);
+  });
 });

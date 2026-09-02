@@ -31,6 +31,24 @@ export function areLimitsActive(
   return isWithinWeeklySchedule(schedule, date);
 }
 
+export function isAccessBlocked(
+  settings: Settings,
+  platform: PlatformId,
+  date = new Date(),
+): boolean {
+  const mode = settings.accessBlockSchedule.modeByPlatform[platform];
+  if (mode === "never") return false;
+  if (mode === "global" && !settings.accessBlockSchedule.globalEnabled) {
+    return false;
+  }
+
+  const schedule =
+    mode === "custom"
+      ? settings.accessBlockSchedule.byPlatform[platform]
+      : settings.accessBlockSchedule.global;
+  return isWithinWeeklySchedule(schedule, date);
+}
+
 export function isWithinWeeklySchedule(
   schedule: WeeklyLimitSchedule,
   date: Date,
